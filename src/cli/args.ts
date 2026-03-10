@@ -60,7 +60,7 @@ export function parseArgs(argv?: string[]): CliArgs {
   program
     .name("mdsone")
     .description("mdsone — Convert Markdown to self-contained HTML")
-    .version("0.1.5", "-v, --version", "Display version")
+    .version("0.1.6", "-v, --version", "Display version")
     .addHelpText("after", EXAMPLES)
     // Paths
     .option("--source <PATH>",             "Markdown source (file or directory)")
