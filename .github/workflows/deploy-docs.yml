@@ -3,12 +3,6 @@ name: Build and Deploy Docs to GitHub Pages
 on:
   push:
     branches: ['main']
-    paths:
-      - 'docs/**'
-      - 'locales/**'
-      - 'templates/**'
-      - '.github/workflows/deploy-docs.yml'
-      - 'package.json'
   pull_request:
     branches: ['main']
   workflow_dispatch:
