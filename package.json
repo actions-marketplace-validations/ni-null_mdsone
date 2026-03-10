@@ -1,0 +1,63 @@
+{
+  "name": "mdsone",
+  "version": "0.1.5",
+  "description": "mdsone — Converts Markdown to self-contained HTML.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "mdsone": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node.js",
+      "types": "./dist/node.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "templates/",
+    "locales/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli/main.ts",
+    "start": "tsx src/cli/main.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "markdown",
+    "html",
+    "converter",
+    "documentation",
+    "packager",
+    "i18n"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@iarna/toml": "^3.0.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
+    "markdown-it": "^14.0.0",
+    "markdown-it-attrs": "^4.1.6",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.0.0",
+    "@types/node": "^20.0.0",
+    "@types/sharp": "^0.31.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.0.0"
+  }
+}

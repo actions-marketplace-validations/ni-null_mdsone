@@ -1,0 +1,137 @@
+# 快速開始
+
+## 安裝
+
+```bash
+# 全域安裝
+npm install -g mdsone
+
+# 或透過 npx 直接執行（無需安裝）
+npx mdsone --help
+
+# 本地開發
+npm install
+npm run build
+
+# 使用圖片 resize/compress 功能時需額外安裝 sharp
+npm install sharp
+```
+
+## 執行方式
+
+```bash
+# 透過 npx 執行（需先全域安裝）
+npx mdsone [選項]
+
+# 本地開發（直接跑 TypeScript，無需編譯）
+npm run dev
+# 或
+npm start
+
+# 開發時也可用 npx tsx 直接執行
+npx tsx src/cli/main.ts [選項]
+```
+
+## 用法示例
+
+```bash
+# 不帶引數：直接讀取 config.toml（本地開發推薦）
+npx mdsone
+
+# **設定単一 Markdown 檔案**
+npx mdsone --source ./README.md --output index.html
+
+# 指定來源目錄與輸出
+npx mdsone --source ./docs --output ./output.html
+
+# 指定模板與語系
+npx mdsone --source ./docs --output ./output.html --template minimal --locale zh-TW
+
+# 指定輸出資料夾與檔名（分開設定）
+npx mdsone --source ./docs --output-dir ./dist --output-filename guide.html
+
+# **嵌入圖片為 base64（本地和遠端都支援）**
+npx mdsone --source ./docs --output ./output.html --img-to-base64 true
+
+# 嵌入圖片並指定最大寬度（需要 sharp）
+npx mdsone --source ./docs --output ./output.html --img-to-base64 true --img-max-width 400
+
+# 嵌入圖片並指定壓縮品質（需要 sharp）
+npx mdsone --source ./docs --output ./output.html --img-to-base64 true --img-compress 80
+```
+
+## 三種執行模式
+
+| 模式                              | 說明                                                          |
+| --------------------------------- | ------------------------------------------------------------- |
+| **模式 1：互動式 Picker**   | 未帶任何必要參數時，自動跳出資料夾選擇視窗（Windows / macOS） |
+| **模式 2：config.toml 設定** | 在 `config.toml` 填好 `[paths]` 等參數後直接執行     |
+| **模式 3：CLI 覆蓋**        | 透過 CLI 參數或環境變數覆蓋，優先權最高               |
+
+## config.toml 範例
+
+```toml
+# ── Paths ────────────────────────────────────────────────────────────────────
+[paths]
+markdown_source_dir = "./docs"
+output_file         = "./output.html"
+output_dir          = "./dist"
+output_filename     = "guide.html"
+templates_dir       = "templates"
+locales_dir         = "locales"
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+[build]
+default_template     = "normal"
+minify_html          = false
+template_config_file = "template.config.json"
+build_date           = ""
+markdown_extensions  = ["tables", "fenced_code", "nl2br", "sane_lists", "attr_list"]
+
+# ── Site ──────────────────────────────────────────────────────────────────────
+[site]
+title      = "My Docs"
+theme_mode = "dark"
+
+# ── Internationalisation ──────────────────────────────────────────────────────
+[i18n]
+locale         = "zh-TW"
+mode           = false
+default_locale = "zh-TW"
+```
+
+> **重要**：`config.toml` 不應被提交到 git（已在 `.gitignore` 中）。本地機器特定的路徑應寫入此檔案。
+
+## 多語言模式
+
+將 `[i18n]` 中的 `mode = true` 加入 `config.toml`，並把 Markdown 依語系放在 `[locale]` 子目錄：
+
+```toml
+[i18n]
+mode = true
+default_locale = "zh-TW"
+```
+
+```text
+docs/
+├── [zh-TW]/
+│   ├── 01_intro.md
+│   └── 02_usage.md
+└── [en]/
+    ├── 01_intro.md
+    └── 02_usage.md
+```
+
+執行後會產生單一 HTML，內建語言切換下拉選單，並透過 `localStorage` 記憶使用者的語系選擇。
+
+```bash
+npx mdsone --source ./docs
+```
+
+## 優先順序
+
+```text
+CLI 參數 > 環境變數 > config.toml > 預設值
+```
+
+> **說明**：在 CI 環境（如 GitHub Actions）未定 `config.toml` 時，env var 接管所有設定；本地開發用 `config.toml` 最便利。

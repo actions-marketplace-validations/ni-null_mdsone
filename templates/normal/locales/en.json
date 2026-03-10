@@ -1,0 +1,19 @@
+{
+  "_comment": "mdsone — normal template i18n (en). Only the template section; cli strings come from global locales/.",
+
+  "template": {
+    "html_lang": "en",
+    "page_subtitle": "Documentation",
+    "loading": "Loading...",
+    "footer_label": "Offline · {BUILD_DATE}",
+    "menu_open_title": "Open sidebar",
+    "breadcrumb_docs": "docs",
+    "breadcrumb_index": "index",
+    "status_offline": "OFFLINE READY",
+    "theme_light_label": "Light",
+    "theme_dark_label": "Dark",
+    "theme_toggle_title": "Toggle theme",
+    "doc_count_suffix": "doc(s)",
+    "toc_title": "On this page"
+  }
+}
