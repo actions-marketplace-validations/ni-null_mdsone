@@ -38,8 +38,8 @@ export function minifyHtml(html: string): string {
   result = result.replace(/<!--[\s\S]*?-->/g, "");   // 移除 HTML 注解
   result = result.replace(/>\s+</g, "><");            // 折疊標籤間空白
 
-  scripts.forEach((s, i) => { result = result.replace(`__SCRIPT_PLACEHOLDER_${i}__`, s); });
-  styles.forEach((s, i)  => { result = result.replace(`__STYLE_PLACEHOLDER_${i}__`,  s); });
+  scripts.forEach((s, i) => { result = result.replace(`__SCRIPT_PLACEHOLDER_${i}__`, () => s); });
+  styles.forEach((s, i)  => { result = result.replace(`__STYLE_PLACEHOLDER_${i}__`,  () => s); });
 
   return result;
 }
