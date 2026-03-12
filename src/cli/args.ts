@@ -3,8 +3,33 @@
 // 對應 Python main.py 的 argparse 段落
 // ============================================================
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import type { CliArgs } from "../core/types.js";
+
+function readPkgVersion(): string {
+  try {
+    const dir = import.meta.url
+      ? path.dirname(fileURLToPath(import.meta.url))
+      : process.cwd();
+    const candidates = [
+      path.resolve(dir, "../../package.json"),  // dev: src/cli/ → root
+      path.resolve(dir, "../package.json"),      // dist: dist/ → root
+      path.resolve(process.cwd(), "package.json"),
+    ];
+    for (const p of candidates) {
+      try {
+        const data = JSON.parse(readFileSync(p, "utf-8")) as { version?: string; name?: string };
+        if (data.name === "mdsone") return data.version ?? "0.0.0";
+      } catch { /* try next */ }
+    }
+  } catch { /* fall through */ }
+  return "0.0.0";
+}
+
+const VERSION = readPkgVersion();
 
 const EXAMPLES = `
 EXAMPLES:
@@ -60,7 +85,7 @@ export function parseArgs(argv?: string[]): CliArgs {
   program
     .name("mdsone")
     .description("mdsone — Convert Markdown to self-contained HTML")
-    .version("0.1.6", "-v, --version", "Display version")
+    .version(VERSION, "-v, --version", "Display version")
     .addHelpText("after", EXAMPLES)
     // Paths
     .option("--source <PATH>",             "Markdown source (file or directory)")
