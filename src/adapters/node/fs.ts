@@ -6,7 +6,7 @@
 import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import path from "node:path";
-import type { I18nFile, TemplateData } from "../../core/types.js";
+import type { Config, I18nFile, TemplateData } from "../../core/types.js";
 import { LOCALE_DIR_PATTERN } from "../../core/markdown.js";
 
 /** 讀取 UTF-8 文字檔 */
@@ -286,10 +286,6 @@ export async function loadTemplateFiles(
   const template = await readTextFile(path.join(templateDir, "template.html"));
 
   // 預設值
-  let extra_css_urls:  string[] = [];
-  let extra_css_inline: string[] = [];
-  let extra_js_urls:   string[] = [];
-  let extra_js_inline: string[] = [];
   let metadata = {};
   let version       = "1.0.0";
   let schema_version = "v1";
@@ -299,10 +295,6 @@ export async function loadTemplateFiles(
   if (fsSync.existsSync(configPath)) {
     try {
       const raw = JSON.parse(await readTextFile(configPath)) as Record<string, unknown>;
-      extra_css_urls   = (raw["extra_css_urls"]  ?? raw["extra_css"]  ?? []) as string[];
-      extra_js_urls    = (raw["extra_js_urls"]   ?? raw["extra_js"]   ?? []) as string[];
-      extra_css_inline = (raw["extra_css_inline"] ?? []) as string[];
-      extra_js_inline  = (raw["extra_js_inline"]  ?? []) as string[];
       metadata         = (raw["_metadata"]        ?? {}) as object;
       version          = (metadata as Record<string, string>)["version"]        ?? "1.0.0";
       schema_version   = (metadata as Record<string, string>)["schema_version"] ?? "v1";
@@ -312,41 +304,131 @@ export async function loadTemplateFiles(
     }
   }
 
-  // 讀取 inline 檔案內容
-  const inline_css_contents: Record<string, string> = {};
-  for (const filename of extra_css_inline) {
-    const fp = path.join(templateDir, filename);
-    if (fsSync.existsSync(fp)) {
-      try { inline_css_contents[filename] = await readTextFile(fp); }
-      catch (e) { console.warn(`[WARN] Failed to read inline CSS '${filename}': ${e}`); }
-    } else {
-      console.warn(`[WARN] Inline CSS file not found: ${fp}`);
-    }
-  }
+  // 掃描 assets/ 資料夾，自動收集 CSS / JS 檔案並依數字前綴排序後 inline 注入
+  const assetsDir = path.join(templateDir, "assets");
+  const assets_css: Array<{ filename: string; content: string }> = [];
+  const assets_js:  Array<{ filename: string; content: string }> = [];
 
-  const inline_js_contents: Record<string, string> = {};
-  for (const filename of extra_js_inline) {
-    const fp = path.join(templateDir, filename);
-    if (fsSync.existsSync(fp)) {
-      try { inline_js_contents[filename] = await readTextFile(fp); }
-      catch (e) { console.warn(`[WARN] Failed to read inline JS '${filename}': ${e}`); }
-    } else {
-      console.warn(`[WARN] Inline JS file not found: ${fp}`);
+  if (fsSync.existsSync(assetsDir)) {
+    const entries = fsSync.readdirSync(assetsDir);
+    const cssFiles = entries.filter(f => f.endsWith(".css")).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+    );
+    const jsFiles  = entries.filter(f => f.endsWith(".js")).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+    );
+
+    for (const f of cssFiles) {
+      try { assets_css.push({ filename: f, content: await readTextFile(path.join(assetsDir, f)) }); }
+      catch (e) { console.warn(`[WARN] Failed to read assets CSS '${f}': ${e}`); }
+    }
+    for (const f of jsFiles) {
+      try { assets_js.push({ filename: f, content: await readTextFile(path.join(assetsDir, f)) }); }
+      catch (e) { console.warn(`[WARN] Failed to read assets JS '${f}': ${e}`); }
     }
   }
 
   return {
     css,
     template,
-    extra_css_urls,
-    extra_css_inline,
-    extra_js_urls,
-    extra_js_inline,
-    inline_css_contents,
-    inline_js_contents,
+    assets_css,
+    assets_js,
     version,
     schema_version,
     metadata,
     toc_config,
+  };
+}
+
+// ── lib/ 資料夾讀取 ──────────────────────────────────────
+
+/**
+ * 根據 config 的 code_highlight / code_copy 旗標，
+ * 從 libDir 讀取對應檔案並組裝為可直接插入 HTML 的字串。
+ *
+ * @returns { css, js } — css 插入 {LIB_CSS}，js 插入 {LIB_JS}
+ */
+export async function loadLibFiles(
+  libDir: string,
+  config: Config,
+): Promise<{ css: string; js: string }> {
+  const tryRead = async (filePath: string, label: string): Promise<string | null> => {
+    try {
+      return await readTextFile(filePath);
+    } catch {
+      console.warn(`[WARN] lib file not found, skipping: ${label}`);
+      return null;
+    }
+  };
+
+  const cssParts: string[] = [];
+  const jsParts:  string[] = [];
+
+  // ── syntax highlight ─────────────────────────────────
+  if (config.code_highlight) {
+    const hlDir = path.join(libDir, "highlight");
+
+    // JS
+    const hlJs = await tryRead(path.join(hlDir, "highlight.min.js"), "highlight.min.js");
+
+    // CSS themes
+    const theme      = config.code_highlight_theme || "atom-one-dark";
+    const darkFile   = `${theme}.min.css`;
+    const lightFile  = "atom-one-light.min.css";
+
+    const darkCss  = await tryRead(path.join(hlDir, "css", darkFile),  darkFile);
+    const lightCss = await tryRead(path.join(hlDir, "css", lightFile), lightFile);
+
+    // Inject dual-theme <style> tags (一個啟用、一個 disabled)
+    if (darkCss)  cssParts.push(`<style id="hljs-theme-dark">${darkCss}</style>`);
+    if (lightCss) cssParts.push(`<style id="hljs-theme-light" disabled>${lightCss}</style>`);
+
+    // Inject highlight.js + helpers as a single <script>
+    if (hlJs) {
+      jsParts.push(
+        `<script>\n` +
+        `try {\n` +
+        `/* highlight.min.js */\n` +
+        hlJs + `\n` +
+        `window.__mdsone_highlight = function(container) {\n` +
+        `  if (typeof hljs === 'undefined') return;\n` +
+        `  var blocks = (container || document).querySelectorAll('pre code');\n` +
+        `  blocks.forEach(function(b) { if (!b.dataset.highlighted) hljs.highlightElement(b); });\n` +
+        `};\n` +
+        `window.__mdsone_hljs_theme = function(isDark) {\n` +
+        `  var dark  = document.getElementById('hljs-theme-dark');\n` +
+        `  var light = document.getElementById('hljs-theme-light');\n` +
+        `  if (dark)  dark.disabled  = !isDark;\n` +
+        `  if (light) light.disabled =  isDark;\n` +
+        `};\n` +
+        `} catch(e) {\n` +
+        `  console.warn('[mdsone] Failed to load highlight.js:', e.message);\n` +
+        `  window.__mdsone_highlight = function() {};\n` +
+        `  window.__mdsone_hljs_theme = function() {};\n` +
+        `}\n` +
+        `</script>`,
+      );
+    }
+  }
+
+  // ── copy button ──────────────────────────────────────
+  if (config.code_copy) {
+    const copyJs = await tryRead(path.join(libDir, "copy", "copy.js"), "copy/copy.js");
+    if (copyJs) {
+      jsParts.push(
+        `<script>\n` +
+        `try {\n` +
+        copyJs + `\n` +
+        `} catch(e) {\n` +
+        `  console.warn('[mdsone] Failed to load copy button:', e.message);\n` +
+        `}\n` +
+        `</script>`,
+      );
+    }
+  }
+
+  return {
+    css: cssParts.join("\n"),
+    js:  jsParts.join("\n"),
   };
 }

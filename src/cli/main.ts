@@ -23,6 +23,7 @@ import {
   scanLocaleSubDirs,
   scanTemplates,
   loadTemplateFiles,
+  loadLibFiles,
   loadLocaleFile,
   loadTemplateLocaleFile,
   readTextFile,
@@ -40,18 +41,21 @@ import type { Config } from "../core/types.js";
  * 需以此函數定位內建 templates / locales 資源。
  */
 function resolvePackageRoot(): string {
-  const thisFile = fileURLToPath(import.meta.url);
-  const dir = path.dirname(thisFile);
-  // 開發時: .../src/cli/main.ts → dirname = .../src/cli → 往上兩層到根
-  // 打包後: .../dist/cli.js → dirname = .../dist → 往上一層到根
-  if (dir.endsWith(path.join("src", "cli"))) {
-    return path.resolve(dir, "..", "..");  // src/cli → src → root
+  // 1. import.meta.url 有值時（正常 ESM 執行）
+  if (import.meta.url) {
+    try {
+      const thisFile = fileURLToPath(import.meta.url);
+      const dir = path.dirname(thisFile);
+      if (dir.endsWith(path.join("src", "cli"))) {
+        return path.resolve(dir, "..", "..");
+      }
+      if (dir.endsWith("dist")) {
+        return path.resolve(dir, "..");
+      }
+    } catch { /* fall through */ }
   }
-  if (dir.endsWith("dist")) {
-    return path.resolve(dir, "..");  // dist → root
-  }
-  // fallback
-  return path.resolve(dir, "..");
+  // 2. tsx / --eval 模式：import.meta.url 為 undefined → 用 CWD
+  return process.cwd();
 }
 
 async function main(): Promise<void> {
@@ -77,6 +81,14 @@ async function main(): Promise<void> {
 
   // ③ 解析 output_file（--output-dir + --output-filename 組合）
   config.output_file = resolveOutputFile(config, !!args.output, path.join);
+
+  // ③-b 單一 .md 檔案來源：若未明確指定輸出位置，自動輸出到來源同目錄
+  if (fileExists(config.markdown_source_dir) && isMdFile(config.markdown_source_dir)
+      && !args.output && !args.outputDir) {
+    const sourceDir = path.dirname(path.resolve(config.markdown_source_dir));
+    const outName = config.output_filename || "main.html";
+    config.output_file = path.join(sourceDir, outName);
+  }
 
   // ④ 原生資料夾選擇器（Windows / macOS，僅在路徑未指定且目錄不存在時觸發）
   const pickerResult = await promptMissingPaths(
@@ -140,6 +152,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // ⑧-b 載入 lib/ 檔案（依 config 旗標決定是否注入 highlight / copy）
+  const libDir = path.resolve(packageRoot, "lib");
+  const { css: libCss, js: libJs } = await loadLibFiles(libDir, config);
+
   // ⑨ 讀取 Markdown 並轉換，準備 buildHtml 所需參數
   if (isSingleFile) {
     // ── 單個文件模式 ──
@@ -179,6 +195,8 @@ async function main(): Promise<void> {
         templateData,
         documents,
         i18nStrings,
+        libCss,
+        libJs,
       });
 
       await writeOutput(config.output_file, htmlContent);
@@ -248,6 +266,8 @@ async function main(): Promise<void> {
       templateData,
       multiDocuments,
       multiI18nStrings,
+      libCss,
+      libJs,
     });
 
     await writeOutput(config.output_file, htmlContent);
@@ -302,6 +322,8 @@ async function main(): Promise<void> {
       templateData,
       documents,
       i18nStrings,
+      libCss,
+      libJs,
     });
 
     await writeOutput(config.output_file, htmlContent);

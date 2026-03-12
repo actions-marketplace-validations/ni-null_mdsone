@@ -153,6 +153,8 @@ export function buildHtml(params: BuildParams): string {
     TITLE:              config.site_title,
     LANG:               htmlLang,
     CSS_CONTENT:        templateData.css,
+    LIB_CSS:            params.libCss ?? "",
+    LIB_JS:             params.libJs  ?? "",
     EXTRA_CSS:          cssTagsHtml,
     EXTRA_JS:           jsTagsHtml,
     MDSONE_DATA_SCRIPT: dataScript,

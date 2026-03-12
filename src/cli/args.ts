@@ -82,6 +82,10 @@ export function parseArgs(argv?: string[]): CliArgs {
     .option("--img-to-base64 <true|false>", "Embed images as base64 (default: false)")
     .option("--img-max-width <pixels>",     "Max image width in pixels (requires 'sharp' package)")
     .option("--img-compress <1-100>",       "Image compression quality 1-100 (requires 'sharp' package)")
+    // Code features
+    .option("--code-highlight <enable|disable>", "Syntax highlighting via highlight.js (default: enable)")
+    .option("--code-copy <enable|disable>",      "Copy button on code blocks (default: enable)")
+    .option("--code-highlight-theme <NAME>",     "highlight.js theme name (default: atom-one-dark)")
     .allowUnknownOption(false);
 
   program.parse(argv ?? process.argv);
@@ -102,6 +106,9 @@ export function parseArgs(argv?: string[]): CliArgs {
     imgToBase64?:      string;
     imgMaxWidth?:      string;
     imgCompress?:      string;
+    codeHighlight?:    string;
+    codeCopy?:         string;
+    codeHighlightTheme?: string;
     version?:          boolean;
   }>();
 
@@ -122,6 +129,9 @@ export function parseArgs(argv?: string[]): CliArgs {
     imgToBase64:       opts.imgToBase64,
     imgMaxWidth:       opts.imgMaxWidth,
     imgCompress:       opts.imgCompress,
+    codeHighlight:     opts.codeHighlight,
+    codeCopy:          opts.codeCopy,
+    codeHighlightTheme: opts.codeHighlightTheme,
     version:           opts.version,
   };
 }

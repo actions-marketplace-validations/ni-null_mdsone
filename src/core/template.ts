@@ -7,41 +7,27 @@
 import type { TemplateData } from "./types.js";
 
 /**
- * 產生額外 CSS 標籤（對應 Python generate_extra_css_tags()）。
- * - extra_css_urls      → <link rel="stylesheet" href="...">
- * - inline_css_contents → <style>/* filename *\/\n...\n</style>
+ * 產生 assets/ CSS 的 inline <style> 標籤。
+ * 每個檔案輸出為獨立的 <style>/* filename *\/\n...\n</style> 區塊。
  */
 export function generateExtraCssTags(
-  urls: string[],
-  inlineContents: Record<string, string>,
+  assets: Array<{ filename: string; content: string }>,
 ): string {
-  const tags: string[] = [];
-  for (const url of urls) {
-    tags.push(`    <link rel="stylesheet" href="${url}">`);
-  }
-  for (const [filename, content] of Object.entries(inlineContents)) {
-    tags.push(`    <style>/* ${filename} */\n${content}\n    </style>`);
-  }
-  return tags.join("\n");
+  return assets
+    .map(({ filename, content }) => `    <style>/* ${filename} */\n${content}\n    </style>`)
+    .join("\n");
 }
 
 /**
- * 產生額外 JS 標籤（對應 Python generate_extra_js_tags()）。
- * - extra_js_urls       → <script src="..."></script>
- * - inline_js_contents  → <script>/* filename *\/\n...\n</script>
+ * 產生 assets/ JS 的 inline <script> 標籤。
+ * 每個檔案輸出為獨立的 <script>/* filename *\/\n...\n</script> 區塊。
  */
 export function generateExtraJsTags(
-  urls: string[],
-  inlineContents: Record<string, string>,
+  assets: Array<{ filename: string; content: string }>,
 ): string {
-  const tags: string[] = [];
-  for (const url of urls) {
-    tags.push(`    <script src="${url}"></script>`);
-  }
-  for (const [filename, content] of Object.entries(inlineContents)) {
-    tags.push(`    <script>/* ${filename} */\n${content}\n    </script>`);
-  }
-  return tags.join("\n");
+  return assets
+    .map(({ filename, content }) => `    <script>/* ${filename} */\n${content}\n    </script>`)
+    .join("\n");
 }
 
 /**
@@ -57,21 +43,21 @@ export function assembleTemplate(
     // 使用 replaceAll 確保全文替換（Python str.replace 也是全文替換）
     html = html.split(`{${key}}`).join(value);
   }
-  // 清除殘餘的 {UPPERCASE_WORD} 佔位符
-  html = html.replace(/\{[A-Z_]+\}/g, "");
+  // 清除殘餘的 {UPPERCASE_WORD} 佔位符 
+  html = html.replace(/\{[A-Z_]{2,}\}/g, "");
   return html;
 }
 
 /**
- * 從已載入的 TemplateData 提取 template dir 的 inline 資源內容，
- * 回傳組裝好的 <link>/<style>/<script> 標籤字串。
+ * 從已載入的 TemplateData 提取 assets/ 資源內容，
+ * 回傳組裝好的 <style>/<script> inline 標籤字串。
  */
 export function buildExtraTags(templateData: TemplateData): {
   cssTagsHtml: string;
   jsTagsHtml: string;
 } {
   return {
-    cssTagsHtml: generateExtraCssTags(templateData.extra_css_urls, templateData.inline_css_contents),
-    jsTagsHtml:  generateExtraJsTags(templateData.extra_js_urls,  templateData.inline_js_contents),
+    cssTagsHtml: generateExtraCssTags(templateData.assets_css),
+    jsTagsHtml:  generateExtraJsTags(templateData.assets_js),
   };
 }

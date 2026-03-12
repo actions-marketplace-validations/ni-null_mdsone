@@ -29,6 +29,10 @@ export interface Config {
   img_to_base64: boolean;
   img_max_width: number;
   img_compress: number;
+  // code features
+  code_highlight: boolean;
+  code_copy: boolean;
+  code_highlight_theme: string;
 }
 
 /** CLI 引數物件（commander 解析後） */
@@ -49,6 +53,9 @@ export interface CliArgs {
   imgToBase64?: string;
   imgMaxWidth?: string;
   imgCompress?: string;
+  codeHighlight?: string;
+  codeCopy?: string;
+  codeHighlightTheme?: string;
   version?: boolean;
 }
 
@@ -90,20 +97,16 @@ export interface TemplateData {
   css: string;
   /** template.html 原始文字（含 {PLACEHOLDER}）*/
   template: string;
-  /** CDN CSS URL 列表 */
-  extra_css_urls: string[];
-  /** 要 inline 的本地 CSS 檔名列表 */
-  extra_css_inline: string[];
-  /** CDN JS URL 列表 */
-  extra_js_urls: string[];
-  /** 要 inline 的本地 JS 檔名列表 */
-  extra_js_inline: string[];
   /**
-   * 已讀取 inline 檔案的內容映射，key = 檔名
-   * Node adapter 讀取後填入，core 直接使用
+   * assets/ 資料夾中依數字前綴排序的 CSS 檔案清單（已讀入內容）
+   * 建置時以 <style> inline 注入 {EXTRA_CSS}
    */
-  inline_css_contents: Record<string, string>;
-  inline_js_contents: Record<string, string>;
+  assets_css: Array<{ filename: string; content: string }>;
+  /**
+   * assets/ 資料夾中依數字前綴排序的 JS 檔案清單（已讀入內容）
+   * 建置時以 <script> inline 注入 {EXTRA_JS}
+   */
+  assets_js: Array<{ filename: string; content: string }>;
   version: string;
   schema_version: string;
   metadata: TemplateMetadata;
@@ -122,6 +125,10 @@ export interface BuildParams {
   i18nStrings?: Record<string, string>;
   /** 多語 i18n 字串 { locale: { key: val } } */
   multiI18nStrings?: Record<string, Record<string, string>>;
+  /** 從 lib/ 組裝的樣式標籤（插入 {LIB_CSS}） */
+  libCss?: string;
+  /** 從 lib/ 組裝的腳本標籤（插入 {LIB_JS}） */
+  libJs?: string;
 }
 
 /** validateConfig() 的回傳型別 */

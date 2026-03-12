@@ -9,7 +9,7 @@ import type { Config, CliArgs } from "./types.js";
 export const DEFAULT_CONFIG: Config = {
   // paths
   markdown_source_dir: "./markdown",
-  output_file:         "system_guide.html",
+  output_file:         "main.html",
   output_dir:          "",
   output_filename:     "",
   templates_dir:       "templates",
@@ -31,6 +31,10 @@ export const DEFAULT_CONFIG: Config = {
   img_to_base64:  false,
   img_max_width:  0,
   img_compress:   0,
+  // code features
+  code_highlight:       true,
+  code_copy:            true,
+  code_highlight_theme: "atom-one-dark",
 };
 
 /**
@@ -93,6 +97,14 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
     const q = parseInt(args.imgCompress, 10);
     if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q));
   }
+  // Code features
+  if (args.codeHighlight !== undefined) {
+    out.code_highlight = !["disable", "false", "0", "off"].includes(args.codeHighlight.toLowerCase());
+  }
+  if (args.codeCopy !== undefined) {
+    out.code_copy = !["disable", "false", "0", "off"].includes(args.codeCopy.toLowerCase());
+  }
+  if (args.codeHighlightTheme) out.code_highlight_theme = args.codeHighlightTheme;
   return out;
 }
 

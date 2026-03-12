@@ -55,6 +55,9 @@ export function envToConfig(): Partial<Config> {
   if (e["IMG_TO_BASE64"] !== undefined) out.img_to_base64 = parseBool(e["IMG_TO_BASE64"], false);
   if (e["IMG_MAX_WIDTH"]  !== undefined) { const w = parseInt(e["IMG_MAX_WIDTH"]!, 10);  if (!isNaN(w) && w > 0) out.img_max_width = w; }
   if (e["IMG_COMPRESS"]   !== undefined) { const q = parseInt(e["IMG_COMPRESS"]!, 10);   if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q)); }
+  if (e["CODE_HIGHLIGHT"] !== undefined) out.code_highlight = !["disable", "false", "0", "off"].includes(e["CODE_HIGHLIGHT"]!.toLowerCase());
+  if (e["CODE_COPY"]      !== undefined) out.code_copy      = !["disable", "false", "0", "off"].includes(e["CODE_COPY"]!.toLowerCase());
+  if (e["CODE_HIGHLIGHT_THEME"]) out.code_highlight_theme = e["CODE_HIGHLIGHT_THEME"];
   if (e["MARKDOWN_EXTENSIONS"]) {
     out.markdown_extensions = parseList(e["MARKDOWN_EXTENSIONS"], DEFAULT_CONFIG.markdown_extensions);
   }
@@ -90,6 +93,9 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   if (b(build["img_to_base64"]) !== undefined) out.img_to_base64 = b(build["img_to_base64"]);
   if (typeof build["img_max_width"] === "number" && (build["img_max_width"] as number) > 0) out.img_max_width = build["img_max_width"] as number;
   if (typeof build["img_compress"] === "number") out.img_compress = Math.max(1, Math.min(100, build["img_compress"] as number));
+  if (b(build["code_highlight"]) !== undefined) out.code_highlight = b(build["code_highlight"])!;
+  if (b(build["code_copy"])      !== undefined) out.code_copy      = b(build["code_copy"])!;
+  if (s(build["code_highlight_theme"]))          out.code_highlight_theme = s(build["code_highlight_theme"]);
 
   if (s(site["title"]))                out.site_title           = s(site["title"]);
   if (s(site["theme_mode"]))           out.theme_mode           = s(site["theme_mode"]) as Config["theme_mode"];

@@ -116,7 +116,7 @@ export function markdownToHtml(markdownText: string, extensions: string[]): stri
       // 將 <pre><code class="language-..."> 改為 <pre data-lang="..."><code>
       return rendered.replace(
         /^<pre><code[^>]*>/,
-        `<pre data-lang="${lang}"><code>`,
+        `<pre data-lang="${lang}"><code class="language-${lang}">`,
       );
     }
     return defaultFence

@@ -14,6 +14,9 @@
 | `--img-to-base64 true\|false` | 將圖片嵌入為 base64（本地+遠端） | `--img-to-base64 true` |
 | `--img-max-width PIXELS` | 限制圖片最大寬度（需要 sharp） | `--img-max-width 400` |
 | `--img-compress QUALITY` | 圖片壓縮品質 1-100（需要 sharp） | `--img-compress 80` |
+| `--code-highlight enable\|disable` | 語法高亮（預設 enable） | `--code-highlight disable` |
+| `--code-copy enable\|disable` | 程式碼複製按鈕（預設 enable） | `--code-copy disable` |
+| `--code-highlight-theme NAME` | highlight.js 主題名稱 | `--code-highlight-theme atom-one-light` |
 
 > `--output` 的優先權高於 `--output-dir` + `--output-filename` 的組合。
 
@@ -96,6 +99,9 @@ npm start
 | 圖片 base64 嵌入 | `--img-to-base64` | `IMG_TO_BASE64` | `[build] img_to_base64` |
 | 圖片最大寬度 | `--img-max-width` | `IMG_MAX_WIDTH` | `[build] img_max_width` |
 | 圖片壓縮品質 | `--img-compress` | `IMG_COMPRESS` | `[build] img_compress` |
+| 語法高亮 | `--code-highlight` | `CODE_HIGHLIGHT` | `[build] code_highlight` |
+| 複製按鈕 | `--code-copy` | `CODE_COPY` | `[build] code_copy` |
+| 高亮主題 | `--code-highlight-theme` | `CODE_HIGHLIGHT_THEME` | `[build] code_highlight_theme` |
 
 ## 使用範例
 
@@ -139,4 +145,10 @@ npx mdsone --source ./docs --output ./dist/index.html --img-to-base64 true
 
 # 嵌入圖片並 resize + 壓縮（需要 sharp）
 npx mdsone --source ./docs --output ./dist/index.html --img-to-base64 true --img-max-width 600 --img-compress 90
+
+# 禁用語法高亮和複製按鈕
+npx mdsone --source ./docs --output ./dist/index.html --code-highlight disable --code-copy disable
+
+# 切換高亮主題
+npx mdsone --source ./docs --output ./dist/index.html --code-highlight-theme atom-one-light
 ```
