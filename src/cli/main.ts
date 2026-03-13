@@ -131,37 +131,90 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // ⑤.₂ 決定合併模式（-m 旗標 或 i18n 模式兩者皆走合併邏輯）
+  const mergeMode = !!args.merge || config.i18n_mode;
+
+  // ⑤.₃ 批次資料夾模式必須明確指定 -o（輸出目錄）
+  if (!mergeMode && isFolder && !args.output) {
+    console.error("[Error] Batch folder mode requires an output directory. Use '-o <dir>' to specify where HTML files should be written.");
+    process.exit(1);
+  }
+
   // ⑥ 解析輸出路徑
-  let outputFile: string;
-  if (args.output) {
-    outputFile = path.resolve(process.cwd(), args.output);
-  } else if (isSingleFile) {
-    const base = path.basename(inputFiles[0], path.extname(inputFiles[0])) + ".html";
-    outputFile = path.join(process.cwd(), base);
-  } else if (isFolder) {
-    const base = path.basename(inputDirs[0]) + ".html";
-    outputFile = path.join(process.cwd(), base);
-  } else {
-    // isMultiFile 且無 -o
-    console.error("[Error] Multiple input files detected. Please provide an output filename using '-o <name>.html'.");
-    process.exit(1);
-  }
-
-  // ⑦ 驗證輸出路徑不是現有資料夾
-  if (dirExists(outputFile)) {
-    console.error(`[Error] Output path '${outputFile}' is an existing directory. Please specify a file path.`);
-    process.exit(1);
-  }
-
-  // ⑧ force 保護：-f false 時若目標已存在則中止
   const force = args.force !== "false";
-  if (!force && fileExists(outputFile)) {
-    console.error("[Error] Output file already exists. Use '-f true' to overwrite.");
-    process.exit(1);
-  }
+  let outputFile = "";     // 合併模式的最終輸出檔案
+  let outputDir  = "";     // 批次模式的輸出目錄
 
-  // 同步至 config.output_file（供 buildHtml 等函式使用）
-  config.output_file = outputFile;
+  if (mergeMode) {
+    // ── 合併模式：輸出必為單一 HTML 檔案 ──
+    if (args.output) {
+      outputFile = path.resolve(process.cwd(), args.output);
+      // -o 不可指向現有目錄
+      if (dirExists(outputFile)) {
+        console.error(`[Error] In merge mode, '-o' must be a file path, not a directory: '${args.output}'`);
+        process.exit(1);
+      }
+    } else if (isFolder) {
+      // 取資料夾名稱作為預設檔名；若名稱為空或 "." 則 fallback merge.html
+      const dirName = path.basename(inputDirs[0]);
+      const baseName = (dirName && dirName !== ".") ? dirName : "merge";
+      outputFile = path.join(process.cwd(), baseName + ".html");
+    } else {
+      // 多檔 / 單檔 -m：預設 merge.html
+      outputFile = path.join(process.cwd(), "merge.html");
+    }
+
+    // ⑦ force 保護
+    if (!force && fileExists(outputFile)) {
+      console.error("[Error] Output file already exists. Use '-f true' to overwrite.");
+      process.exit(1);
+    }
+
+    // 同步至 config.output_file
+    config.output_file = outputFile;
+
+  } else if (isSingleFile) {
+    // ── 批次單檔模式 ──
+    if (args.output) {
+      outputFile = path.resolve(process.cwd(), args.output);
+      if (dirExists(outputFile)) {
+        console.error(`[Error] Output path '${outputFile}' is an existing directory. Please specify a file path.`);
+        process.exit(1);
+      }
+    } else {
+      const base = path.basename(inputFiles[0], path.extname(inputFiles[0])) + ".html";
+      outputFile = path.join(process.cwd(), base);
+    }
+
+    // ⑦ force 保護
+    if (!force && fileExists(outputFile)) {
+      console.error("[Error] Output file already exists. Use '-f true' to overwrite.");
+      process.exit(1);
+    }
+
+    config.output_file = outputFile;
+
+  } else {
+    // ── 批次多檔 / 批次資料夾模式 ──
+    if (args.output) {
+      outputDir = path.resolve(process.cwd(), args.output);
+      // -o 不可含副檔名（代表使用者誤傳了檔案路徑）
+      if (path.extname(outputDir) !== "") {
+        console.error(`[Error] In batch mode, '-o' must be a directory path, not a file path: '${args.output}'`);
+        process.exit(1);
+      }
+      // -o 不可指向現有檔案
+      if (fileExists(outputDir)) {
+        console.error(`[Error] Output path '${args.output}' is an existing file. Please specify a directory path.`);
+        process.exit(1);
+      }
+    } else {
+      // isMultiFile 且無 -o → 輸出至 CWD
+      outputDir = process.cwd();
+    }
+
+    config.output_file = outputDir;
+  }
 
   // ⑨ 驗證 template 設定（validateConfig 只驗 default_template）
   const logicResult = validateConfig(config);
@@ -202,7 +255,7 @@ async function main(): Promise<void> {
 
   // ⑫ 讀取 Markdown 並轉換，準備 buildHtml 所需參數
   if (isSingleFile) {
-    // ── 單個文件模式 ──
+    // ── 單個文件模式（批次或合併，行為相同）──
     const srcFile = inputFiles[0];
     try {
       const fileContent = await readTextFile(srcFile);
@@ -236,33 +289,174 @@ async function main(): Promise<void> {
       console.error(`[ERROR] Failed to read markdown file: ${e}`);
       process.exit(1);
     }
-  } else if (isMultiFile) {
-    // ── 多檔案合併模式（依 inputs 輸入順序）──
-    const documents: Record<string, string> = {};
-    for (const filepath of inputFiles) {
-      const tabName = path.basename(filepath, path.extname(filepath));
-      try {
-        const content = await readTextFile(filepath);
-        if (content.trim()) {
-          let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
-          if (config.img_to_base64) {
-            html = await embedImagesInHtml(html, path.dirname(filepath), {
-              maxWidth: config.img_max_width || undefined,
-              compress: config.img_compress || undefined,
-            });
+  } else if (mergeMode) {
+    // ── 合併模式：多檔案 / 資料夾 → 單一 HTML ──
+    if (isMultiFile) {
+      // 多檔案合併（依 inputs 輸入順序）
+      const documents: Record<string, string> = {};
+      for (const filepath of inputFiles) {
+        const tabName = path.basename(filepath, path.extname(filepath));
+        try {
+          const content = await readTextFile(filepath);
+          if (content.trim()) {
+            let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
+            if (config.img_to_base64) {
+              html = await embedImagesInHtml(html, path.dirname(filepath), {
+                maxWidth: config.img_max_width || undefined,
+                compress: config.img_compress || undefined,
+              });
+            }
+            documents[tabName] = html;
           }
-          documents[tabName] = html;
+        } catch (e) {
+          console.warn(`[WARN] Failed to read ${filepath}: ${e}`);
         }
-      } catch (e) {
-        console.warn(`[WARN] Failed to read ${filepath}: ${e}`);
+      }
+
+      if (Object.keys(documents).length === 0) {
+        console.error("[ERROR] No content generated.");
+        process.exit(1);
+      }
+
+      const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
+      const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale || "en");
+      const localeFile = tplLocale?.template
+        ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
+        : globalLocale;
+      const buildDate = resolveBuildDate(config);
+      const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
+
+      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
+      await writeOutput(outputFile, htmlContent);
+    } else if (config.i18n_mode) {
+      // 多語模式（資料夾，含 [locale] 子資料夾）
+      const folderPath = inputDirs[0];
+      const localeDirs = await scanLocaleSubDirs(folderPath);
+      if (Object.keys(localeDirs).length === 0) {
+        console.error(`[ERROR] No [locale] subdirectories found in: ${folderPath}`);
+        process.exit(1);
+      }
+
+      const multiDocuments: Record<string, Record<string, string>> = {};
+      for (const [locale, dir] of Object.entries(localeDirs)) {
+        const mdFiles = await scanMarkdownFiles(dir);
+        const localeDocs: Record<string, string> = {};
+        for (const { filename, filepath } of mdFiles) {
+          const tabName = filename.replace(/\.(md|markdown)$/i, "");
+          try {
+            const content = await readTextFile(filepath);
+            if (content.trim()) {
+              let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
+              if (config.img_to_base64) {
+                html = await embedImagesInHtml(html, dir, {
+                  maxWidth: config.img_max_width || undefined,
+                  compress: config.img_compress || undefined,
+                });
+              }
+              localeDocs[tabName] = html;
+            }
+          } catch (e) {
+            console.warn(`[WARN] Failed to read ${filepath}: ${e}`);
+          }
+        }
+        if (Object.keys(localeDocs).length > 0) {
+          multiDocuments[locale] = localeDocs;
+        }
+      }
+
+      if (Object.keys(multiDocuments).length === 0) {
+        console.error("[ERROR] No content generated in i18n mode.");
+        process.exit(1);
+      }
+
+      const locales = Object.keys(multiDocuments);
+      const localeFileMap: Record<string, Awaited<ReturnType<typeof loadLocaleFile>>> = {};
+      for (const locale of locales) {
+        const globalLocale = await loadLocaleFile(config.locales_dir, locale);
+        const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, locale);
+        localeFileMap[locale] = tplLocale?.template
+          ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
+          : globalLocale;
+      }
+      const buildDate = resolveBuildDate(config);
+      const multiI18nStrings = getAllLocalesTemplateStrings(localeFileMap, buildDate);
+
+      const htmlContent = buildHtml({ config, templateData, multiDocuments, multiI18nStrings, libCss, libJs });
+      await writeOutput(outputFile, htmlContent);
+    } else {
+      // 單語資料夾合併
+      const folderPath = inputDirs[0];
+      const mdFiles = await scanMarkdownFiles(folderPath);
+      if (mdFiles.length === 0) {
+        console.error(`[ERROR] No .md files found in: ${folderPath}`);
+        process.exit(1);
+      }
+
+      const documents: Record<string, string> = {};
+      for (const { filename, filepath } of mdFiles) {
+        const tabName = filename.replace(/\.(md|markdown)$/i, "");
+        try {
+          const content = await readTextFile(filepath);
+          if (content.trim()) {
+            let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
+            if (config.img_to_base64) {
+              html = await embedImagesInHtml(html, folderPath, {
+                maxWidth: config.img_max_width || undefined,
+                compress: config.img_compress || undefined,
+              });
+            }
+            documents[tabName] = html;
+          }
+        } catch (e) {
+          console.warn(`[WARN] Failed to read ${filepath}: ${e}`);
+        }
+      }
+
+      if (Object.keys(documents).length === 0) {
+        console.error("[ERROR] No content generated.");
+        process.exit(1);
+      }
+
+      const globalLocale = await loadLocaleFile(config.locales_dir, config.locale);
+      const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale);
+      const localeFile = tplLocale?.template
+        ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
+        : globalLocale;
+      const buildDate = resolveBuildDate(config);
+      const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
+
+      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
+      await writeOutput(outputFile, htmlContent);
+    }
+  } else {
+    // ── 批次多檔 / 批次資料夾模式：每個 .md 獨立產生一個 HTML ──
+    type BatchEntry = { filepath: string; baseName: string; baseDir: string };
+    const batchFiles: BatchEntry[] = [];
+
+    if (isMultiFile) {
+      for (const f of inputFiles) {
+        batchFiles.push({ filepath: f, baseName: path.basename(f, path.extname(f)), baseDir: path.dirname(f) });
+      }
+    } else {
+      // isFolder
+      const mdFiles = await scanMarkdownFiles(inputDirs[0]);
+      for (const { filename, filepath } of mdFiles) {
+        batchFiles.push({
+          filepath,
+          baseName: filename.replace(/\.(md|markdown)$/i, ""),
+          baseDir: inputDirs[0],
+        });
       }
     }
 
-    if (Object.keys(documents).length === 0) {
-      console.error("[ERROR] No content generated.");
+    if (batchFiles.length === 0) {
+      console.error("[ERROR] No .md files found.");
       process.exit(1);
     }
 
+    await ensureDir(outputDir);
+
+    // 載入共用 locale（批次中所有檔案共用同一組 i18n 字串）
     const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
     const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale || "en");
     const localeFile = tplLocale?.template
@@ -271,107 +465,46 @@ async function main(): Promise<void> {
     const buildDate = resolveBuildDate(config);
     const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
 
-    const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
-    await writeOutput(outputFile, htmlContent);
-  } else if (config.i18n_mode) {
-    // ── 多語模式（資料夾，含 [locale] 子資料夾）──
-    const folderPath = inputDirs[0];
-    const localeDirs = await scanLocaleSubDirs(folderPath);
-    if (Object.keys(localeDirs).length === 0) {
-      console.error(`[ERROR] No [locale] subdirectories found in: ${folderPath}`);
-      process.exit(1);
-    }
+    let successCount = 0;
+    for (const { filepath, baseName, baseDir } of batchFiles) {
+      const targetFile = path.join(outputDir, baseName + ".html");
 
-    const multiDocuments: Record<string, Record<string, string>> = {};
-    for (const [locale, dir] of Object.entries(localeDirs)) {
-      const mdFiles = await scanMarkdownFiles(dir);
-      const localeDocs: Record<string, string> = {};
-      for (const { filename, filepath } of mdFiles) {
-        const tabName = filename.replace(/\.(md|markdown)$/i, "");
-        try {
-          const content = await readTextFile(filepath);
-          if (content.trim()) {
-            let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
-            if (config.img_to_base64) {
-              html = await embedImagesInHtml(html, dir, {
-                maxWidth: config.img_max_width || undefined,
-                compress: config.img_compress || undefined,
-              });
-            }
-            localeDocs[tabName] = html;
-          }
-        } catch (e) {
-          console.warn(`[WARN] Failed to read ${filepath}: ${e}`);
-        }
+      // -f false：目標已存在則 WARN 並跳過（不中止整批）
+      if (!force && fileExists(targetFile)) {
+        console.warn(`[WARN] Skipping '${baseName}.html' — file already exists. Use '-f true' to overwrite.`);
+        continue;
       }
-      if (Object.keys(localeDocs).length > 0) {
-        multiDocuments[locale] = localeDocs;
-      }
-    }
 
-    if (Object.keys(multiDocuments).length === 0) {
-      console.error("[ERROR] No content generated in i18n mode.");
-      process.exit(1);
-    }
-
-    const locales = Object.keys(multiDocuments);
-    const localeFileMap: Record<string, Awaited<ReturnType<typeof loadLocaleFile>>> = {};
-    for (const locale of locales) {
-      const globalLocale = await loadLocaleFile(config.locales_dir, locale);
-      const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, locale);
-      localeFileMap[locale] = tplLocale?.template
-        ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
-        : globalLocale;
-    }
-    const buildDate = resolveBuildDate(config);
-    const multiI18nStrings = getAllLocalesTemplateStrings(localeFileMap, buildDate);
-
-    const htmlContent = buildHtml({ config, templateData, multiDocuments, multiI18nStrings, libCss, libJs });
-    await writeOutput(outputFile, htmlContent);
-  } else {
-    // ── 單語資料夾模式 ──
-    const folderPath = inputDirs[0];
-    const mdFiles = await scanMarkdownFiles(folderPath);
-    if (mdFiles.length === 0) {
-      console.error(`[ERROR] No .md files found in: ${folderPath}`);
-      process.exit(1);
-    }
-
-    const documents: Record<string, string> = {};
-    for (const { filename, filepath } of mdFiles) {
-      const tabName = filename.replace(/\.(md|markdown)$/i, "");
       try {
         const content = await readTextFile(filepath);
-        if (content.trim()) {
-          let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
-          if (config.img_to_base64) {
-            html = await embedImagesInHtml(html, folderPath, {
-              maxWidth: config.img_max_width || undefined,
-              compress: config.img_compress || undefined,
-            });
-          }
-          documents[tabName] = html;
+        if (!content.trim()) {
+          console.warn(`[WARN] Skipping '${path.basename(filepath)}' — file is empty.`);
+          continue;
         }
+        let html = markdownToHtml(content, config.markdown_extensions, config.code_highlight);
+        if (config.img_to_base64) {
+          html = await embedImagesInHtml(html, baseDir, {
+            maxWidth: config.img_max_width || undefined,
+            compress: config.img_compress || undefined,
+          });
+        }
+        const documents: Record<string, string> = { index: html };
+        // 每個批次檔案有自己的 config.output_file（供 template 使用）
+        const batchConfig = { ...config, output_file: targetFile };
+        const htmlContent = buildHtml({ config: batchConfig, templateData, documents, i18nStrings, libCss, libJs });
+        await writeOutput(targetFile, htmlContent);
+        successCount++;
       } catch (e) {
-        console.warn(`[WARN] Failed to read ${filepath}: ${e}`);
+        console.warn(`[WARN] Failed to process '${path.basename(filepath)}': ${e}`);
       }
     }
 
-    if (Object.keys(documents).length === 0) {
-      console.error("[ERROR] No content generated.");
+    if (successCount === 0) {
+      console.error("[ERROR] No files were successfully converted.");
       process.exit(1);
     }
 
-    const globalLocale = await loadLocaleFile(config.locales_dir, config.locale);
-    const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale);
-    const localeFile = tplLocale?.template
-      ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
-      : globalLocale;
-    const buildDate = resolveBuildDate(config);
-    const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
-
-    const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
-    await writeOutput(outputFile, htmlContent);
+    console.info(`[INFO] Batch complete: ${successCount}/${batchFiles.length} file(s) → ${outputDir}`);
   }
 
   // ⑬ 印出等效指令
@@ -381,9 +514,15 @@ async function main(): Promise<void> {
   if (tpl !== "normal") parts.push(`--template ${tpl}`);
   if (config.i18n_mode) parts.push(`--i18n-mode true`);
   else if (config.locale !== "en") parts.push(`--locale ${config.locale}`);
-  if (args.output) parts.push(`-o "${outputFile}"`);
+  if (args.merge) parts.push(`-m`);
+  if (args.output) {
+    const outDisplay = mergeMode ? outputFile : outputDir;
+    parts.push(`-o "${outDisplay}"`);
+  }
   console.info(`[INFO] ${parts.join(" ")}`);
-  console.info(`[INFO] Output: ${outputFile}`);
+  if (mergeMode || isSingleFile) {
+    console.info(`[INFO] Output: ${outputFile}`);
+  }
 }
 
 function resolveBuildDate(config: Config): string {

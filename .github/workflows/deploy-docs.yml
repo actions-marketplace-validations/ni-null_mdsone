@@ -48,7 +48,7 @@ jobs:
             ./docs \
             -o ./_site/index.html \
             --template normal \
-            --i18n-mode true \
+            --i18n-mode  \
             --default-locale zh-TW \
             --site-title "MDSone Documentation" \
             --theme-mode light

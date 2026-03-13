@@ -37,13 +37,14 @@ export interface Config {
 /** CLI 引數物件（commander 解析後） */
 export interface CliArgs {
   inputs?: string[];
+  merge?: boolean;
   template?: string;
   locale?: string;
   output?: string;
   force?: string;
   siteTitle?: string;
   themeMode?: string;
-  i18nMode?: string;
+  i18nMode?: boolean;
   defaultLocale?: string;
   minifyHtml?: string;
   templatesDir?: string;

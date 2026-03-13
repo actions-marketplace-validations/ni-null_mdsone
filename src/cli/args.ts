@@ -32,26 +32,38 @@ const VERSION = readPkgVersion();
 
 const EXAMPLES = `
 EXAMPLES:
-  # Single file → output to CWD/README.html
+  # [Batch] Single file → auto-named README.html in CWD
   npx mdsone README.md
 
-  # Single file with explicit output path
+  # [Batch] Single file with explicit output path
   npx mdsone README.md -o dist/index.html
 
-  # Multiple files merged in order (-o required)
-  npx mdsone intro.md guide.md reference.md -o manual.html
+  # [Batch] Multiple files → a.html, b.html, c.html in CWD
+  npx mdsone a.md b.md c.md
 
-  # Entire folder (A-Z merge) → output to CWD/docs.html
-  npx mdsone ./docs
+  # [Batch] Multiple files into specified directory
+  npx mdsone a.md b.md -o ./out
 
-  # Folder with explicit output
-  npx mdsone ./docs -o dist/manual.html
+  # [Batch] Entire folder → -o (output dir) is required
+  npx mdsone ./docs -o ./dist
+
+  # [Merge] Multiple files merged → merge.html in CWD
+  npx mdsone intro.md guide.md reference.md -m
+
+  # [Merge] Multiple files merged with explicit output
+  npx mdsone intro.md guide.md reference.md -m -o manual.html
+
+  # [Merge] Folder → auto-named docs.html in CWD
+  npx mdsone ./docs -m
+
+  # [Merge] Folder with explicit output
+  npx mdsone ./docs -m -o dist/manual.html
 
   # With template and locale
   npx mdsone ./markdown --template minimal --locale zh-TW
 
   # Multi-language folder (i18n mode requires single folder)
-  npx mdsone ./docs --i18n-mode true --default-locale zh-TW
+  npx mdsone ./docs --i18n-mode --default-locale zh-TW
 
   # Image optimization
   npx mdsone README.md -o index.html --img-to-base64 true --img-max-width 800 --img-compress 85
@@ -91,6 +103,7 @@ export function parseArgs(argv?: string[]): CliArgs {
     .argument("[inputs...]", "Input: single file, multiple files, or single folder path")
     .addHelpText("after", EXAMPLES)
     // Output
+    .option("-m, --merge", "Merge all inputs into a single HTML output")
     .option("-o, --output <PATH>", "Output HTML file path")
     .option("-f, --force <boolean>", "Overwrite existing output file (default: true)", "true")
     // Paths
@@ -103,7 +116,7 @@ export function parseArgs(argv?: string[]): CliArgs {
     .option("--minify-html <true|false>", "Minify HTML output (default: true)")
     // Internationalization
     .option("--locale <CODE>", "UI locale code (e.g., en, zh-TW; default: en)")
-    .option("--i18n-mode <true|false>", "Enable multi-language mode (default: false)")
+    .option("--i18n-mode", "Enable multi-language mode")
     .option("--default-locale <CODE>", "Default locale in i18n mode")
     // Image Processing
     .option("--img-to-base64 <true|false>", "Embed images as base64 (default: false)")
@@ -118,13 +131,14 @@ export function parseArgs(argv?: string[]): CliArgs {
 
   program.parse(argv ?? process.argv);
   const opts = program.opts<{
+    merge?: boolean;
     output?: string;
     force?: string;
     template?: string;
     locale?: string;
     siteTitle?: string;
     themeMode?: string;
-    i18nMode?: string;
+    i18nMode?: boolean;
     defaultLocale?: string;
     minifyHtml?: string;
     templatesDir?: string;
@@ -143,6 +157,7 @@ export function parseArgs(argv?: string[]): CliArgs {
 
   return {
     inputs,
+    merge: opts.merge,
     output: opts.output,
     force: opts.force,
     template: opts.template,

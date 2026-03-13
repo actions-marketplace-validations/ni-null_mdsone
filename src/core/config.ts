@@ -76,9 +76,7 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   }
   // Internationalization
   if (args.locale) out.locale = args.locale;
-  if (args.i18nMode !== undefined) {
-    out.i18n_mode = ["true", "1", "yes", "on"].includes(args.i18nMode!.toLowerCase());
-  }
+  if (args.i18nMode) out.i18n_mode = true;
   if (args.defaultLocale) out.default_locale = args.defaultLocale;
   // Image Processing
   if (args.imgToBase64 !== undefined) {
