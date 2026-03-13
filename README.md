@@ -4,6 +4,7 @@ mdsone is a Markdown conversion tool that transforms Markdown documents into ful
 
 ## Features
 
+- 🚀 **Zero-dependency delivery**: No server or internet required — a single HTML file that opens directly in any browser on any device
 - 📝 **Markdown Support**: Full support for CommonMark standard syntax
 - 🎨 **Built-in Templates**: Multiple responsive HTML templates included
 - 🌍 **Internationalization**: Multi-language document support (i18n)
@@ -13,25 +14,27 @@ mdsone is a Markdown conversion tool that transforms Markdown documents into ful
 - 🔌 **Library & CLI**: Use as a command-line tool or integrate as a JavaScript library
 
 ## Quick Start
-```bash
-npm install -g mdsone
-```
 
 Single Markdown file:
 ```bash
-mdsone --source README.md --output index.html
+npx mdsone README.md
+```
+
+Specify output filename:
+```bash
+npx mdsone README.md output.html
 ```
 
 Full directory:
 ```bash
-mdsone --source ./docs --output index.html
+npx mdsone ./docs
 ```
 
 With image embedding:
 ```bash
-mdsone --source README.md --output index.html --img-to-base64 true --img-max-width 400
+npx mdsone README.md --img-to-base64 --img-max-width 400
 ```
 
 ## License
 
-MIT
+[MIT](./LICENSE)
