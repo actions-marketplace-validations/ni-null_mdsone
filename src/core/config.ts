@@ -10,8 +10,6 @@ export const DEFAULT_CONFIG: Config = {
   // paths
   markdown_source_dir: "./markdown",
   output_file: "main.html",
-  output_dir: "",
-  output_filename: "",
   templates_dir: "templates",
   locales_dir: "locales",
   // build
@@ -67,10 +65,6 @@ function filterDefined<T extends object>(obj: Partial<T>): Partial<T> {
 export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   const out: Partial<Config> = {};
   // Paths
-  if (args.source) out.markdown_source_dir = args.source;
-  if (args.output) out.output_file = args.output;
-  if (args.outputDir) out.output_dir = args.outputDir;
-  if (args.outputFilename) out.output_filename = args.outputFilename;
   if (args.templatesDir) out.templates_dir = args.templatesDir;
   if (args.localesDir) out.locales_dir = args.localesDir;
   // Templates & Styling
@@ -110,31 +104,4 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   return out;
 }
 
-/**
- * 解析 output_file：若 output_dir + output_filename 已設定且 --output 未明確提供，
- * 組合出完整路徑（純字串操作，不呼叫 path 模組）。
- * 平台分隔符由呼叫方提供（Node adapter 傳入 path.join）。
- */
-export function resolveOutputFile(
-  config: Config,
-  outputExplicit: boolean,
-  joinFn: (...parts: string[]) => string,
-): string {
-  if (outputExplicit) return config.output_file;
-  if (config.output_dir || config.output_filename) {
-    const dir = config.output_dir || getDirname(config.output_file);
-    const name = config.output_filename || getBasename(config.output_file);
-    return joinFn(dir, name);
-  }
-  return config.output_file;
-}
 
-function getDirname(p: string): string {
-  const idx = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
-  return idx >= 0 ? p.slice(0, idx) || "." : ".";
-}
-
-function getBasename(p: string): string {
-  const idx = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
-  return idx >= 0 ? p.slice(idx + 1) : p;
-}

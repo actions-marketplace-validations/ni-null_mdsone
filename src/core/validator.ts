@@ -13,16 +13,8 @@ import type { Config, ValidationResult } from "./types.js";
 export function validateConfig(config: Config): ValidationResult {
   const errors: string[] = [];
 
-  if (!config.markdown_source_dir || config.markdown_source_dir.trim() === "") {
-    errors.push("Markdown source directory is not configured.");
-  }
-
   if (!config.default_template || config.default_template.trim() === "") {
     errors.push("Default template is not configured.");
-  }
-
-  if (!config.output_file || config.output_file.trim() === "") {
-    errors.push("Output file path is not configured.");
   }
 
   return {

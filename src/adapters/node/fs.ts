@@ -51,9 +51,10 @@ export function fileExists(filePath: string): boolean {
   }
 }
 
-/** 確認是否是 Markdown 檔案 */
+/** 確認是否是 Markdown 檔案（支援 .md 與 .markdown） */
 export function isMdFile(filePath: string): boolean {
-  return filePath.toLowerCase().endsWith('.md');
+  const lower = filePath.toLowerCase();
+  return lower.endsWith('.md') || lower.endsWith('.markdown');
 }
 
 /** 副檔名 → MIME type 對應表 */
@@ -192,7 +193,7 @@ export async function scanMarkdownFiles(
     return [];
   }
   return entries
-    .filter((e) => e.toLowerCase().endsWith(".md"))
+    .filter((e) => isMdFile(e))
     .sort()
     .map((e) => ({ filename: e, filepath: path.join(dir, e) }));
 }

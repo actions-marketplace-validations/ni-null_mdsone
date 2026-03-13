@@ -1,30 +1,72 @@
-# CLI Reference
+﻿# CLI Reference
 
-## Arguments
+## Syntax
 
-| Argument | Description | Example |
-|----------|-------------|---------|
-| `--source PATH` | Markdown source (file or directory) | `--source ./README.md` or `--source ./docs` |
-| `--output PATH` | Output HTML path | `--output ./dist/index.html` |
-| `--output-dir DIR` | Output folder (used together with `--output-filename`) | `--output-dir ./dist` |
-| `--output-filename NAME` | Output filename (used together with `--output-dir`) | `--output-filename guide.html` |
+```
+mdsone <inputs...> [-o output_path] [-f <boolean>]
+```
+
+## Arguments & Options
+
+| Argument / Option | Description | Example |
+|-------------------|-------------|---------|
+| `<inputs...>` | Input: single file, multiple files, or single folder | `README.md` \| `f1.md f2.md` \| `./docs` |
+| `-o, --output PATH` | Output HTML file path | `-o dist/index.html` |
+| `-f, --force <boolean>` | Overwrite existing output file (default: `true`) | `-f false` |
 | `--template NAME` | Template name | `--template minimal` |
 | `--locale CODE` | Locale code (single-language mode) | `--locale en` |
-| `--i18n-mode true\|false` | Enable/disable multi-language mode | `--i18n-mode false` |
+| `--i18n-mode true\|false` | Enable/disable multi-language mode | `--i18n-mode true` |
 | `--img-to-base64 true\|false` | Embed images as base64 (local + remote) | `--img-to-base64 true` |
 | `--img-max-width PIXELS` | Limit image max width (requires sharp) | `--img-max-width 400` |
-| `--img-compress QUALITY` | Image compression quality 1–100 (requires sharp) | `--img-compress 80` |
+| `--img-compress QUALITY` | Image compression quality 1-100 (requires sharp) | `--img-compress 80` |
 
-> `--output` takes priority over the `--output-dir` + `--output-filename` combination.
+## Input Modes
+
+### A. Single File
+
+```bash
+mdsone README.md
+# Output: CWD/README.html (default)
+
+mdsone README.md -o dist/index.html
+```
+
+### B. Multiple Files (merged in input order)
+
+> ``-o`` is **required** when providing multiple files.
+
+```bash
+mdsone intro.md guide.md reference.md -o manual.html
+```
+
+### C. Single Folder (A-Z merge)
+
+```bash
+mdsone ./docs
+# Output: CWD/docs.html (default)
+
+mdsone ./docs -o dist/manual.html
+```
+
+> Mixed input (files + directories) is **not supported**.
+
+## Overwrite Protection (`-f`)
+
+| Flag | Behaviour |
+|------|-----------|
+| ``-f true`` (default) | Always overwrite the output file |
+| ``-f false`` | Stop with an error if output already exists |
+
+```bash
+npx mdsone README.md -o output.html -f false
+```
 
 ## Configuration Methods (Priority Order)
-
-Configuration can be specified in three ways, in the following order of priority:
 
 ### 1. CLI Arguments (Highest Priority)
 
 ```bash
-npx mdsone --source ./docs --output ./dist/index.html --i18n-mode false
+npx mdsone ./docs -o ./dist/index.html --i18n-mode false
 ```
 
 ### 2. Environment Variables
@@ -36,7 +78,7 @@ export I18N_MODE="false"
 npx mdsone
 ```
 
-Especially useful in CI environments (e.g. GitHub Actions):
+CI environment (e.g. GitHub Actions):
 
 ```yaml
 env:
@@ -53,7 +95,7 @@ steps:
 
 ```toml
 [paths]
-markdown_source_dir = "./docs"
+source = "./docs"
 output_file = "./dist/index.html"
 
 [build]
@@ -69,7 +111,6 @@ default_locale = "en"
 
 ```bash
 npx mdsone
-# Also works for local development
 npm start
 ```
 
@@ -79,64 +120,45 @@ If none of the above are set, built-in default values are used.
 
 ## Argument-to-Configuration Mapping
 
-| Feature | CLI Argument | Environment Variable | config.toml |
-|---------|-------------|----------------------|-------------|
-| Markdown source | `--source` | `MARKDOWN_SOURCE_DIR` | `[paths] markdown_source_dir` |
-| Output path | `--output` | `OUTPUT_FILE` | `[paths] output_file` |
-| Output folder | `--output-dir` | `OUTPUT_DIR` | `[paths] output_dir` |
-| Output filename | `--output-filename` | `OUTPUT_FILENAME` | `[paths] output_filename` |
+| Feature | CLI | Environment Variable | config.toml |
+|---------|-----|----------------------|-------------|
+| Source input | `<inputs...>` | `MARKDOWN_SOURCE_DIR` | `[paths] source` |
+| Output path | `-o, --output` | `OUTPUT_FILE` | `[paths] output_file` |
 | Template | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template` |
 | Locale | `--locale` | `LOCALE` | `[i18n] locale` |
 | Multi-language mode | `--i18n-mode` | `I18N_MODE` | `[i18n] mode` |
-| Default locale | — | `DEFAULT_LOCALE` | `[i18n] default_locale` |
-| Page title | — | `SITE_TITLE` | `[site] title` |
-| Theme | — | `THEME_MODE` | `[site] theme_mode` |
-| Minify HTML | — | `MINIFY_HTML` | `[build] minify_html` |
-| Build date | — | `BUILD_DATE` | `[build] build_date` |
+| Default locale | `--default-locale` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
+| Page title | `--site-title` | `SITE_TITLE` | `[site] title` |
+| Theme | `--theme-mode` | `THEME_MODE` | `[site] theme_mode` |
+| Minify HTML | `--minify-html` | `MINIFY_HTML` | `[build] minify_html` |
+| Build date | - | `BUILD_DATE` | `[build] build_date` |
 | Image base64 embed | `--img-to-base64` | `IMG_TO_BASE64` | `[build] img_to_base64` |
 | Image max width | `--img-max-width` | `IMG_MAX_WIDTH` | `[build] img_max_width` |
 | Image compression quality | `--img-compress` | `IMG_COMPRESS` | `[build] img_compress` |
 
 ## Usage Examples
 
-### Local Development (using config.toml)
-
 ```bash
-# Reads config.toml settings by default
-npx mdsone
+# Single file
+npx mdsone README.md
+npx mdsone README.md -o dist/index.html
 
-# CLI arguments override config.toml
-npx mdsone --source ./custom-docs --output ./dist/index.html
-```
+# Multiple files merged in order (-o required)
+npx mdsone intro.md guide.md -o manual.html
 
-### CI Environment (using environment variables)
+# Folder (A-Z merge)
+npx mdsone ./docs
+npx mdsone ./docs -o dist/manual.html --template normal
 
-```yaml
-env:
-  MARKDOWN_SOURCE_DIR: "./docs"
-  OUTPUT_FILE: "./docs/index.html"
-  I18N_MODE: "true"
-  DEFAULT_LOCALE: "en"
-  IMG_TO_BASE64: "true"
-  IMG_MAX_WIDTH: "600"
-  IMG_COMPRESS: "90"
-steps:
-  - run: npm ci
-  - run: npx mdsone
-```
-
-### Quick Testing
-
-```bash
-# Disable multi-language mode, specify source and output
-npx mdsone --source ./test --output ./test/output.html --i18n-mode false
-
-# Enable multi-language with normal template
-npx mdsone --source ./docs --output ./dist/index.html --template normal --i18n-mode true
+# Multi-language mode (folder only)
+npx mdsone ./docs --i18n-mode true --default-locale zh-TW
 
 # Embed images as base64 (no resize)
-npx mdsone --source ./docs --output ./dist/index.html --img-to-base64 true
+npx mdsone ./docs -o dist/index.html --img-to-base64 true
 
 # Embed images with resize + compression (requires sharp)
-npx mdsone --source ./docs --output ./dist/index.html --img-to-base64 true --img-max-width 600 --img-compress 90
+npx mdsone ./docs -o dist/index.html --img-to-base64 true --img-max-width 600 --img-compress 90
+
+# Overwrite protection
+npx mdsone README.md -o output.html -f false
 ```

@@ -8,8 +8,6 @@ export interface Config {
   // paths
   markdown_source_dir: string;
   output_file: string;
-  output_dir: string;
-  output_filename: string;
   templates_dir: string;
   locales_dir: string;
   // build
@@ -38,12 +36,11 @@ export interface Config {
 
 /** CLI 引數物件（commander 解析後） */
 export interface CliArgs {
+  inputs?: string[];
   template?: string;
   locale?: string;
   output?: string;
-  source?: string;
-  outputDir?: string;
-  outputFilename?: string;
+  force?: string;
   siteTitle?: string;
   themeMode?: string;
   i18nMode?: string;

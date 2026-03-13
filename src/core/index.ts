@@ -20,7 +20,7 @@ export type {
 } from "./types.js";
 
 // Config
-export { DEFAULT_CONFIG, mergeConfigs, cliArgsToConfig, resolveOutputFile } from "./config.js";
+export { DEFAULT_CONFIG, mergeConfigs, cliArgsToConfig } from "./config.js";
 
 // Markdown
 export {

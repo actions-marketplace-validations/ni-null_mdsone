@@ -1,6 +1,5 @@
 // ============================================================
 // src/cli/args.ts — CLI 引數解析（commander）
-// 對應 Python main.py 的 argparse 段落
 // ============================================================
 
 import { readFileSync } from "node:fs";
@@ -33,35 +32,39 @@ const VERSION = readPkgVersion();
 
 const EXAMPLES = `
 EXAMPLES:
-  # Basic: Convert single file
-  npx mdsone --source README.md --output index.html
+  # Single file → output to CWD/README.html
+  npx mdsone README.md
 
-  # Convert entire directory
-  npx mdsone --source ./docs --output build/docs.html
+  # Single file with explicit output path
+  npx mdsone README.md -o dist/index.html
+
+  # Multiple files merged in order (-o required)
+  npx mdsone intro.md guide.md reference.md -o manual.html
+
+  # Entire folder (A-Z merge) → output to CWD/docs.html
+  npx mdsone ./docs
+
+  # Folder with explicit output
+  npx mdsone ./docs -o dist/manual.html
 
   # With template and locale
-  npx mdsone --template minimal --locale zh-TW --source ./markdown
+  npx mdsone ./markdown --template minimal --locale zh-TW
 
-  # Customize site title and theme
-  npx mdsone --source ./docs --output docs.html --site-title "My Docs" --theme-mode dark
-
-  # Enable multi-language mode
-  npx mdsone --source ./docs --i18n-mode true --default-locale zh-TW
+  # Multi-language folder (i18n mode requires single folder)
+  npx mdsone ./docs --i18n-mode true --default-locale zh-TW
 
   # Image optimization
-  npx mdsone --source README.md --output index.html --img-to-base64 true --img-max-width 800 --img-compress 85
+  npx mdsone README.md -o index.html --img-to-base64 true --img-max-width 800 --img-compress 85
 
-  # Output control
-  npx mdsone --source ./docs --output-dir ./dist --output-filename guide.html
+  # Overwrite protection: stop if output already exists
+  npx mdsone README.md -o output.html -f false
 
 CONFIGURATION PRIORITY:
   CLI arguments > Environment variables > config.toml > Default values
 
 ENVIRONMENT VARIABLES:
-  MARKDOWN_SOURCE_DIR    (default: ./markdown)              → --source
-  OUTPUT_FILE            (default: system_guide.html)       → --output
-  OUTPUT_DIR             (default: empty)                   → --output-dir
-  OUTPUT_FILENAME        (default: empty)                   → --output-filename
+  MARKDOWN_SOURCE_DIR    (fallback source when no inputs given)
+  OUTPUT_FILE            (default: main.html)               → -o
   DEFAULT_TEMPLATE       (default: normal)                  → --template
   SITE_TITLE             (default: Documentation)           → --site-title
   THEME_MODE             (default: light)                   → --theme-mode
@@ -77,7 +80,6 @@ ENVIRONMENT VARIABLES:
 
 /**
  * 解析 CLI 引數並回傳 CliArgs（純物件，不修改 process.env）。
- * 對應 Python argparse + CONFIG 覆寫段落。
  */
 export function parseArgs(argv?: string[]): CliArgs {
   const program = new Command();
@@ -86,12 +88,12 @@ export function parseArgs(argv?: string[]): CliArgs {
     .name("mdsone")
     .description("mdsone — Convert Markdown to self-contained HTML")
     .version(VERSION, "-v, --version", "Display version")
+    .argument("[inputs...]", "Input: single file, multiple files, or single folder path")
     .addHelpText("after", EXAMPLES)
+    // Output
+    .option("-o, --output <PATH>", "Output HTML file path")
+    .option("-f, --force <boolean>", "Overwrite existing output file (default: true)", "true")
     // Paths
-    .option("--source <PATH>", "Markdown source (file or directory)")
-    .option("--output <PATH>", "Output HTML file path")
-    .option("--output-dir <DIR>", "Output directory")
-    .option("--output-filename <NAME>", "Output filename (e.g., docs.html)")
     .option("--templates-dir <DIR>", "Templates directory (default: templates)")
     .option("--locales-dir <DIR>", "Locales directory (default: locales)")
     // Templates & Styling
@@ -116,12 +118,10 @@ export function parseArgs(argv?: string[]): CliArgs {
 
   program.parse(argv ?? process.argv);
   const opts = program.opts<{
+    output?: string;
+    force?: string;
     template?: string;
     locale?: string;
-    output?: string;
-    source?: string;
-    outputDir?: string;
-    outputFilename?: string;
     siteTitle?: string;
     themeMode?: string;
     i18nMode?: string;
@@ -139,13 +139,14 @@ export function parseArgs(argv?: string[]): CliArgs {
     version?: boolean;
   }>();
 
+  const inputs: string[] = (program.processedArgs[0] as string[] | undefined) ?? [];
+
   return {
+    inputs,
+    output: opts.output,
+    force: opts.force,
     template: opts.template,
     locale: opts.locale,
-    output: opts.output,
-    source: opts.source,
-    outputDir: opts.outputDir,
-    outputFilename: opts.outputFilename,
     siteTitle: opts.siteTitle,
     themeMode: opts.themeMode,
     i18nMode: opts.i18nMode,

@@ -39,8 +39,6 @@ export function envToConfig(): Partial<Config> {
 
   if (e["MARKDOWN_SOURCE_DIR"]) out.markdown_source_dir = e["MARKDOWN_SOURCE_DIR"];
   if (e["OUTPUT_FILE"]) out.output_file = e["OUTPUT_FILE"];
-  if (e["OUTPUT_DIR"]) out.output_dir = e["OUTPUT_DIR"];
-  if (e["OUTPUT_FILENAME"]) out.output_filename = e["OUTPUT_FILENAME"];
   if (e["TEMPLATES_DIR"]) out.templates_dir = e["TEMPLATES_DIR"];
   if (e["LOCALES_DIR"]) out.locales_dir = e["LOCALES_DIR"];
   if (e["DEFAULT_TEMPLATE"]) out.default_template = e["DEFAULT_TEMPLATE"];
@@ -79,10 +77,10 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   const b = (v: unknown): boolean | undefined => (typeof v === "boolean" ? v : undefined);
   const l = (v: unknown): string[] | undefined => (Array.isArray(v) ? (v as string[]) : undefined);
 
-  if (s(paths["markdown_source_dir"])) out.markdown_source_dir = s(paths["markdown_source_dir"]);
+  // 支援 paths.source （新格式）和 paths.markdown_source_dir （舊格式）兩者均可，新格式優先
+  if (s(paths["source"])) out.markdown_source_dir = s(paths["source"]);
+  else if (s(paths["markdown_source_dir"])) out.markdown_source_dir = s(paths["markdown_source_dir"]);
   if (s(paths["output_file"])) out.output_file = s(paths["output_file"]);
-  if (s(paths["output_dir"])) out.output_dir = s(paths["output_dir"]);
-  if (s(paths["output_filename"])) out.output_filename = s(paths["output_filename"]);
   if (s(paths["templates_dir"])) out.templates_dir = s(paths["templates_dir"]);
   if (s(paths["locales_dir"])) out.locales_dir = s(paths["locales_dir"]);
 
