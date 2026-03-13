@@ -45,8 +45,8 @@ jobs:
       - name: Build multi-language documentation
         run: |
           npx mdsone \
-            --source ./docs \
-            --output ./_site/index.html \
+            ./docs \
+            -o ./_site/index.html \
             --template normal \
             --i18n-mode true \
             --default-locale zh-TW \
