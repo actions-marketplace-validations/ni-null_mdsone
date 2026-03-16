@@ -97,6 +97,10 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   const copy = (plugins["copy"] ?? {}) as Record<string, unknown>;
   const highlight = (plugins["highlight"] ?? {}) as Record<string, unknown>;
   const image = (plugins["image"] ?? {}) as Record<string, unknown>;
+  const order = (plugins["order"] ?? undefined) as unknown;
+  if (Array.isArray(order)) {
+    out.plugins = { ...(out.plugins ?? {}), order: order.filter((x) => typeof x === "string") as string[] };
+  }
   if (b(copy["enable"]) !== undefined) out.code_copy = b(copy["enable"])!;
   if (b(highlight["enable"]) !== undefined) out.code_highlight = b(highlight["enable"])!;
   if (s(highlight["theme"])) out.code_highlight_theme = s(highlight["theme"]);

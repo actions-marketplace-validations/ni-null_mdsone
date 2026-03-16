@@ -29,7 +29,7 @@ import {
   dirExists,
   isMdFile,
 } from "../adapters/node/fs.js";
-import { PluginManager } from "../plugin-manager.js";
+import { PluginManager } from "../plugins/manager.js";
 import type { Config } from "../core/types.js";
 
 /**

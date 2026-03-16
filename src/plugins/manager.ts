@@ -1,22 +1,25 @@
 // ============================================================
-// src/plugin-manager.ts — Plugin 管理器
+// src/plugins/manager.ts — Plugin 管理器
 // 負責按順序執行各 plugin，收集 HTML 資源統一注入
 // ============================================================
 
-import type { Config, Plugin, PluginContext } from "./core/types.js";
-import { highlightPlugin } from "../plugins/highlight/index.js";
-import { copyPlugin } from "../plugins/copy/index.js";
-import { imageEmbedPlugin } from "../plugins/image/index.js";
+import type { Config, Plugin, PluginContext } from "../core/types.js";
+import { builtInPlugins } from "./index.js";
 
 /**
- * 內建 plugin 清單（順序即執行順序）。
- * image 必須在 highlight 之前，因為會修改 img 標籤結構。
+ * 排序 plugin（若 config.plugins.order 有指定）。
+ * 未指定或不存在的 plugin 維持原始順序。
  */
-const builtInPlugins: Plugin[] = [
-    imageEmbedPlugin,
-    highlightPlugin,
-    copyPlugin,
-];
+function sortPlugins(plugins: Plugin[], order: string[] | undefined): Plugin[] {
+    if (!order || order.length === 0) return plugins;
+    const priority = new Map(order.map((name, i) => [name, i]));
+    return [...plugins].sort((a, b) => {
+        const pa = priority.has(a.name) ? priority.get(a.name)! : Number.POSITIVE_INFINITY;
+        const pb = priority.has(b.name) ? priority.get(b.name)! : Number.POSITIVE_INFINITY;
+        if (pa === pb) return 0;
+        return pa - pb;
+    });
+}
 
 export class PluginManager {
     private readonly plugins: readonly Plugin[];
@@ -35,7 +38,11 @@ export class PluginManager {
         context: PluginContext,
     ): Promise<string> {
         let result = html;
-        for (const plugin of this.plugins) {
+        const ordered = sortPlugins(
+            [...this.plugins],
+            (config as unknown as { plugins?: { order?: string[] } }).plugins?.order,
+        );
+        for (const plugin of ordered) {
             if (plugin.isEnabled(config) && plugin.processHtml) {
                 try {
                     result = await plugin.processHtml(result, config, context);
@@ -57,7 +64,11 @@ export class PluginManager {
         const cssParts: string[] = [];
         const jsParts: string[] = [];
 
-        for (const plugin of this.plugins) {
+        const ordered = sortPlugins(
+            [...this.plugins],
+            (config as unknown as { plugins?: { order?: string[] } }).plugins?.order,
+        );
+        for (const plugin of ordered) {
             if (plugin.isEnabled(config) && plugin.getAssets) {
                 try {
                     const assets = await plugin.getAssets(config);

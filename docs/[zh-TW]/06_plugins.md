@@ -36,7 +36,8 @@ npx mdsone README.md -o index.html --img-base64-embed true --img-max-width 400 -
 
 ```toml
 [plugins]
+order = ["image", "highlight", "copy"]
 copy = { enable = true }
-highlight = { enable = true }
+highlight = { enable = true, theme = "atom-one-dark", theme_light = "atom-one-light" }
 image = { base64_embed = false, max_width = 0, compress = 0 }
 ```
