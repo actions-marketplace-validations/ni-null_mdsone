@@ -29,6 +29,7 @@ export interface Config {
   // code features
   code_highlight: boolean;
   code_copy: boolean;
+  code_copy_mode: string;
   code_line_copy: boolean;
   code_highlight_theme: string;
   code_highlight_theme_light: string;
