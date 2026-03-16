@@ -59,13 +59,13 @@ npx mdsone ./docs -m -o manual.html
 
 ```bash
 # Embed images as base64
-npx mdsone README.md -o index.html --img-base64-embed true
+npx mdsone README.md -o index.html --img-base64-embed
 
 # Embed images with max width
-npx mdsone README.md -o index.html --img-base64-embed true --img-max-width 400
+npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400
 
 # Embed images with compression (requires sharp)
-npx mdsone README.md -o index.html --img-base64-embed true --img-max-width 400 --img-compress 80
+npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400 --img-compress 80
 ```
 
 ### Template and Locale

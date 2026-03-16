@@ -29,6 +29,7 @@ export interface Config {
   // code features
   code_highlight: boolean;
   code_copy: boolean;
+  code_line_copy: boolean;
   code_highlight_theme: string;
   code_highlight_theme_light: string;
   // plugin settings (optional)
@@ -53,13 +54,7 @@ export interface CliArgs {
   templatesDir?: string;
   configPath?: string;
   noConfig?: boolean;
-  imgToBase64?: string;
-  imgMaxWidth?: string;
-  imgCompress?: string;
-  codeHighlight?: string;
-  codeCopy?: string;
-  codeHighlightTheme?: string;
-  codeHighlightThemeLight?: string;
+  pluginOverrides?: Partial<Config>;
   version?: boolean;
 }
 
@@ -185,10 +180,25 @@ export interface PluginContext {
   sourceDir: string;
 }
 
+/** CLI program 介面（避免 core 直接依賴 commander） */
+export interface CliProgram {
+  option: (...args: unknown[]) => unknown;
+}
+
 /** Plugin 介面：每個 plugin 必須實作 name 與 isEnabled */
 export interface Plugin {
   /** plugin 名稱（唯一識別，用於日誌） */
   readonly name: string;
+
+  /**
+   * 註冊 CLI 參數（可選）
+   */
+  registerCli?: (program: CliProgram) => void;
+
+  /**
+   * 將 CLI 參數轉為 config 覆蓋（可選）
+   */
+  cliToConfig?: (opts: Record<string, unknown>, out: Partial<Config>) => void;
 
   /**
    * 判斷此 plugin 在給定 config 下是否啟用。

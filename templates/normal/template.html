@@ -150,7 +150,6 @@
             themeIcon.textContent = "☾"
             themeLabel.textContent = activeI18n.theme_dark_label || "Dark"
           }
-          if (window.__mdsone_hljs_theme) window.__mdsone_hljs_theme(isDark)
         }
         updateThemeUI()
 
@@ -158,12 +157,6 @@
           isDark = !isDark
           updateThemeUI()
         })
-
-        // ── Code block helpers — delegated to lib/ ──
-        function initCodeBlocks(container) {
-          if (window.__mdsone_highlight) window.__mdsone_highlight(container)
-          if (window.__mdsone_copy) window.__mdsone_copy(container)
-        }
 
         // ── Content render (called on init and on locale switch) ──
         function renderDocs(docs, i18n) {
@@ -196,7 +189,6 @@
             content.className = "tab-content" + (idx === 0 ? " active" : "")
             content.setAttribute("data-tab", doc.id)
             content.innerHTML = doc.html
-            initCodeBlocks(content)
             contentArea.appendChild(content)
           })
 

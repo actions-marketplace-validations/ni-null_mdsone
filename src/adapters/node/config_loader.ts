@@ -23,7 +23,10 @@ async function parseTOML(raw: string): Promise<Record<string, unknown>> {
 
 function parseBool(val: string | undefined, fallback: boolean): boolean {
   if (val === undefined || val === null) return fallback;
-  return ["true", "1", "yes", "on"].includes(val.toLowerCase());
+  const v = val.toLowerCase();
+  if (v === "true") return true;
+  if (v === "false") return false;
+  return fallback;
 }
 
 function parseList(val: string | undefined, fallback: string[]): string[] {
@@ -51,8 +54,9 @@ export function envToConfig(): Partial<Config> {
   if (e["IMG_TO_BASE64"] !== undefined) out.img_to_base64 = parseBool(e["IMG_TO_BASE64"], false);
   if (e["IMG_MAX_WIDTH"] !== undefined) { const w = parseInt(e["IMG_MAX_WIDTH"]!, 10); if (!isNaN(w) && w > 0) out.img_max_width = w; }
   if (e["IMG_COMPRESS"] !== undefined) { const q = parseInt(e["IMG_COMPRESS"]!, 10); if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q)); }
-  if (e["CODE_HIGHLIGHT"] !== undefined) out.code_highlight = !["disable", "false", "0", "off"].includes(e["CODE_HIGHLIGHT"]!.toLowerCase());
-  if (e["CODE_COPY"] !== undefined) out.code_copy = !["disable", "false", "0", "off"].includes(e["CODE_COPY"]!.toLowerCase());
+  if (e["CODE_HIGHLIGHT"] !== undefined) out.code_highlight = parseBool(e["CODE_HIGHLIGHT"], true);
+  if (e["CODE_COPY"] !== undefined) out.code_copy = parseBool(e["CODE_COPY"], true);
+  if (e["CODE_LINE_COPY"] !== undefined) out.code_line_copy = parseBool(e["CODE_LINE_COPY"], false);
   if (e["CODE_HIGHLIGHT_THEME"]) out.code_highlight_theme = e["CODE_HIGHLIGHT_THEME"];
   if (e["CODE_HIGHLIGHT_THEME_LIGHT"]) out.code_highlight_theme_light = e["CODE_HIGHLIGHT_THEME_LIGHT"];
   if (e["MARKDOWN_EXTENSIONS"]) {
@@ -102,6 +106,14 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
     out.plugins = { ...(out.plugins ?? {}), order: order.filter((x) => typeof x === "string") as string[] };
   }
   if (b(copy["enable"]) !== undefined) out.code_copy = b(copy["enable"])!;
+  const copyMode = s(copy["mode"]);
+  if (copyMode && ["none", "line", "cmd"].includes(copyMode)) {
+    out.code_copy_mode = copyMode;
+  }
+  if (b(copy["line_copy"]) !== undefined) out.code_line_copy = b(copy["line_copy"])!;
+  if (out.code_copy_mode === undefined && out.code_line_copy === true) {
+    out.code_copy_mode = "line";
+  }
   if (b(highlight["enable"]) !== undefined) out.code_highlight = b(highlight["enable"])!;
   if (s(highlight["theme"])) out.code_highlight_theme = s(highlight["theme"]);
   if (s(highlight["theme_light"])) out.code_highlight_theme_light = s(highlight["theme_light"]);

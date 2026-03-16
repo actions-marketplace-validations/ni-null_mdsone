@@ -159,4 +159,4 @@ lib/
     └── copy.js                # Code copy button functionality
 ```
 
-Based on the `--code-highlight` and `--code-copy` flags, the corresponding files are inline-injected into `{LIB_CSS}` and `{LIB_JS}`. Users can dynamically enable or disable these features via arguments.
+Based on the `--code-highlight` and `--code-copy` flags, the corresponding files are inline-injected into `{LIB_CSS}` and `{LIB_JS}`. Users can set these features to `true` or `false` via arguments.

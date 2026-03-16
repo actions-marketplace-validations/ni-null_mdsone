@@ -6,7 +6,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command } from "commander";
-import type { CliArgs } from "../core/types.js";
+import type { CliArgs, Config, CliProgram } from "../core/types.js";
+import { builtInPlugins } from "../plugins/index.js";
 
 function readPkgVersion(): string {
   try {
@@ -66,7 +67,7 @@ EXAMPLES:
   npx mdsone ./docs --i18n-mode --i18n-default zh-TW
 
   # Image optimization
-  npx mdsone README.md -o index.html --img-base64-embed true --img-max-width 800 --img-compress 85
+  npx mdsone README.md -o index.html --img-base64-embed --img-max-width 800 --img-compress 85
 
   # Use a specific config.toml
   npx mdsone --config ./config.toml
@@ -98,6 +99,7 @@ ENVIRONMENT VARIABLES:
   IMG_COMPRESS           (default: 0)                       → --img-compress
   CODE_HIGHLIGHT         (default: true)                    → --code-highlight
   CODE_COPY              (default: true)                    → --code-copy
+  CODE_LINE_COPY         (default: false)                   → --line-copy
   CODE_HIGHLIGHT_THEME   (default: atom-one-dark)           → --code-highlight-theme
   CODE_HIGHLIGHT_THEME_LIGHT (default: atom-one-light)      → --code-highlight-theme-light
 `;
@@ -132,19 +134,16 @@ export function parseArgs(argv?: string[]): CliArgs {
     // Config
     .option("--config <PATH>", "Specify config.toml path")
     .option("--no-config", "Ignore config.toml")
-    // Image Processing
-    .option("--img-base64-embed <true|false>", "Embed images as base64 (default: false)")
-    .option("--img-max-width <pixels>", "Max image width in pixels (requires 'sharp' package)")
-    .option("--img-compress <1-100>", "Image compression quality 1-100 (requires 'sharp' package)")
-    // Code features
-    .option("--code-highlight <enable|disable>", "Syntax highlighting via highlight.js (default: enable)")
-    .option("--code-copy <enable|disable>", "Copy button on code blocks (default: enable)")
-    .option("--code-highlight-theme <NAME>", "highlight.js dark theme name (default: atom-one-dark)")
-    .option("--code-highlight-theme-light <NAME>", "highlight.js light theme name (default: atom-one-light)")
     .allowUnknownOption(false);
 
+  // Plugin-owned CLI options
+  for (const plugin of builtInPlugins) {
+    plugin.registerCli?.(program as unknown as CliProgram);
+  }
+
   program.parse(argv ?? process.argv);
-  const opts = program.opts<{
+  const opts = program.opts<Record<string, unknown>>();
+  const typed = opts as {
     merge?: boolean;
     output?: string;
     force?: string;
@@ -159,41 +158,32 @@ export function parseArgs(argv?: string[]): CliArgs {
     config?: string;
     configPath?: string;
     noConfig?: boolean;
-    imgToBase64?: string;
-    imgMaxWidth?: string;
-    imgCompress?: string;
-    codeHighlight?: string;
-    codeCopy?: string;
-    codeHighlightTheme?: string;
-    codeHighlightThemeLight?: string;
     version?: boolean;
-  }>();
+  };
 
   const inputs: string[] = (program.processedArgs[0] as string[] | undefined) ?? [];
+  const pluginOverrides: Partial<Config> = {};
+  for (const plugin of builtInPlugins) {
+    plugin.cliToConfig?.(opts, pluginOverrides);
+  }
 
   return {
     inputs,
-    merge: opts.merge,
-    output: opts.output,
-    force: opts.force,
-    template: opts.template,
-    locale: opts.locale,
-    siteTitle: opts.siteTitle,
-    themeMode: opts.themeMode,
-    i18nMode: opts.i18nMode,
-    defaultLocale: opts.defaultLocale,
-    minifyHtml: opts.minifyHtml,
-    templatesDir: opts.templatesDir,
-    configPath: opts.config,
-    noConfig: opts.noConfig,
-    imgToBase64: opts.imgToBase64,
-    imgMaxWidth: opts.imgMaxWidth,
-    imgCompress: opts.imgCompress,
-    codeHighlight: opts.codeHighlight,
-    codeCopy: opts.codeCopy,
-    codeHighlightTheme: opts.codeHighlightTheme,
-    codeHighlightThemeLight: opts.codeHighlightThemeLight,
-    version: opts.version,
+    merge: typed.merge,
+    output: typed.output,
+    force: typed.force,
+    template: typed.template,
+    locale: typed.locale,
+    siteTitle: typed.siteTitle,
+    themeMode: typed.themeMode,
+    i18nMode: typed.i18nMode,
+    defaultLocale: typed.defaultLocale,
+    minifyHtml: typed.minifyHtml,
+    templatesDir: typed.templatesDir,
+    configPath: typed.config,
+    noConfig: typed.noConfig,
+    pluginOverrides,
+    version: typed.version,
   };
 }
 

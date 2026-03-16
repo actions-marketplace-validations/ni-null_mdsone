@@ -63,6 +63,33 @@ async function embedImagesInHtml(
 export const imageEmbedPlugin: Plugin = {
     name: "image",
 
+    registerCli(program) {
+        program.option("--img-base64-embed [true|false]", "Embed images as base64 (default: false)");
+        program.option("--img-max-width <pixels>", "Max image width in pixels (requires 'sharp' package)");
+        program.option("--img-compress <1-100>", "Image compression quality 1-100 (requires 'sharp' package)");
+    },
+
+    cliToConfig(opts, out) {
+        const raw = opts["imgBase64Embed"];
+        if (raw === true) {
+            out.img_to_base64 = true;
+        } else if (typeof raw === "string") {
+            const v = raw.toLowerCase();
+            if (v === "true") out.img_to_base64 = true;
+            if (v === "false") out.img_to_base64 = false;
+        }
+        const maxWidth = opts["imgMaxWidth"];
+        if (typeof maxWidth === "string" && maxWidth !== "") {
+            const w = parseInt(maxWidth, 10);
+            if (!isNaN(w) && w > 0) out.img_max_width = w;
+        }
+        const compress = opts["imgCompress"];
+        if (typeof compress === "string" && compress !== "") {
+            const q = parseInt(compress, 10);
+            if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q));
+        }
+    },
+
     isEnabled: (config) => config.img_to_base64,
 
     async processHtml(html, config, context) {

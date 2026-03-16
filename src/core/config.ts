@@ -31,6 +31,7 @@ export const DEFAULT_CONFIG: Config = {
   // code features
   code_highlight: true,
   code_copy: true,
+  code_line_copy: false,
   code_highlight_theme: "atom-one-dark",
   code_highlight_theme_light: "atom-one-light",
 };
@@ -70,32 +71,15 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   if (args.siteTitle) out.site_title = args.siteTitle;
   if (args.themeMode) out.theme_mode = args.themeMode;
   if (args.minifyHtml !== undefined) {
-    out.minify_html = ["true", "1", "yes", "on"].includes(args.minifyHtml!.toLowerCase());
+    const v = args.minifyHtml!.toLowerCase();
+    if (v === "true") out.minify_html = true;
+    if (v === "false") out.minify_html = false;
   }
   // Internationalization
   if (args.locale) out.locale = args.locale;
   if (args.i18nMode) out.i18n_mode = true;
   if (args.defaultLocale) out.default_locale = args.defaultLocale;
-  // Image Processing
-  if (args.imgToBase64 !== undefined) {
-    out.img_to_base64 = ["true", "1", "yes", "on"].includes(args.imgToBase64!.toLowerCase());
-  }
-  if (args.imgMaxWidth !== undefined && args.imgMaxWidth !== "") {
-    const w = parseInt(args.imgMaxWidth, 10);
-    if (!isNaN(w) && w > 0) out.img_max_width = w;
-  }
-  if (args.imgCompress !== undefined && args.imgCompress !== "") {
-    const q = parseInt(args.imgCompress, 10);
-    if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q));
-  }
-  // Code features
-  if (args.codeHighlight !== undefined) {
-    out.code_highlight = !["disable", "false", "0", "off"].includes(args.codeHighlight.toLowerCase());
-  }
-  if (args.codeCopy !== undefined) {
-    out.code_copy = !["disable", "false", "0", "off"].includes(args.codeCopy.toLowerCase());
-  }
-  if (args.codeHighlightTheme) out.code_highlight_theme = args.codeHighlightTheme;
-  if (args.codeHighlightThemeLight) out.code_highlight_theme_light = args.codeHighlightThemeLight;
+  // Plugin CLI overrides
+  if (args.pluginOverrides) Object.assign(out, args.pluginOverrides);
   return out;
 }

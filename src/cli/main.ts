@@ -144,7 +144,12 @@ async function main(): Promise<void> {
   }
 
   // ⑥ 解析輸出路徑
-  const force = args.force !== "false";
+  const forceRaw = args.force?.toLowerCase();
+  if (forceRaw && forceRaw !== "true" && forceRaw !== "false") {
+    console.error("[Error] Invalid value for -f/--force. Use true or false.");
+    process.exit(1);
+  }
+  const force = forceRaw === undefined ? true : forceRaw === "true";
   let outputFile = "";     // 合併模式的最終輸出檔案
   let outputDir = "";     // 批次模式的輸出目錄
 

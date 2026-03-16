@@ -17,11 +17,11 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `--template NAME` | Template name | `--template minimal` |
 | `--locale CODE` | Locale code (single-language mode) | `--locale en` |
 | `--i18n-mode` | Enable multi-language mode (boolean flag, automatically triggers merge) | `--i18n-mode` |
-| `--img-base64-embed true\|false` | Embed images as base64 (local + remote) | `--img-base64-embed true` |
+| `--img-base64-embed [true\|false]` | Embed images as base64 (local + remote) | `--img-base64-embed` |
 | `--img-max-width PIXELS` | Limit maximum image width (requires sharp) | `--img-max-width 400` |
 | `--img-compress QUALITY` | Image compression quality 1–100 (requires sharp) | `--img-compress 80` |
-| `--code-highlight enable\|disable` | Syntax highlighting (default: enable) | `--code-highlight disable` |
-| `--code-copy enable\|disable` | Code copy button (default: enable) | `--code-copy disable` |
+| `--code-highlight true\|false` | Syntax highlighting (default: true) | `--code-highlight false` |
+| `--code-copy [true\|false\|line\|cmd]` | Code copy button & mode (default: true) | `--code-copy cmd` |
 | `--code-highlight-theme NAME` | highlight.js dark theme name | `--code-highlight-theme github-dark` |
 | `--code-highlight-theme-light NAME` | highlight.js light theme name | `--code-highlight-theme-light github` |
 | `--config PATH` | Specify config.toml path | `--config ./config.toml` |
@@ -112,6 +112,8 @@ npx mdsone README.md -o output.html -f false
 
 Settings can be specified in four ways, in descending priority:
 
+> Boolean values only accept `true` / `false` (CLI and environment variables).
+
 ### 1. CLI Arguments (Highest Priority)
 
 ```bash
@@ -185,11 +187,12 @@ If none of the above are configured, built-in default values are used.
 | Minify HTML | `--minify-html` | `MINIFY_HTML` | `[build] minify_html` |
 | Build date | — | `BUILD_DATE` | `[build] build_date` |
 | Markdown extensions | — | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
-| Image base64 embed | `--img-base64-embed` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
+| Image base64 embed | `--img-base64-embed [true|false]` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
 | Image max width | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | Image compression quality | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| Syntax highlighting | `--code-highlight` | `CODE_HIGHLIGHT` | `[plugins.highlight] enable` |
-| Copy button | `--code-copy` | `CODE_COPY` | `[plugins.copy] enable` |
+| Syntax highlighting | `--code-highlight true|false` | `CODE_HIGHLIGHT` | `[plugins.highlight] enable` |
+| Copy button | `--code-copy [true|false|line|cmd]` | `CODE_COPY` | `[plugins.copy] enable` |
+| Copy mode | `--code-copy line|cmd` | — | `[plugins.copy] mode` |
 | Dark highlight theme | `--code-highlight-theme` | `CODE_HIGHLIGHT_THEME` | `[plugins.highlight] theme` |
 | Light highlight theme | `--code-highlight-theme-light` | `CODE_HIGHLIGHT_THEME_LIGHT` | `[plugins.highlight] theme_light` |
 
@@ -229,13 +232,13 @@ npx mdsone ./docs -m -o dist/manual.html --template normal
 npx mdsone ./docs --i18n-mode --i18n-default en -o dist/index.html
 
 # Embed images as base64
-npx mdsone ./docs -m -o dist/index.html --img-base64-embed true
+npx mdsone ./docs -m -o dist/index.html --img-base64-embed
 
 # Embed images with resize + compression (requires sharp)
-npx mdsone ./docs -m -o dist/index.html --img-base64-embed true --img-max-width 600 --img-compress 90
+npx mdsone ./docs -m -o dist/index.html --img-base64-embed --img-max-width 600 --img-compress 90
 
 # Disable syntax highlighting and copy button
-npx mdsone ./docs -m -o dist/index.html --code-highlight disable --code-copy disable
+npx mdsone ./docs -m -o dist/index.html --code-highlight false --code-copy false
 
 # Overwrite protection
 npx mdsone README.md -o output.html -f false

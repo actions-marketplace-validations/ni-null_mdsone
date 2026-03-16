@@ -43,7 +43,7 @@ default_locale = ""
 
 [plugins]
 order = ["image", "highlight", "copy"]
-copy = { enable = true }
+copy = { enable = true, mode = "none", line_copy = false }
 highlight = { enable = true, theme = "atom-one-dark", theme_light = "atom-one-light" }
 image = { base64_embed = false, max_width = 0, compress = 0 }
 ```
