@@ -66,6 +66,19 @@ export const shikiPlugin: Plugin = {
     const cssParts: string[] = [];
     if (darkCss) cssParts.push(`<style id="code-theme-dark">${darkCss}</style>`);
     if (lightCss) cssParts.push(`<style id="code-theme-light" disabled>${lightCss}</style>`);
+    cssParts.push(
+      `<style id="shiki-theme-adapter">` +
+      `html:not([data-theme="light"]) pre.shiki,` +
+      `html:not([data-theme="light"]) pre.shiki code,` +
+      `html:not([data-theme="light"]) pre.shiki span {` +
+      `  color: var(--shiki-dark) !important;` +
+      `  background-color: var(--shiki-dark-bg) !important;` +
+      `  font-style: var(--shiki-dark-font-style) !important;` +
+      `  font-weight: var(--shiki-dark-font-weight) !important;` +
+      `  text-decoration: var(--shiki-dark-text-decoration) !important;` +
+      `}` +
+      `</style>`,
+    );
 
     const themeScript =
       `<script>\n` +

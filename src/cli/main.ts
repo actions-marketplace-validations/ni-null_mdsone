@@ -30,7 +30,7 @@ import {
   isMdFile,
 } from "../adapters/node/fs.js";
 import { PluginManager } from "../plugins/manager.js";
-import type { Config } from "../core/types.js";
+import type { Config, TemplateData } from "../core/types.js";
 
 /**
  * 取得套件根目錄的絕對路徑。
@@ -51,6 +51,16 @@ function resolvePackageRoot(): string {
     } catch { /* fall through */ }
   }
   return process.cwd();
+}
+
+function resolveShikiThemes(config: Config, templateData: TemplateData): { dark: string; light: string } {
+  const dark = templateData.code_config.shiki?.dark
+    || config.code_highlight_theme
+    || "github-dark";
+  const light = templateData.code_config.shiki?.light
+    || config.code_highlight_theme_light
+    || "github-light";
+  return { dark, light };
 }
 
 async function main(): Promise<void> {
@@ -259,6 +269,7 @@ async function main(): Promise<void> {
   // ⑪-b 透過 PluginManager 收集 highlight / copy 靜態資源
   const pluginManager = new PluginManager();
   const { css: libCss, js: libJs } = await pluginManager.getAssets(config);
+  const shikiThemes = resolveShikiThemes(config, templateData);
 
   // ⑫ 讀取 Markdown 並轉換，準備 buildHtml 所需參數
   if (isSingleFile) {
@@ -277,8 +288,8 @@ async function main(): Promise<void> {
         config.markdown_extensions,
         config.code_highlight,
         0,
-        config.code_highlight_theme,
-        config.code_highlight_theme_light,
+        shikiThemes.dark,
+        shikiThemes.light,
       );
       html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(srcFile) });
       documents["index"] = html;
@@ -312,8 +323,8 @@ async function main(): Promise<void> {
               config.markdown_extensions,
               config.code_highlight,
               i,
-              config.code_highlight_theme,
-              config.code_highlight_theme_light,
+              shikiThemes.dark,
+              shikiThemes.light,
             );
             html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(filepath) });
             documents[tabName] = html;
@@ -361,8 +372,8 @@ async function main(): Promise<void> {
                 config.markdown_extensions,
                 config.code_highlight,
                 idx,
-                config.code_highlight_theme,
-                config.code_highlight_theme_light,
+                shikiThemes.dark,
+                shikiThemes.light,
               );
               html = await pluginManager.processHtml(html, config, { sourceDir: dir });
               localeDocs[tabName] = html;
@@ -415,8 +426,8 @@ async function main(): Promise<void> {
               config.markdown_extensions,
               config.code_highlight,
               idx,
-              config.code_highlight_theme,
-              config.code_highlight_theme_light,
+              shikiThemes.dark,
+              shikiThemes.light,
             );
             html = await pluginManager.processHtml(html, config, { sourceDir: folderPath });
             documents[tabName] = html;
@@ -500,8 +511,8 @@ async function main(): Promise<void> {
           config.markdown_extensions,
           config.code_highlight,
           0,
-          config.code_highlight_theme,
-          config.code_highlight_theme_light,
+          shikiThemes.dark,
+          shikiThemes.light,
         );
         html = await pluginManager.processHtml(html, config, { sourceDir: baseDir });
         const documents: Record<string, string> = { index: html };

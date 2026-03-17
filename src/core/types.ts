@@ -92,6 +92,14 @@ export interface TemplateMetadata {
   author?: string;
 }
 
+/** Template-level code highlight overrides */
+export interface TemplateCodeConfig {
+  shiki?: {
+    dark?: string;
+    light?: string;
+  };
+}
+
 /** template_loader 載入後的完整模板資料（含已讀取的檔案內容） */
 export interface TemplateData {
   /** style.css 原始文字 */
@@ -112,6 +120,7 @@ export interface TemplateData {
   schema_version: string;
   metadata: TemplateMetadata;
   toc_config: TocConfig;
+  code_config: TemplateCodeConfig;
 }
 
 /** buildHtml() 的輸入型別 */

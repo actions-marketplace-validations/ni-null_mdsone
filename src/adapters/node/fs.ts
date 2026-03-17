@@ -169,6 +169,7 @@ export async function loadTemplateFiles(
   let version = "1.0.0";
   let schema_version = "v1";
   let toc_config = { enabled: false, levels: [2, 3] };
+  let code_config: TemplateData["code_config"] = {};
 
   const configPath = path.join(templateDir, "template.config.json");
   if (fsSync.existsSync(configPath)) {
@@ -178,6 +179,13 @@ export async function loadTemplateFiles(
       version = (metadata as Record<string, string>)["version"] ?? "1.0.0";
       schema_version = (metadata as Record<string, string>)["schema_version"] ?? "v1";
       if (raw["toc"]) toc_config = raw["toc"] as typeof toc_config;
+      const codeRaw = (raw["code"] ?? {}) as Record<string, unknown>;
+      const shikiRaw = (codeRaw["Shiki"] ?? codeRaw["shiki"] ?? {}) as Record<string, unknown>;
+      const dark = typeof shikiRaw["dark"] === "string" ? shikiRaw["dark"] : undefined;
+      const light = typeof shikiRaw["light"] === "string" ? shikiRaw["light"] : undefined;
+      if (dark || light) {
+        code_config = { shiki: { dark, light } };
+      }
     } catch (e) {
       console.warn(`[WARN] Failed to load template config: ${e}`);
     }
@@ -216,5 +224,6 @@ export async function loadTemplateFiles(
     schema_version,
     metadata,
     toc_config,
+    code_config,
   };
 }
