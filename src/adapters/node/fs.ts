@@ -9,6 +9,23 @@ import path from "node:path";
 import type { I18nFile, TemplateData } from "../../core/types.js";
 import { LOCALE_DIR_PATTERN } from "../../core/markdown.js";
 
+type PlainObject = Record<string, unknown>;
+
+function asObject(value: unknown): PlainObject {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as PlainObject)
+    : {};
+}
+
+function parseShikiSettings(raw: unknown): { dark?: string; light?: string; auto_detect?: boolean } | undefined {
+  const obj = asObject(raw);
+  const dark = typeof obj["dark"] === "string" ? obj["dark"] : undefined;
+  const light = typeof obj["light"] === "string" ? obj["light"] : undefined;
+  const autoDetect = typeof obj["auto_detect"] === "boolean" ? obj["auto_detect"] : undefined;
+  if (!dark && !light && autoDetect === undefined) return undefined;
+  return { dark, light, auto_detect: autoDetect };
+}
+
 /** 霈??UTF-8 ??瑼??芸??駁 BOM嚗?*/
 export async function readTextFile(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath, "utf-8");
@@ -132,6 +149,34 @@ export async function loadLocaleFile(
 }
 
 /**
+ * 載入全域語言代碼顯示名稱對照表（locales/config.json）。
+ * 找不到或格式錯誤時回傳空物件，並保持系統可運作。
+ */
+export async function loadLocaleNamesConfig(
+  localesDir: string,
+): Promise<Record<string, string>> {
+  const filePath = path.join(localesDir, "config.json");
+  if (!fsSync.existsSync(filePath)) return {};
+
+  try {
+    const raw = JSON.parse(await readTextFile(filePath)) as Record<string, unknown>;
+    const namesRaw = Object.keys(asObject(raw["locale_names"])).length > 0
+      ? asObject(raw["locale_names"])
+      : asObject(raw);
+    const names: Record<string, string> = {};
+    for (const [k, v] of Object.entries(namesRaw)) {
+      if (!k.startsWith("_") && typeof v === "string" && v.trim()) {
+        names[k] = v.trim();
+      }
+    }
+    return names;
+  } catch (e) {
+    console.warn(`[WARN] Failed to load locale names config: ${e}`);
+    return {};
+  }
+}
+
+/**
  * 頛璅⊥撠惇??locale 瑼?嚗???template ?憛???
  * ?曆??唳?? null嚗?怎垢?舀捱摰?fallback 蝑??
  * ?交??嚗?locale>.json ??en.json ??null??
@@ -169,7 +214,7 @@ export async function loadTemplateFiles(
   let version = "1.0.0";
   let schema_version = "v1";
   let toc_config = { enabled: false, levels: [2, 3] };
-  let code_config: TemplateData["code_config"] = {};
+  let template_config: TemplateData["config"] = {};
 
   const configPath = path.join(templateDir, "template.config.json");
   if (fsSync.existsSync(configPath)) {
@@ -178,13 +223,30 @@ export async function loadTemplateFiles(
       metadata = (raw["_metadata"] ?? {}) as object;
       version = (metadata as Record<string, string>)["version"] ?? "1.0.0";
       schema_version = (metadata as Record<string, string>)["schema_version"] ?? "v1";
-      if (raw["toc"]) toc_config = raw["toc"] as typeof toc_config;
-      const codeRaw = (raw["code"] ?? {}) as Record<string, unknown>;
-      const shikiRaw = (codeRaw["Shiki"] ?? codeRaw["shiki"] ?? {}) as Record<string, unknown>;
-      const dark = typeof shikiRaw["dark"] === "string" ? shikiRaw["dark"] : undefined;
-      const light = typeof shikiRaw["light"] === "string" ? shikiRaw["light"] : undefined;
-      if (dark || light) {
-        code_config = { shiki: { dark, light } };
+      const cfgRaw = asObject(raw["config"]);
+      if (cfgRaw["toc"]) toc_config = cfgRaw["toc"] as typeof toc_config;
+      const rootPalette = typeof cfgRaw["palette"] === "string" ? cfgRaw["palette"] : undefined;
+      if (rootPalette) {
+        template_config = { ...template_config, palette: rootPalette };
+      }
+
+      const parsedTypes: NonNullable<TemplateData["config"]["types"]> = {};
+      const typesRaw = asObject(cfgRaw["types"]);
+      for (const [typeName, typeValue] of Object.entries(typesRaw)) {
+        const typeObj = asObject(typeValue);
+        const typeCode = asObject(typeObj["code"]);
+        const typeShiki = parseShikiSettings(typeCode["Shiki"] ?? typeCode["shiki"]);
+        const typePalette = typeof typeObj["palette"] === "string" ? typeObj["palette"] : undefined;
+        if (typeShiki || typePalette) {
+          parsedTypes[typeName] = {
+            ...(typePalette ? { palette: typePalette } : {}),
+            ...(typeShiki ? { code: { Shiki: typeShiki } } : {}),
+          };
+        }
+      }
+
+      if (Object.keys(parsedTypes).length > 0) {
+        template_config = { ...template_config, types: parsedTypes };
       }
     } catch (e) {
       console.warn(`[WARN] Failed to load template config: ${e}`);
@@ -224,6 +286,6 @@ export async function loadTemplateFiles(
     schema_version,
     metadata,
     toc_config,
-    code_config,
+    config: template_config,
   };
 }

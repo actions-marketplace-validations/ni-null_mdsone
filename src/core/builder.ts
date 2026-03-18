@@ -55,12 +55,25 @@ function buildDocItems(docs: Record<string, string>): DocItem[] {
 
 // ── Config payload ────────────────────────────────────────
 
-function buildConfigPayload(config: Config, buildDate: string, toc: TocConfig): mdsoneData["config"] {
+function buildConfigPayload(
+  config: Config,
+  buildDate: string,
+  toc: TocConfig,
+  templatePalette?: string,
+  templateTypes?: Record<string, { palette?: string }>,
+): mdsoneData["config"] {
+  const templateType = config.template_type || "default";
+  const typePalette = templateTypes?.[templateType]?.palette ?? templateTypes?.default?.palette;
+  const resolvedPalette = typePalette ?? templatePalette;
+
   return {
     site_title: config.site_title,
     theme_mode: config.theme_mode,
     build_date: buildDate,
     toc,
+    template_type: templateType,
+    ...(resolvedPalette ? { palette: resolvedPalette } : {}),
+    ...(templateTypes ? { types: templateTypes } : {}),
   };
 }
 
@@ -86,7 +99,18 @@ export function generateDataScript(params: BuildParams): string {
   const { config, templateData } = params;
   const buildDate = resolveBuildDate(config);
   const toc = templateData.toc_config;
-  const configPayload = buildConfigPayload(config, buildDate, toc);
+  const paletteTypes = templateData.config.types
+    ? Object.fromEntries(
+        Object.entries(templateData.config.types).map(([name, v]) => [name, { palette: v.palette }]),
+      )
+    : undefined;
+  const configPayload = buildConfigPayload(
+    config,
+    buildDate,
+    toc,
+    templateData.config.palette,
+    paletteTypes,
+  );
 
   let data: mdsoneData;
 
@@ -109,6 +133,7 @@ export function generateDataScript(params: BuildParams): string {
       docs: allDocs,
       config: configPayload,
       i18n: params.multiI18nStrings,
+      ...(params.localeNames ? { localeNames: params.localeNames } : {}),
     } satisfies mdsoneDataMulti;
   } else {
     // ── 單語模式 ──
@@ -118,6 +143,7 @@ export function generateDataScript(params: BuildParams): string {
       docs,
       config: configPayload,
       i18n: i18nStrings,
+      ...(params.localeNames ? { localeNames: params.localeNames } : {}),
     } satisfies mdsoneDataSingle;
   }
 

@@ -34,8 +34,7 @@ export const DEFAULT_CONFIG: Config = {
   code_copy_mode: "none",
   code_line_copy: false,
   code_line_number: false,
-  code_highlight_theme: "atom-one-dark",
-  code_highlight_theme_light: "atom-one-light",
+  template_type: "default",
 };
 
 /**
@@ -70,6 +69,7 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   if (args.templatesDir) out.templates_dir = args.templatesDir;
   // Templates & Styling
   if (args.template) out.default_template = args.template;
+  if (args.templateType) out.template_type = args.templateType;
   if (args.siteTitle) out.site_title = args.siteTitle;
   if (args.themeMode) out.theme_mode = args.themeMode;
   if (args.minifyHtml !== undefined) {

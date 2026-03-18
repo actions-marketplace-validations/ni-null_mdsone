@@ -15,6 +15,7 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `-o, --output PATH` | Output path (merge mode → file; batch mode → directory) | `-o dist/index.html` \| `-o dist/` |
 | `-f, --force <boolean>` | Overwrite mode toggle (default `true`) | `-f false` |
 | `--template NAME` | Template name | `--template minimal` |
+| `--template-type NAME` | Template style variant (fallback to `default` if missing) | `--template-type default` |
 | `--locale CODE` | Locale code (single-language mode) | `--locale en` |
 | `--i18n-mode` | Enable multi-language mode (boolean flag, automatically triggers merge) | `--i18n-mode` |
 | `--img-base64-embed [true\|false]` | Embed images as base64 (local + remote) | `--img-base64-embed` |
@@ -22,8 +23,6 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `--img-compress QUALITY` | Image compression quality 1–100 (requires sharp) | `--img-compress 80` |
 | `--code-highlight true\|false` | Syntax highlighting (default: true) | `--code-highlight false` |
 | `--code-copy [true\|false\|line\|cmd]` | Code copy button & mode (default: true) | `--code-copy cmd` |
-| `--code-highlight-theme NAME` | highlight.js dark theme name | `--code-highlight-theme github-dark` |
-| `--code-highlight-theme-light NAME` | highlight.js light theme name | `--code-highlight-theme-light github` |
 | `--config PATH` | Specify config.toml path | `--config ./config.toml` |
 | `--no-config` | Ignore config.toml | `--no-config` |
 
@@ -179,6 +178,7 @@ If none of the above are configured, built-in default values are used.
 | Templates dir | — | `TEMPLATES_DIR` | `[paths] templates_dir` |
 | Merge mode | `-m, --merge` | — | — |
 | Template | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template` |
+| Template type | `--template-type` | `TEMPLATE_TYPE` | `[build] template_type` |
 | Locale | `--locale` | `LOCALE` | `[i18n] locale` |
 | Multi-language mode | `--i18n-mode` | `I18N_MODE` | `[i18n] mode` |
 | Default locale | `--i18n-default` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
@@ -190,11 +190,9 @@ If none of the above are configured, built-in default values are used.
 | Image base64 embed | `--img-base64-embed [true|false]` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
 | Image max width | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | Image compression quality | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| Syntax highlighting | `--code-highlight true|false` | `CODE_HIGHLIGHT` | `[plugins.highlight] enable` |
+| Syntax highlighting | `--code-highlight true|false` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
 | Copy button | `--code-copy [true|false|line|cmd]` | `CODE_COPY` | `[plugins.copy] enable` |
 | Copy mode | `--code-copy line|cmd` | — | `[plugins.copy] mode` |
-| Dark highlight theme | `--code-highlight-theme` | `CODE_HIGHLIGHT_THEME` | `[plugins.highlight] theme` |
-| Light highlight theme | `--code-highlight-theme-light` | `CODE_HIGHLIGHT_THEME_LIGHT` | `[plugins.highlight] theme_light` |
 
 ## Usage Examples
 

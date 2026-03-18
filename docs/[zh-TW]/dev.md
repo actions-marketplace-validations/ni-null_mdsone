@@ -1,87 +1,121 @@
-﻿# 開發說明
+# 開發說明
 
-本文件整理給開發者使用的說明，包含模板結構、自訂模板流程與模板佔位符。
+本文件整理給開發者使用的說明，包含模板結構、模板配置與 plugin 介入點。
 
 ## 模板結構
 
-```
+```text
 templates/
 └── my-template/
     ├── template.html
     ├── style.css
     ├── template.config.json
+    ├── locales/
+    │   ├── en.json
+    │   └── zh-TW.json
     └── assets/
-        ├── example1.css      # 自動掃描並注入
-        └── example2.js       # 依數字前綴排序
+        ├── 01_base.css
+        └── 02_behavior.js
 ```
 
-### assets/ 資料夾
+## assets/
 
-`assets/` 內的 CSS/JS 檔案會自動掃描並 inline 注入到模板中，無需在 `template.config.json` 明確列舉：
+`assets/` 內的 CSS / JS 檔案會自動掃描並 inline 注入：
 
-- **CSS 檔案** → 注入為 `<style>` 在 `<head>` 內
-- **JS 檔案** → 注入為 `<script>` 在 `</body>` 前
-- **排序規則** → 檔名依數字前綴排序（例：`01_base.css`、`02_theme.css`）
-
-這是處理模板專屬樣式和邏輯的最簡單方式。
+- CSS 注入為 `<style>`，放在 `<head>`
+- JS 注入為 `<script>`，放在 `</body>` 前
+- 檔名會依字典序排序，建議用數字前綴控制順序
 
 ## template.config.json
+
+目前模板設定集中在 `config` 區塊：
 
 ```json
 {
   "_metadata": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "schema_version": "v1"
   },
-  "toc": {
-    "enabled": true,
-    "levels": [2, 3]
+  "config": {
+    "toc": {
+      "enabled": true,
+      "levels": [2, 3]
+    },
+    "palette": "fog-gray",
+    "types": {
+      "default": {
+        "palette": "fog-gray",
+        "code": {
+          "Shiki": {
+            "dark": "github-dark",
+            "light": "github-light",
+            "auto_detect": true
+          }
+        }
+      }
+    }
   }
 }
 ```
 
-| 欄位                       | 說明                                  |
-| -------------------------- | ------------------------------------- |
-| `_metadata.version`        | 模板版本（資訊用）                    |
-| `_metadata.schema_version` | 模板配置格式版本                      |
-| `toc.enabled`              | 是否顯示目錄                          |
-| `toc.levels`               | 目錄涵蓋層級，如 `[2, 3]` 代表 h2、h3 |
+| 欄位 | 說明 |
+|------|------|
+| `_metadata.version` | 模板版本 |
+| `_metadata.schema_version` | 模板配置格式版本 |
+| `config.toc.enabled` | 是否顯示目錄 |
+| `config.toc.levels` | 目錄抓取的標題層級 |
+| `config.palette` | 預設配色名稱 |
+| `config.types` | 模板變體定義 |
+| `config.types.<name>.palette` | 該變體使用的配色 |
+| `config.types.<name>.code.Shiki.*` | 該變體的程式碼高亮主題設定 |
 
 ## 新增自訂模板
 
 ```bash
 # Windows PowerShell
-Copy-Item -Recurse templates/minimal templates/my-template
+Copy-Item -Recurse templates/normal templates/my-template
 
 # macOS / Linux
-cp -r templates/minimal templates/my-template
+cp -r templates/normal templates/my-template
 
-# 編輯模板檔案
-cd templates/my-template
-# 編輯 template.html、style.css、locales 等
-
-# 執行自訂模板
-npx mdsone --template my-template
-
-# 或在 config.toml 中指定
-# [build]
-# default_template = "my-template"
+# 使用自訂模板
+npx mdsone ./docs -m --template my-template
 ```
 
 ## template.html 佔位符
 
-| 佔位符                 | 替換內容                                 |
-| ---------------------- | ---------------------------------------- |
-| `{TITLE}`              | 頁面標題                                 |
-| `{LANG}`               | HTML lang 屬性                           |
-| `{CSS_CONTENT}`        | style.css 內容                           |
-| `{LIB_CSS}`            | plugin/ 外掛樣式（highlight 主題等）     |
-| `{EXTRA_CSS}`          | 其他 CSS 標籤                            |
-| `{LIB_JS}`             | plugin/ 外掛腳本（highlight/copy 等）    |
-| `{EXTRA_JS}`           | 其他 JS 標籤                             |
-| `{MDSONE_DATA_SCRIPT}` | 文件資料 JSON（window.mdsone_DATA 事件） |
+| 佔位符 | 替換內容 |
+|--------|----------|
+| `{TITLE}` | 頁面標題 |
+| `{LANG}` | HTML `lang` 屬性 |
+| `{CSS_CONTENT}` | `style.css` 內容 |
+| `{LIB_CSS}` | plugin 提供的 CSS |
+| `{EXTRA_CSS}` | `assets/` 內額外 CSS |
+| `{LIB_JS}` | plugin 提供的 JS |
+| `{EXTRA_JS}` | `assets/` 內額外 JS |
+| `{MDSONE_DATA_SCRIPT}` | `window.mdsone_DATA` 資料腳本 |
 
-## Plugin 相關補充
+## 語系設計
 
-- 內建 plugin 放在 `plugins/` 目錄內。
-- 若要新增或修改 plugin，請參考 `PLUGIN_ARCHITECTURE.md`。
+- 全域語言顯示名稱：`locales/config.json`
+- 全域 CLI / 共用字串：`locales/*.json`
+- 模板專屬字串：`templates/<name>/locales/*.json`
+
+模板 locale 不需要再維護 `locale_name_*`。
+
+## Plugin 架構
+
+目前 plugin 全部在核心 Markdown 轉換完成後介入。
+
+流程大致如下：
+
+1. 核心先把 Markdown 轉成一般 HTML
+2. `PluginManager.processHtml()` 依順序讓 plugin 改寫 HTML
+3. `PluginManager.getAssets()` 收集 plugin 需要的 CSS / JS
+4. 模板再把 `{LIB_CSS}`、`{LIB_JS}` 注入最終輸出
+
+這種架構的好處是：
+
+- 核心不需要知道 Shiki、圖片嵌入、copy button 的內部細節
+- plugin 可以獨立調整順序與行為
+- 模板只關心呈現，不直接耦合 plugin 實作

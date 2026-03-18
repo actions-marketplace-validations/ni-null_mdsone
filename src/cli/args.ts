@@ -86,6 +86,7 @@ ENVIRONMENT VARIABLES:
   OUTPUT_FILE            (default: main.html)               → -o
   TEMPLATES_DIR          (default: templates)               → --templates-dir
   DEFAULT_TEMPLATE       (default: normal)                  → --template
+  TEMPLATE_TYPE          (default: default)                 → --template-type
   SITE_TITLE             (default: Documentation)           → --site-title
   THEME_MODE             (default: light)                   → --theme-mode
   MINIFY_HTML            (default: true)                    → --minify-html
@@ -123,6 +124,7 @@ export function parseArgs(argv?: string[]): CliArgs {
     .option("--templates-dir <DIR>", "Templates directory (default: templates)")
     // Templates & Styling
     .option("--template <NAME>", "Template name (normal, minimal; default: normal)")
+    .option("--template-type <NAME>", "Template type variant (default: default)")
     .option("--site-title <TEXT>", "Documentation site title (default: Documentation)")
     .option("--theme-mode <light|dark>", "Theme mode: light or dark (default: light)")
     .option("--minify-html <true|false>", "Minify HTML output (default: true)")
@@ -154,6 +156,7 @@ export function parseArgs(argv?: string[]): CliArgs {
     defaultLocale?: string;
     minifyHtml?: string;
     templatesDir?: string;
+    templateType?: string;
     config?: string;
     configPath?: string;
     noConfig?: boolean;
@@ -179,6 +182,7 @@ export function parseArgs(argv?: string[]): CliArgs {
     defaultLocale: typed.defaultLocale,
     minifyHtml: typed.minifyHtml,
     templatesDir: typed.templatesDir,
+    templateType: typed.templateType,
     configPath: typed.config,
     noConfig: typed.noConfig,
     pluginOverrides,

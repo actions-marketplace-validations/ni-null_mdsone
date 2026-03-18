@@ -43,6 +43,7 @@ export function envToConfig(): Partial<Config> {
   if (e["MARKDOWN_SOURCE_DIR"]) out.markdown_source_dir = e["MARKDOWN_SOURCE_DIR"];
   if (e["OUTPUT_FILE"]) out.output_file = e["OUTPUT_FILE"];
   if (e["TEMPLATES_DIR"]) out.templates_dir = e["TEMPLATES_DIR"];
+  if (e["TEMPLATE_TYPE"]) out.template_type = e["TEMPLATE_TYPE"];
   if (e["DEFAULT_TEMPLATE"]) out.default_template = e["DEFAULT_TEMPLATE"];
   if (e["BUILD_DATE"]) out.build_date = e["BUILD_DATE"];
   if (e["SITE_TITLE"]) out.site_title = e["SITE_TITLE"];
@@ -86,6 +87,7 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   if (s(paths["templates_dir"])) out.templates_dir = s(paths["templates_dir"]);
 
   if (s(build["default_template"])) out.default_template = s(build["default_template"]);
+  if (s(build["template_type"])) out.template_type = s(build["template_type"]);
   if (b(build["minify_html"]) !== undefined) out.minify_html = b(build["minify_html"]);
   if (l(build["markdown_extensions"])) out.markdown_extensions = l(build["markdown_extensions"]);
   if (s(build["build_date"])) out.build_date = s(build["build_date"]);

@@ -18,7 +18,6 @@ export const LOCALE_DIR_PATTERN = /^\[(.+)\]$/;
 /**
  * 將標題文字轉換為 URL-friendly slug（對應 Python slugify()）。
  * 規則：小寫、移除 HTML 標籤、空白/底線→連字號、移除非 ASCII 英數、去重複連字號
- * @deprecated 內部已改用 markdown-it-anchor；此函式保留供外部呼叫。
  */
 export function slugify(text: string): string {
   let slug = text.toLowerCase();
@@ -134,6 +133,5 @@ export function markdownToHtml(
   };
 
   const html = md.render(markdownText);
-  // addHeadingIds 已由 markdown-it-anchor 取代，不再需要後處理
   return sanitizeTableCells(escapeCodeBlocks(html));
 }

@@ -22,6 +22,7 @@ export {
   scanLocaleSubDirs,
   scanTemplates,
   loadLocaleFile,
+  loadLocaleNamesConfig,
   loadTemplateLocaleFile,
   loadTemplateFiles,
 } from "./fs.js";

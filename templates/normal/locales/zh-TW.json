@@ -1,19 +1,18 @@
-{
-  "_comment": "mdsone — normal 模板專屬 i18n (zh-TW)。僅含 template 區塊；cli 字串由全域 locales/ 提供。",
-
+﻿{
+  "_comment": "mdsone normal template i18n (zh-TW). Template section only.",
   "template": {
     "html_lang": "zh-TW",
-    "page_subtitle": "系統交接文檔",
-    "loading": "載入中…",
-    "footer_label": "離線版本 · {BUILD_DATE}",
+    "page_subtitle": "文件中心",
+    "loading": "載入中...",
+    "footer_label": "離線 - {BUILD_DATE}",
     "menu_open_title": "開啟側邊欄",
     "breadcrumb_docs": "文件",
-    "breadcrumb_index": "索引",
-    "status_offline": "OFFLINE READY",
+    "breadcrumb_index": "首頁",
+    "status_offline": "離線可用",
     "theme_light_label": "日間",
     "theme_dark_label": "夜間",
     "theme_toggle_title": "切換日夜模式",
-    "doc_count_suffix": "份文檔",
+    "doc_count_suffix": "篇",
     "toc_title": "本頁目錄"
   }
 }

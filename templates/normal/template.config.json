@@ -2,25 +2,71 @@
   "_metadata": {
     "name": "normal",
     "description": "Standard single-column documentation template with sidebar and dark/light theme toggle",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "schema_version": "v1",
     "author": "mdsone"
   },
-
-  "toc": {
-    "enabled": true,
-    "levels": [2, 3]
-  },
-
-  "code": {
-    "Shiki": {
-      "dark": "github-dark",
-      "light": "github-light"
+  "config": {
+    "toc": {
+      "enabled": true,
+      "levels": [2, 3]
+    },
+    "palette": "fog-gray",
+    "types": {
+      "default": {
+        "palette": "fog-gray",
+        "code": {
+          "Shiki": {
+            "dark": "github-dark",
+            "light": "github-light",
+            "auto_detect": true
+          }
+        }
+      },
+      "fog-gray": {
+        "_description": "Cool neutral gray ??clean and minimal. Default palette.",
+        "palette": "fog-gray",
+        "code": {
+          "Shiki": {
+            "dark": "github-dark",
+            "light": "github-light",
+            "auto_detect": true
+          }
+        }
+      },
+      "warm-cream": {
+        "_description": "Warm off-white with amber-brown tones ??easy on the eyes for long reading sessions.",
+        "palette": "warm-cream",
+        "code": {
+          "Shiki": {
+            "dark": "min-dark",
+            "light": "min-light",
+            "auto_detect": true
+          }
+        }
+      },
+      "sage-mist": {
+        "_description": "Cool green-gray tones ??natural and calm.",
+        "palette": "sage-mist",
+        "code": {
+          "Shiki": {
+            "dark": "vitesse-dark",
+            "light": "min-light",
+            "auto_detect": true
+          }
+        }
+      },
+      "soft-dusk": {
+        "_description": "Lavender-purple tones ??distinctive and easy on the eyes.",
+        "palette": "soft-dusk",
+        "code": {
+          "Shiki": {
+            "dark": "vitesse-dark",
+            "light": "vitesse-light",
+            "auto_detect": true
+          }
+        }
+      }
     }
-  },
-
-  "_comment_toc": "Enable table of contents in sidebar. levels: array of heading levels to include (e.g. [2, 3] for h2-h3). Set enabled to false to disable TOC.",
-  "_comment_code": "Optional Shiki theme override for this template. If theme names are invalid, mdsone falls back to built-in defaults.",
-  "_comment_assets": "Place .css and .js files in the assets/ folder; they are auto-scanned, sorted by numeric prefix (e.g. 01-reset.css, 02-layout.css), and inlined into the HTML output. CDN resources can be added directly in template.html as <link> or <script> tags."
+  }
 }
-

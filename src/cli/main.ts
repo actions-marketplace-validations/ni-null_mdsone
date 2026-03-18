@@ -21,6 +21,7 @@ import {
   scanTemplates,
   loadTemplateFiles,
   loadLocaleFile,
+  loadLocaleNamesConfig,
   loadTemplateLocaleFile,
   readTextFile,
   writeTextFile,
@@ -30,7 +31,7 @@ import {
   isMdFile,
 } from "../adapters/node/fs.js";
 import { PluginManager } from "../plugins/manager.js";
-import type { Config, TemplateData } from "../core/types.js";
+import type { Config } from "../core/types.js";
 
 /**
  * 取得套件根目錄的絕對路徑。
@@ -51,12 +52,6 @@ function resolvePackageRoot(): string {
     } catch { /* fall through */ }
   }
   return process.cwd();
-}
-
-function resolveShikiThemes(templateData: TemplateData): { dark: string; light: string } {
-  const dark = templateData.code_config.shiki?.dark || "github-dark";
-  const light = templateData.code_config.shiki?.light || "github-light";
-  return { dark, light };
 }
 
 async function main(): Promise<void> {
@@ -262,15 +257,16 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // ⑪-b 透過 PluginManager 收集 highlight / copy 靜態資源
+  const typeName = config.template_type || "default";
+  if (templateData.config.types && !templateData.config.types[typeName]) {
+    console.warn(`[WARN] template_type '${typeName}' not found. Falling back to 'default'.`);
+    config.template_type = "default";
+  }
+
+  // ⑪-b 透過 PluginManager 收集 plugin 靜態資源
   const pluginManager = new PluginManager();
-  const shikiThemes = resolveShikiThemes(templateData);
-  config = {
-    ...config,
-    code_highlight_theme: shikiThemes.dark,
-    code_highlight_theme_light: shikiThemes.light,
-  };
   const { css: libCss, js: libJs } = await pluginManager.getAssets(config);
+  const localeNames = await loadLocaleNamesConfig(config.locales_dir);
 
   // ⑫ 讀取 Markdown 並轉換，準備 buildHtml 所需參數
   if (isSingleFile) {
@@ -285,7 +281,7 @@ async function main(): Promise<void> {
 
       const documents: Record<string, string> = {};
       let html = await markdownToHtml(fileContent, config.markdown_extensions, config.code_highlight, 0);
-      html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(srcFile) });
+      html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(srcFile), templateData });
       documents["index"] = html;
 
       const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
@@ -296,7 +292,7 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
 
-      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
+      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs });
       await writeOutput(outputFile, htmlContent);
     } catch (e) {
       console.error(`[ERROR] Failed to read markdown file: ${e}`);
@@ -313,7 +309,7 @@ async function main(): Promise<void> {
           const content = await readTextFile(filepath);
           if (content.trim()) {
             let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, i);
-            html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(filepath) });
+            html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(filepath), templateData });
             documents[tabName] = html;
           }
         } catch (e) {
@@ -334,7 +330,7 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
 
-      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
+      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs });
       await writeOutput(outputFile, htmlContent);
     } else if (config.i18n_mode) {
       // 多語模式（資料夾，含 [locale] 子資料夾）
@@ -355,7 +351,7 @@ async function main(): Promise<void> {
             const content = await readTextFile(filepath);
             if (content.trim()) {
               let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, idx);
-              html = await pluginManager.processHtml(html, config, { sourceDir: dir });
+              html = await pluginManager.processHtml(html, config, { sourceDir: dir, templateData });
               localeDocs[tabName] = html;
             }
           } catch (e) {
@@ -384,7 +380,7 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const multiI18nStrings = getAllLocalesTemplateStrings(localeFileMap, buildDate);
 
-      const htmlContent = buildHtml({ config, templateData, multiDocuments, multiI18nStrings, libCss, libJs });
+      const htmlContent = buildHtml({ config, templateData, multiDocuments, multiI18nStrings, localeNames, libCss, libJs });
       await writeOutput(outputFile, htmlContent);
     } else {
       // 單語資料夾合併
@@ -402,7 +398,7 @@ async function main(): Promise<void> {
           const content = await readTextFile(filepath);
           if (content.trim()) {
             let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, idx);
-            html = await pluginManager.processHtml(html, config, { sourceDir: folderPath });
+            html = await pluginManager.processHtml(html, config, { sourceDir: folderPath, templateData });
             documents[tabName] = html;
           }
         } catch (e) {
@@ -423,7 +419,7 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
 
-      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, libCss, libJs });
+      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs });
       await writeOutput(outputFile, htmlContent);
     }
   } else {
@@ -480,11 +476,11 @@ async function main(): Promise<void> {
           continue;
         }
         let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, 0);
-        html = await pluginManager.processHtml(html, config, { sourceDir: baseDir });
+        html = await pluginManager.processHtml(html, config, { sourceDir: baseDir, templateData });
         const documents: Record<string, string> = { index: html };
         // 每個批次檔案有自己的 config.output_file（供 template 使用）
         const batchConfig = { ...config, output_file: targetFile };
-        const htmlContent = buildHtml({ config: batchConfig, templateData, documents, i18nStrings, libCss, libJs });
+        const htmlContent = buildHtml({ config: batchConfig, templateData, documents, i18nStrings, localeNames, libCss, libJs });
         await writeOutput(targetFile, htmlContent);
         successCount++;
       } catch (e) {
@@ -502,9 +498,11 @@ async function main(): Promise<void> {
 
   // ⑬ 印出等效指令
   const tpl = config.default_template;
+  const tplType = config.template_type || "default";
   const inputsStr = inputs.map((p) => `"${p}"`).join(" ");
   const parts = [`npx mdsone ${inputsStr}`];
   if (tpl !== "normal") parts.push(`--template ${tpl}`);
+  if (tplType !== "default") parts.push(`--template-type ${tplType}`);
   if (config.i18n_mode) {
     parts.push(`--i18n-mode`);
     if (config.default_locale) parts.push(`--i18n-default ${config.default_locale}`);

@@ -1,15 +1,14 @@
 {
-  "_comment": "mdsone — normal template i18n (en). Only the template section; cli strings come from global locales/.",
-
+  "_comment": "mdsone normal template i18n (en). Only template strings are defined here.",
   "template": {
     "html_lang": "en",
     "page_subtitle": "Documentation",
     "loading": "Loading...",
-    "footer_label": "Offline · {BUILD_DATE}",
+    "footer_label": "Offline - {BUILD_DATE}",
     "menu_open_title": "Open sidebar",
     "breadcrumb_docs": "docs",
     "breadcrumb_index": "index",
-    "status_offline": "OFFLINE READY",
+    "status_offline": "Offline Ready",
     "theme_light_label": "Light",
     "theme_dark_label": "Dark",
     "theme_toggle_title": "Toggle theme",

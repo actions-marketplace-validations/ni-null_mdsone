@@ -1,0 +1,21 @@
+﻿{
+  "_comment": "Global locale code -> display name mapping for templates and UI switchers.",
+  "en": "English",
+  "en_US": "English (US)",
+  "en_GB": "English (UK)",
+  "zh_TW": "繁體中文",
+  "zh_CN": "简体中文",
+  "zh": "中文",
+  "ja": "日本語",
+  "ko": "한국어",
+  "fr": "Français",
+  "de": "Deutsch",
+  "es": "Español",
+  "pt": "Português",
+  "it": "Italiano",
+  "ru": "Русский",
+  "ar": "العربية",
+  "th": "ไทย",
+  "vi": "Tiếng Việt",
+  "id": "Bahasa Indonesia"
+}

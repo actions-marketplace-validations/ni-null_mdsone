@@ -1,9 +1,8 @@
-// ============================================================
-// src/core/types.ts — 所有共用 TypeScript 介面與型別
-// 核心層零依賴：不引用任何 Node.js / runtime API
+﻿// ============================================================
+// src/core/types.ts ??????TypeScript 隞????// ?詨?撅日靘陷嚗?撘隞颱? Node.js / runtime API
 // ============================================================
 
-/** 完整設定物件（對應 Python CONFIG dict） */
+/** 摰閮剖??拐辣嚗???Python CONFIG dict嚗?*/
 export interface Config {
   // paths
   markdown_source_dir: string;
@@ -32,15 +31,14 @@ export interface Config {
   code_copy_mode: string;
   code_line_copy: boolean;
   code_line_number: boolean;
-  code_highlight_theme: string;
-  code_highlight_theme_light: string;
+  template_type: string;
   // plugin settings (optional)
   plugins?: {
     order?: string[];
   };
 }
 
-/** CLI 引數物件（commander 解析後） */
+/** CLI 撘?拐辣嚗ommander 閫??敺? */
 export interface CliArgs {
   inputs?: string[];
   merge?: boolean;
@@ -54,22 +52,23 @@ export interface CliArgs {
   defaultLocale?: string;
   minifyHtml?: string;
   templatesDir?: string;
+  templateType?: string;
   configPath?: string;
   noConfig?: boolean;
   pluginOverrides?: Partial<Config>;
   version?: boolean;
 }
 
-/** locale JSON 檔案的結構（en.json / zh-TW.json） */
+/** locale JSON 瑼???瑽?en.json / zh-TW.json嚗?*/
 export interface I18nFile {
   _comment?: string;
   _locale?: string;
   cli: Record<string, string>;
-  /** template 區塊現由各模板的 locales/ 提供，全域檔案可省略 */
+  /** template ?憛?勗?璅⊥??locales/ ??嚗??獢? */
   template?: Record<string, string>;
 }
 
-/** 單一文件項目（對應 mdsone_DATA.docs[n]） */
+/** ?桐??辣?嚗???mdsone_DATA.docs[n]嚗?*/
 export interface DocItem {
   id: string;
   title: string;
@@ -77,13 +76,13 @@ export interface DocItem {
   html: string;
 }
 
-/** TOC 設定 */
+/** TOC 閮剖? */
 export interface TocConfig {
   enabled: boolean;
   levels: number[];
 }
 
-/** Template config.json 中 _metadata 物件 */
+/** Template config.json 銝?_metadata ?拐辣 */
 export interface TemplateMetadata {
   name?: string;
   description?: string;
@@ -92,135 +91,153 @@ export interface TemplateMetadata {
   author?: string;
 }
 
-/** Template-level code highlight overrides */
-export interface TemplateCodeConfig {
-  shiki?: {
-    dark?: string;
-    light?: string;
+/** Template-level user-overridable config */
+export interface TemplateRuntimeConfig {
+  palette?: string;
+  code?: {
+    Shiki?: {
+      dark?: string;
+      light?: string;
+      auto_detect?: boolean;
+    };
   };
+  types?: Record<string, {
+    palette?: string;
+    code?: {
+      Shiki?: {
+        dark?: string;
+        light?: string;
+        auto_detect?: boolean;
+      };
+    };
+  }>;
 }
 
-/** template_loader 載入後的完整模板資料（含已讀取的檔案內容） */
+/** template_loader 頛敺?摰璅⊥鞈?嚗撌脰???瑼??批捆嚗?*/
 export interface TemplateData {
-  /** style.css 原始文字 */
+  /** style.css ???? */
   css: string;
-  /** template.html 原始文字（含 {PLACEHOLDER}）*/
+  /** template.html ????嚗 {PLACEHOLDER}嚗?/
   template: string;
   /**
-   * assets/ 資料夾中依數字前綴排序的 CSS 檔案清單（已讀入內容）
-   * 建置時以 <style> inline 注入 {EXTRA_CSS}
+   * assets/ 鞈?憭曆葉靘摮?蝬湔?摨? CSS 瑼?皜嚗歇霈?亙摰對?
+   * 撱箇蔭?誑 <style> inline 瘜典 {EXTRA_CSS}
    */
   assets_css: Array<{ filename: string; content: string }>;
   /**
-   * assets/ 資料夾中依數字前綴排序的 JS 檔案清單（已讀入內容）
-   * 建置時以 <script> inline 注入 {EXTRA_JS}
+   * assets/ 鞈?憭曆葉靘摮?蝬湔?摨? JS 瑼?皜嚗歇霈?亙摰對?
+   * 撱箇蔭?誑 <script> inline 瘜典 {EXTRA_JS}
    */
   assets_js: Array<{ filename: string; content: string }>;
   version: string;
   schema_version: string;
   metadata: TemplateMetadata;
   toc_config: TocConfig;
-  code_config: TemplateCodeConfig;
+  config: TemplateRuntimeConfig;
 }
 
-/** buildHtml() 的輸入型別 */
+/** buildHtml() ?撓?亙???*/
 export interface BuildParams {
   config: Config;
-  /** 單語模式：{ tab_name: html } */
+  /** ?株?璅∪?嚗 tab_name: html } */
   documents?: Record<string, string>;
-  /** 多語模式：{ locale: { tab_name: html } } */
+  /** 憭?璅∪?嚗 locale: { tab_name: html } } */
   multiDocuments?: Record<string, Record<string, string>>;
   templateData: TemplateData;
-  /** 單語 i18n 字串（來自 getAllTemplateStrings） */
+  /** ?株? i18n 摮葡嚗???getAllTemplateStrings嚗?*/
   i18nStrings?: Record<string, string>;
-  /** 多語 i18n 字串 { locale: { key: val } } */
+  /** 憭? i18n 摮葡 { locale: { key: val } } */
   multiI18nStrings?: Record<string, Record<string, string>>;
-  /** 從 lib/ 組裝的樣式標籤（插入 {LIB_CSS}） */
+  /** 全域語言顯示名稱對照（來源：locales/config.json） */
+  localeNames?: Record<string, string>;
+  /** 敺?lib/ 蝯??見撘?蝐歹?? {LIB_CSS}嚗?*/
   libCss?: string;
-  /** 從 lib/ 組裝的腳本標籤（插入 {LIB_JS}） */
+  /** 敺?lib/ 蝯???祆?蝐歹?? {LIB_JS}嚗?*/
   libJs?: string;
 }
 
-/** validateConfig() 的回傳型別 */
+/** validateConfig() ???喳???*/
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
 }
 
-// ── mdsone_DATA 結構（注入至 HTML 的 JSON payload）──
+// ?? mdsone_DATA 蝯?嚗釣?亥 HTML ??JSON payload嚗??
 
-/** 單語模式的 mdsone_DATA */
+/** ?株?璅∪???mdsone_DATA */
 export interface mdsoneDataSingle {
   docs: DocItem[];
   config: mdsoneConfigPayload;
   i18n: Record<string, string>;
+  localeNames?: Record<string, string>;
 }
 
-/** 多語模式的 mdsone_DATA */
+/** 憭?璅∪???mdsone_DATA */
 export interface mdsoneDataMulti {
   locales: string[];
   defaultLocale: string;
   docs: Record<string, DocItem[]>;
   config: mdsoneConfigPayload;
   i18n: Record<string, Record<string, string>>;
+  localeNames?: Record<string, string>;
 }
 
 export type mdsoneData = mdsoneDataSingle | mdsoneDataMulti;
 
-/** mdsone_DATA.config 段落 */
+/** mdsone_DATA.config 畾菔 */
 export interface mdsoneConfigPayload {
   site_title: string;
   theme_mode: string;
   build_date: string;
   toc: TocConfig;
+  template_type?: string;
+  palette?: string;
+  types?: Record<string, { palette?: string }>;
 }
 
-// ── Plugin 系統 ──────────────────────────────────────────────
+// ?? Plugin 蝟餌絞 ??????????????????????????????????????????????
 
-/** Plugin getAssets() 的回傳型別，css/js 為含標籤的完整 HTML 字串 */
+/** Plugin getAssets() ???喳??伐?css/js ?箏璅惜????HTML 摮葡 */
 export interface PluginAssets {
-  /** 完整 HTML，含 <style> 標籤（例如 <style id="...">...</style>） */
+  /** 摰 HTML嚗 <style> 璅惜嚗?憒?<style id="...">...</style>嚗?*/
   css?: string;
-  /** 完整 HTML，含 <script> 標籤（例如 <script>...</script>） */
+  /** 摰 HTML嚗 <script> 璅惜嚗?憒?<script>...</script>嚗?*/
   js?: string;
 }
 
-/** Plugin processHtml() 收到的執行上下文 */
+/** Plugin processHtml() ?嗅?銵?銝? */
 export interface PluginContext {
-  /** 當前處理的 Markdown 檔案所在目錄（用於解析本地圖片相對路徑） */
+  /** ?嗅?????Markdown 瑼???函???冽閫???砍???詨?頝臬?嚗?*/
   sourceDir: string;
+  templateData?: TemplateData;
 }
 
-/** CLI program 介面（避免 core 直接依賴 commander） */
+/** CLI program 隞嚗??core ?湔靘陷 commander嚗?*/
 export interface CliProgram {
   option: (...args: unknown[]) => unknown;
 }
 
-/** Plugin 介面：每個 plugin 必須實作 name 與 isEnabled */
+/** Plugin 隞嚗???plugin 敹?撖虫? name ??isEnabled */
 export interface Plugin {
-  /** plugin 名稱（唯一識別，用於日誌） */
+  /** plugin ?迂嚗銝霅嚗?潭隤? */
   readonly name: string;
 
   /**
-   * 註冊 CLI 參數（可選）
+   * 閮餃? CLI ?嚗?賂?
    */
   registerCli?: (program: CliProgram) => void;
 
   /**
-   * 將 CLI 參數轉為 config 覆蓋（可選）
+   * 撠?CLI ?頧 config 閬?嚗?賂?
    */
   cliToConfig?: (opts: Record<string, unknown>, out: Partial<Config>) => void;
 
   /**
-   * 判斷此 plugin 在給定 config 下是否啟用。
-   * 由 plugin 自行宣告啟用條件，manager 不需知道細節。
-   */
+   * ?斗甇?plugin ?函策摰?config 銝?血??具?   * ??plugin ?芾?摰???璇辣嚗anager 銝??仿?蝝啁???   */
   isEnabled: (config: Config) => boolean;
 
   /**
-   * HTML 後處理階段（可選）。
-   * 在 markdownToHtml() 之後、buildHtml() 之前執行。
-   * @returns 處理後的 HTML 字串
+   * HTML 敺???畾蛛??舫嚗?   * ??markdownToHtml() 銋??uildHtml() 銋??瑁???   * @returns ??敺? HTML 摮葡
    */
   processHtml?: (
     html: string,
@@ -229,14 +246,15 @@ export interface Plugin {
   ) => string | Promise<string>;
 
   /**
-   * 取得需注入輸出 HTML 的靜態資源（可選）。
-   * 回傳的 css/js 包含完整的 <style>/<script> 標籤。
-   */
+   * ???瘜典頛詨 HTML ????皞??舫嚗?   * ???css/js ?摰??<style>/<script> 璅惜??   */
   getAssets?: (config: Config) => PluginAssets | Promise<PluginAssets>;
 
   /**
-   * 驗證 config 合法性（可選）。
-   * @returns 錯誤訊息陣列，空陣列表示驗證通過
+   * 撽? config ???改??舫嚗?   * @returns ?航炊閮???嚗征???銵函內撽???
    */
   validateConfig?: (config: Config) => string[];
 }
+
+
+
+

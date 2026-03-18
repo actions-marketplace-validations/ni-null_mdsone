@@ -6,6 +6,7 @@
 // ============================================================
 import { load } from "cheerio";
 import { codeToHtml } from "shiki";
+import hljs from "highlight.js";
 import type { Plugin, PluginAssets } from "../../src/core/types.js";
 
 function escapeHtmlAttr(value: string): string {
@@ -119,11 +120,16 @@ export const shikiPlugin: Plugin = {
 
   isEnabled: (config) => config.code_highlight,
 
-  async processHtml(html, config) {
+  async processHtml(html, config, context) {
     const $ = load(html, { decodeEntities: false }, false);
     const codeNodes = $("pre > code").toArray();
-    const themeDark = config.code_highlight_theme || "github-dark";
-    const themeLight = config.code_highlight_theme_light || "github-light";
+    const typeName = config.template_type || "default";
+    const typeCfg = context.templateData?.config?.types?.[typeName]
+      ?? context.templateData?.config?.types?.default;
+    const shikiCfg = typeCfg?.code?.Shiki;
+    const themeDark = shikiCfg?.dark || "github-dark";
+    const themeLight = shikiCfg?.light || "github-light";
+    const autoDetect = shikiCfg?.auto_detect ?? true;
 
     for (const node of codeNodes) {
       const codeEl = $(node);
@@ -131,10 +137,17 @@ export const shikiPlugin: Plugin = {
       if (!preEl.length) continue;
       if (preEl.hasClass("shiki")) continue;
 
-      const lang = extractLanguage(codeEl.attr("class"));
+      let lang = extractLanguage(codeEl.attr("class"));
+      const codeText = codeEl.text();
+      if (!lang && autoDetect) {
+        try {
+          lang = hljs.highlightAuto(codeText).language ?? null;
+        } catch {
+          lang = null;
+        }
+      }
       if (!lang) continue;
 
-      const codeText = codeEl.text();
       const rendered = await renderShikiFence(codeText, lang, themeDark, themeLight);
       if (!rendered) continue;
 

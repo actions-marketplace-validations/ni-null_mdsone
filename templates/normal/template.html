@@ -12,36 +12,32 @@
   </head>
   <body>
     <div class="container">
-      <!-- Mobile top bar — always visible on mobile, hidden on desktop -->
       <div class="mobile-topbar" id="mobile-topbar">
-        <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+        <button class="mobile-menu-btn" id="mobile-menu-btn">&#9776;</button>
         <span class="mobile-topbar-title">{TITLE}</span>
       </div>
 
-      <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-logo">
-            <div class="logo-mark"></div>
             <div class="logo-text"><span>{TITLE}</span></div>
           </div>
           <div class="sidebar-subtitle" id="sidebar-subtitle"></div>
         </div>
 
-        <div class="tab-list" id="tab-list"></div>
-
         <div class="sidebar-controls">
-          <button class="menu-btn" id="menu-btn" title="">☰</button>
+          <button class="menu-btn" id="menu-btn" title="">&#9776;</button>
           <div class="lang-switcher" id="lang-switcher"></div>
           <button class="theme-toggle" id="theme-toggle" title="">
-            <span class="theme-icon" id="theme-icon">☀</span>
+            <span class="theme-icon" id="theme-icon">&#9789;</span>
             <span class="theme-label" id="theme-label"></span>
           </button>
         </div>
+
+        <div class="tab-list" id="tab-list"></div>
         <div class="sidebar-footer" id="sidebar-footer"></div>
       </aside>
 
-      <!-- Main -->
       <div class="main-content">
         <div class="content-area" id="content-area"></div>
       </div>
@@ -50,11 +46,9 @@
     {MDSONE_DATA_SCRIPT}
     {LIB_JS}
     <script>
-      // ── Main rendering function ──
       async function renderApp(data) {
         const isMultiLang = !!(data.locales && Array.isArray(data.locales) && data.locales.length > 0)
-
-        if (!isMultiLang && (!data.docs || !data.config || !data.i18n)) {
+        if (!data || !data.config) {
           console.error("Invalid mdsone_DATA structure")
           return
         }
@@ -67,117 +61,138 @@
         const htmlEl = document.documentElement
         const config = data.config
 
-        // ── Mutable i18n reference — updated on locale switch ──
+        const resolvedPalette = (
+          config.palette ||
+          (config.types && config.types.default && config.types.default.palette) ||
+          "fog-gray"
+        )
+        htmlEl.setAttribute("data-palette", resolvedPalette)
+
         let activeI18n = isMultiLang
           ? (data.i18n[data.defaultLocale] || data.i18n[data.locales[0]] || {})
-          : data.i18n
+          : (data.i18n || {})
         let activeLocale = isMultiLang ? (data.defaultLocale || data.locales[0]) : null
+        let langTrigger = null
+        let langMenu = null
 
-        // ── Locale display name map ──
-        const LOCALE_NAMES = {
-          "zh-TW": "繁體中文", "zh-CN": "简体中文", "zh": "中文",
-          "en": "English", "en-US": "English (US)", "en-GB": "English (UK)",
-          "ja": "日本語", "ko": "한국어", "fr": "Français", "de": "Deutsch",
-          "es": "Español", "pt": "Português", "it": "Italiano", "ru": "Русский",
-          "ar": "العربية", "th": "ภาษาไทย", "vi": "Tiếng Việt", "id": "Indonesia",
+        function getLocaleNameKey(locale) {
+          return `locale_name_${String(locale || "").replace(/-/g, "_")}`
         }
 
-        // ── Lang switcher (multi-lang only) ──
-        if (isMultiLang) {
-          const savedLocale = localStorage.getItem("mdsone_locale")
-          if (savedLocale && data.locales.includes(savedLocale)) {
-            activeLocale = savedLocale
-            activeI18n = data.i18n[activeLocale] || {}
+        function getLocaleNameFromConfig(locale) {
+          const localeNames = data.localeNames || {}
+          const raw = String(locale || "").trim()
+          if (!raw) return ""
+          const hyphen = raw.replace(/_/g, "-")
+          const underscore = raw.replace(/-/g, "_")
+          return localeNames[raw] || localeNames[hyphen] || localeNames[underscore] || ""
+        }
+
+        function getLocaleDisplayName(locale) {
+          const fromConfig = getLocaleNameFromConfig(locale)
+          if (fromConfig) return fromConfig
+
+          const key = getLocaleNameKey(locale)
+          const currentValue = activeI18n && typeof activeI18n[key] === "string"
+            ? activeI18n[key].trim()
+            : ""
+          if (currentValue) return currentValue
+
+          if (isMultiLang && data.i18n) {
+            const enFallback = data.i18n.en || data.i18n["en-US"] || data.i18n["en-GB"]
+            const enValue = enFallback && typeof enFallback[key] === "string"
+              ? enFallback[key].trim()
+              : ""
+            if (enValue) return enValue
           }
-          const switcher = document.getElementById("lang-switcher")
-          if (switcher) {
-            switcher.style.display = "flex"
-            const select = document.createElement("select")
-            select.className = "lang-select"
-            select.id = "lang-select"
-            data.locales.forEach((locale) => {
-              const opt = document.createElement("option")
-              opt.value = locale
-              opt.textContent = LOCALE_NAMES[locale] || locale
-              if (locale === activeLocale) opt.selected = true
-              select.appendChild(opt)
+
+          return locale
+        }
+
+        function refreshLocaleSwitcherLabels() {
+          if (langTrigger && activeLocale) {
+            langTrigger.textContent = getLocaleDisplayName(activeLocale)
+          }
+          if (langMenu) {
+            langMenu.querySelectorAll(".lang-option").forEach((el) => {
+              const locale = el.dataset.locale || ""
+              el.textContent = getLocaleDisplayName(locale)
             })
-            select.addEventListener("change", () => switchLocale(select.value))
-            switcher.appendChild(select)
           }
         }
 
-        // ── Shared one-time setup ──
-        if (menuBtn) {
-          menuBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("active")
-            const isActive = sidebar.classList.contains("active")
-            menuBtn.textContent = isActive ? "✕" : "☰"
-            if (mobileMenuBtn) mobileMenuBtn.textContent = isActive ? "✕" : "☰"
-          })
-        }
-
-        if (mobileMenuBtn) {
-          mobileMenuBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("active")
-            const isActive = sidebar.classList.contains("active")
-            mobileMenuBtn.textContent = isActive ? "✕" : "☰"
-            if (menuBtn) menuBtn.textContent = isActive ? "✕" : "☰"
-          })
-        }
-
-        contentArea.addEventListener("click", () => {
+        function closeSidebarOnMobile() {
           if (window.innerWidth <= 768 && sidebar.classList.contains("active")) {
             sidebar.classList.remove("active")
-            if (menuBtn) menuBtn.textContent = "☰"
-            if (mobileMenuBtn) mobileMenuBtn.textContent = "☰"
-          }
-        })
-
-        // ── Theme toggle ──
-        const themeBtn = document.getElementById("theme-toggle")
-        const themeIcon = document.getElementById("theme-icon")
-        const themeLabel = document.getElementById("theme-label")
-        let isDark = config.theme_mode === "dark"
-
-        function updateThemeUI() {
-          if (isDark) {
-            htmlEl.removeAttribute("data-theme")
-            themeIcon.textContent = "☀"
-            themeLabel.textContent = activeI18n.theme_light_label || "Light"
-          } else {
-            htmlEl.setAttribute("data-theme", "light")
-            themeIcon.textContent = "☾"
-            themeLabel.textContent = activeI18n.theme_dark_label || "Dark"
+            if (menuBtn) menuBtn.textContent = MENU_ICON
+            if (mobileMenuBtn) mobileMenuBtn.textContent = MENU_ICON
           }
         }
-        updateThemeUI()
 
-        themeBtn.addEventListener("click", () => {
-          isDark = !isDark
-          updateThemeUI()
-        })
+        function buildTOC(tabName) {
+          if (!config.toc || !config.toc.enabled) return
+          const nav = document.querySelector(`.toc-nav[data-tab="${tabName}"]`)
+          if (!nav || nav.children.length > 0) return
 
-        // ── Content render (called on init and on locale switch) ──
+          const levels = config.toc.levels || [2, 3]
+          const content = document.querySelector(`.tab-content[data-tab="${tabName}"]`)
+          if (!content) return
+
+          const selector = levels.map((l) => `h${l}`).join(",")
+          const headings = content.querySelectorAll(selector)
+          if (headings.length === 0) return
+
+          let html = '<ul class="toc-list">'
+          headings.forEach((h) => {
+            const level = parseInt(h.tagName[1], 10)
+            const id = h.id || ""
+            const text = h.textContent || ""
+            if (id) html += `<li class="toc-item toc-h${level}"><a href="#${id}" data-target-id="${id}">${text}</a></li>`
+          })
+          html += "</ul>"
+          nav.innerHTML = html
+
+          nav.querySelectorAll("a[data-target-id]").forEach((a) => {
+            a.addEventListener("click", function (e) {
+              e.preventDefault()
+              const targetId = this.getAttribute("data-target-id")
+              const activeContent = contentArea.querySelector(".tab-content.active")
+              const target = activeContent ? activeContent.querySelector(`#${CSS.escape(targetId)}`) : null
+              if (target) {
+                let offset = 0
+                let el = target
+                while (el && el !== contentArea) {
+                  offset += el.offsetTop
+                  el = el.offsetParent
+                }
+                contentArea.scrollTo({ top: offset - 24, behavior: "smooth" })
+              }
+            })
+          })
+        }
+
+        function switchTOC(activeTab) {
+          document.querySelectorAll(".toc-nav").forEach((n) => n.classList.remove("open"))
+          buildTOC(activeTab)
+          const activeNav = document.querySelector(`.toc-nav[data-tab="${activeTab}"]`)
+          if (activeNav && activeNav.children.length > 0) activeNav.classList.add("open")
+        }
+
         function renderDocs(docs, i18n) {
           tabList.innerHTML = ""
           contentArea.innerHTML = ""
 
-          // i18n text elements
           document.getElementById("sidebar-subtitle").textContent = i18n.page_subtitle || ""
           document.getElementById("sidebar-footer").textContent = i18n.footer_label || ""
-
-
           if (menuBtn) menuBtn.title = i18n.menu_open_title || ""
           if (themeBtn) themeBtn.title = i18n.theme_toggle_title || ""
           updateThemeUI()
 
-          // Tabs + content
           docs.forEach((doc, idx) => {
             const btn = document.createElement("button")
             btn.className = "tab-button" + (idx === 0 ? " active" : "")
             btn.setAttribute("data-tab", doc.id)
-            btn.innerHTML = `<span class="tab-icon">◈</span><span class="tab-label">${doc.title}</span><span class="tab-indicator"></span>`
+            btn.innerHTML = `<span class="tab-label">${doc.title}</span><span class="tab-indicator"></span>`
             tabList.appendChild(btn)
 
             const nav = document.createElement("nav")
@@ -192,65 +207,8 @@
             contentArea.appendChild(content)
           })
 
-
-
-          // ── TOC ──
-          function buildTOC(tabName) {
-            if (!config.toc || !config.toc.enabled) return
-            const nav = document.querySelector(`.toc-nav[data-tab="${tabName}"]`)
-            if (!nav || nav.children.length > 0) return
-            const levels = config.toc.levels || [2, 3]
-            const content = document.querySelector(`.tab-content[data-tab="${tabName}"]`)
-            if (!content) return
-            const selector = levels.map((l) => `h${l}`).join(",")
-            const headings = content.querySelectorAll(selector)
-            if (headings.length === 0) return
-            let html = '<ul class="toc-list">'
-            headings.forEach((h) => {
-              const level = parseInt(h.tagName[1])
-              const id = h.id || ""
-              const text = h.textContent
-              if (id) html += `<li class="toc-item toc-h${level}"><a href="#${id}" data-target-id="${id}">${text}</a></li>`
-            })
-            html += "</ul>"
-            nav.innerHTML = html
-
-            // Scroll to heading within content-area using offsetTop chain.
-            // getBoundingClientRect() gives viewport-relative values that break after
-            // tab switches because display:none siblings and slideIn animation cause
-            // stale layout reads. offsetTop traversal is always accurate.
-            nav.querySelectorAll("a[data-target-id]").forEach((a) => {
-              a.addEventListener("click", function (e) {
-                e.preventDefault()
-                const targetId = this.getAttribute("data-target-id")
-                // Query only within the active tab-content to avoid hitting
-                // duplicate ids from other tabs that are still in the DOM (display:none)
-                const activeContent = contentArea.querySelector(".tab-content.active")
-                const target = activeContent ? activeContent.querySelector(`#${CSS.escape(targetId)}`) : null
-                if (target) {
-                  let offset = 0
-                  let el = target
-                  while (el && el !== contentArea) {
-                    offset += el.offsetTop
-                    el = el.offsetParent
-                  }
-                  contentArea.scrollTo({ top: offset - 24, behavior: "smooth" })
-                }
-              })
-            })
-          }
-
-          function switchTOC(activeTab) {
-            document.querySelectorAll(".toc-nav").forEach((n) => n.classList.remove("open"))
-            buildTOC(activeTab)
-            const activeNav = document.querySelector(`.toc-nav[data-tab="${activeTab}"]`)
-            if (activeNav && activeNav.children.length > 0) activeNav.classList.add("open")
-          }
-
-          // ── Tab switching ──
           const buttons = tabList.querySelectorAll(".tab-button")
           const contents = contentArea.querySelectorAll(".tab-content")
-
 
           buttons.forEach((btn) => {
             btn.addEventListener("click", function () {
@@ -268,45 +226,140 @@
 
               document.querySelector(`.tab-content[data-tab="${tab}"]`).classList.add("active")
               this.classList.add("active")
-
-              // Reset scroll position so the new tab always starts from the top
               contentArea.scrollTop = 0
-
-              const doc = docs.find((d) => d.id === tab)
               switchTOC(tab)
-
-              // Close sidebar on mobile after tab selection
-              if (window.innerWidth <= 768 && sidebar.classList.contains("active")) {
-                sidebar.classList.remove("active")
-                if (menuBtn) menuBtn.textContent = "☰"
-                if (mobileMenuBtn) mobileMenuBtn.textContent = "☰"
-              }
+              closeSidebarOnMobile()
             })
           })
 
           if (docs.length > 0) switchTOC(docs[0].id)
         }
 
-        // ── Locale switch ──
         function switchLocale(locale) {
           activeLocale = locale
           activeI18n = data.i18n[locale] || {}
           localStorage.setItem("mdsone_locale", locale)
           htmlEl.lang = activeI18n.html_lang || locale
-          const sel = document.getElementById("lang-select")
-          if (sel) sel.value = locale
+          refreshLocaleSwitcherLabels()
+          if (langMenu) {
+            langMenu.querySelectorAll(".lang-option").forEach((el) => {
+              el.classList.toggle("active", el.dataset.locale === locale)
+            })
+          }
           renderDocs(data.docs[locale] || [], activeI18n)
         }
 
-        // ── Initial render ──
+        if (isMultiLang) {
+          const savedLocale = localStorage.getItem("mdsone_locale")
+          if (savedLocale && data.locales.includes(savedLocale)) {
+            activeLocale = savedLocale
+            activeI18n = data.i18n[activeLocale] || {}
+          }
+          const switcher = document.getElementById("lang-switcher")
+          if (switcher) {
+            switcher.style.display = "flex"
+
+            langTrigger = document.createElement("button")
+            langTrigger.type = "button"
+            langTrigger.className = "lang-trigger"
+            langTrigger.id = "lang-trigger"
+
+            langMenu = document.createElement("div")
+            langMenu.className = "lang-menu"
+            langMenu.id = "lang-menu"
+
+            data.locales.forEach((locale) => {
+              const item = document.createElement("button")
+              item.type = "button"
+              item.className = "lang-option" + (locale === activeLocale ? " active" : "")
+              item.dataset.locale = locale
+              item.textContent = getLocaleDisplayName(locale)
+              item.addEventListener("click", () => {
+                switchLocale(locale)
+                switcher.classList.remove("open")
+              })
+              langMenu.appendChild(item)
+            })
+
+            langTrigger.textContent = getLocaleDisplayName(activeLocale)
+            langTrigger.addEventListener("click", (e) => {
+              e.stopPropagation()
+              switcher.classList.toggle("open")
+            })
+
+            switcher.appendChild(langTrigger)
+            switcher.appendChild(langMenu)
+
+            document.addEventListener("click", (e) => {
+              if (!switcher.contains(e.target)) switcher.classList.remove("open")
+            })
+            document.addEventListener("keydown", (e) => {
+              if (e.key === "Escape") switcher.classList.remove("open")
+            })
+          }
+        }
+
+        const MENU_ICON = "\u2630"
+        const CLOSE_ICON = "\u2715"
+
+        if (menuBtn) {
+          menuBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("active")
+            const isActive = sidebar.classList.contains("active")
+            menuBtn.textContent = isActive ? CLOSE_ICON : MENU_ICON
+            if (mobileMenuBtn) mobileMenuBtn.textContent = isActive ? CLOSE_ICON : MENU_ICON
+          })
+        }
+
+        if (mobileMenuBtn) {
+          mobileMenuBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("active")
+            const isActive = sidebar.classList.contains("active")
+            mobileMenuBtn.textContent = isActive ? CLOSE_ICON : MENU_ICON
+            if (menuBtn) menuBtn.textContent = isActive ? CLOSE_ICON : MENU_ICON
+          })
+        }
+
+        contentArea.addEventListener("click", () => {
+          closeSidebarOnMobile()
+        })
+
+        const themeBtn = document.getElementById("theme-toggle")
+        const themeIcon = document.getElementById("theme-icon")
+        const themeLabel = document.getElementById("theme-label")
+        let isDark = config.theme_mode === "dark"
+
+        function updateThemeUI() {
+          if (isDark) {
+            htmlEl.removeAttribute("data-theme")
+            themeIcon.textContent = "\u263E"
+            themeLabel.textContent = activeI18n.theme_light_label || "Light"
+          } else {
+            htmlEl.setAttribute("data-theme", "light")
+            themeIcon.textContent = "\u2600"
+            themeLabel.textContent = activeI18n.theme_dark_label || "Dark"
+          }
+          const currentPalette = (
+            config.palette ||
+            (config.types && config.types.default && config.types.default.palette) ||
+            "fog-gray"
+          )
+          htmlEl.setAttribute("data-palette", currentPalette)
+        }
+        updateThemeUI()
+
+        themeBtn.addEventListener("click", () => {
+          isDark = !isDark
+          updateThemeUI()
+        })
+
         if (isMultiLang) {
           renderDocs(data.docs[activeLocale] || [], activeI18n)
         } else {
-          renderDocs(data.docs, data.i18n)
+          renderDocs(data.docs || [], data.i18n || {})
         }
       }
 
-      // Wait for window.mdsone_DATA to be set, then render
       if (window.mdsone_DATA) {
         renderApp(window.mdsone_DATA)
       }

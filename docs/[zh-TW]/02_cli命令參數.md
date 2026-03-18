@@ -1,8 +1,8 @@
-﻿# CLI 命令參數
+# CLI 命令參數
 
 ## 語法
 
-```
+```bash
 mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 ```
 
@@ -10,220 +10,123 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 
 | 參數 / 選項 | 說明 | 範例 |
 |------------|------|------|
-| `<inputs...>` | 輸入來源：單一檔、多個檔、或單一資料夾 | `README.md` \| `f1.md f2.md` \| `./docs` |
-| `-m, --merge` | 合併所有輸入為**單一** HTML 輸出 | `-m` |
-| `-o, --output PATH` | 輸出路徑（合併模式 → 檔案；批次模式 → 目錄） | `-o dist/index.html` \| `-o dist/` |
-| `-f, --force <boolean>` | 覆蓋模式開關（預設 `true`） | `-f false` |
-| `--template NAME` | 模板名稱 | `--template minimal` |
-| `--locale CODE` | 語系代碼（單語模式） | `--locale zh-TW` |
-| `--img-base64-embed [true\|false]` | 將圖片嵌入為 base64（本地+遠端） | `--img-base64-embed` |
-| `--img-max-width PIXELS` | 限制圖片最大寬度（需要 sharp） | `--img-max-width 400` |
-| `--img-compress QUALITY` | 圖片壓縮品質 1-100（需要 sharp） | `--img-compress 80` |
-| `--code-highlight true\|false` | 語法高亮（預設 true） | `--code-highlight false` |
-| `--code-copy [true\|false\|line\|cmd]` | 程式碼複製按鈕與模式（預設 true） | `--code-copy cmd` |
-| `--line-copy` | 程式碼單行複製按鈕（預設停用） | `--line-copy` |
-| `--code-highlight-theme NAME` | highlight.js 深色主題名稱 | `--code-highlight-theme github-dark` |
-| `--code-highlight-theme-light NAME` | highlight.js 淺色主題名稱 | `--code-highlight-theme-light github` |
-| `--config PATH` | 指定 config.toml 路徑 | `--config ./config.toml` |
-| `--no-config` | 忽略 config.toml | `--no-config` |
+| `<inputs...>` | 輸入來源：單一檔、多個檔、或單一資料夾 | `README.md`、`a.md b.md`、`./docs` |
+| `-m, --merge` | 合併所有輸入為單一 HTML | `-m` |
+| `-o, --output PATH` | 輸出路徑；合併模式為檔案，批次模式多檔 / 資料夾為目錄 | `-o dist/index.html` |
+| `-f, --force <boolean>` | 是否覆蓋既有輸出（預設 `true`） | `-f false` |
+| `--templates-dir <DIR>` | 模板目錄 | `--templates-dir ./templates` |
+| `--template <NAME>` | 模板名稱（目前內建為 `normal`） | `--template normal` |
+| `--template-type <NAME>` | 模板變體名稱；不存在時回退 `default` | `--template-type warm-cream` |
+| `--site-title <TEXT>` | 文件標題 | `--site-title "My Docs"` |
+| `--theme-mode <light\|dark>` | 初始明暗模式 | `--theme-mode dark` |
+| `--minify-html <true\|false>` | 是否壓縮 HTML（預設 `true`） | `--minify-html false` |
+| `--locale <CODE>` | 單語模式 UI 語系 | `--locale zh-TW` |
+| `--i18n-mode` | 啟用多國語言模式 | `--i18n-mode` |
+| `--i18n-default <CODE>` | 多國語言模式的預設語系 | `--i18n-default zh-TW` |
+| `--config <PATH>` | 指定 `config.toml` 路徑 | `--config ./config.toml` |
+| `--no-config` | 忽略 `config.toml` | `--no-config` |
+| `--img-base64-embed [true\|false]` | 將圖片嵌入為 base64 | `--img-base64-embed` |
+| `--img-max-width <pixels>` | 圖片最大寬度 | `--img-max-width 400` |
+| `--img-compress <1-100>` | 圖片壓縮品質 | `--img-compress 80` |
+| `--code-highlight <true\|false>` | 啟用 / 關閉語法高亮 | `--code-highlight false` |
+| `--code-copy [mode]` | 程式碼複製模式：`true`、`false`、`line`、`cmd` | `--code-copy cmd` |
+| `--line-copy` | 快捷方式，等同讓 copy mode 走 `line` | `--line-copy` |
+| `--code-line-number [true\|false]` | 顯示程式碼行號 | `--code-line-number true` |
 
-## 兩種運作模式
+## 輸入模式
 
 ### 批次模式（預設，不加 `-m`）
 
-每個 Markdown 檔案各自產生一個獨立的 HTML 檔案。
+每個 Markdown 檔案各自輸出一個 HTML。
 
-| 輸入 | 輸出 | `-o` 的意義 |
-|------|------|-------------|
-| 單一檔案 | 單一 HTML | 可選 — 指定輸出**檔案**路徑；預設為 CWD 下同名 `.html` |
-| 多個檔案 | 各自對應 HTML | 可選 — 指定輸出**目錄**；預設為 CWD |
-| 單一資料夾 | 各自對應 HTML | **必填** — 必須為目錄路徑 |
-
-> 批次多檔 / 資料夾模式使用 `-o` 時，必須為**目錄路徑**（不可包含副檔名）。
+| 輸入 | 輸出 | `-o` 用途 |
+|------|------|-----------|
+| 單一檔案 | 單一 HTML | 可選；為輸出檔案路徑 |
+| 多個檔案 | 多個 HTML | 可選；為輸出目錄 |
+| 單一資料夾 | 多個 HTML | 必填；必須是輸出目錄 |
 
 ```bash
-# 單一檔案 → README.html 輸出至 CWD
-mdsone README.md
-
-# 單一檔案，指定輸出路徑
-mdsone README.md -o dist/index.html
-
-# 多個檔案 → a.html + b.html 輸出至 CWD
-mdsone a.md b.md
-
-# 多個檔案，指定輸出目錄
-mdsone a.md b.md -o ./dist
-
-# 資料夾 → 每個 .md 各自產生對應 .html（-o 必填）
-mdsone ./docs -o ./dist
+npx mdsone README.md
+npx mdsone README.md -o dist/index.html
+npx mdsone a.md b.md
+npx mdsone a.md b.md -o ./dist
+npx mdsone ./docs -o ./dist
 ```
 
 ### 合併模式（`-m`）
 
-所有輸入合併為**單一** HTML 檔案，以分頁（tab）方式呈現。
+所有輸入會合併成單一 HTML，以 tab 方式呈現。
 
-| 輸入 | 預設輸出檔名 | `-o` 的意義 |
-|------|-------------|-------------|
-| 單一檔案 | CWD 下 `<name>.html` | 可選 — 指定輸出**檔案**路徑 |
-| 多個檔案 | CWD 下 `merge.html` | 可選 — 指定輸出**檔案**路徑 |
-| 單一資料夾 | CWD 下 `<dirname>.html` | 可選 — 指定輸出**檔案**路徑 |
-
-> 合併模式的 `-o` 必須為**檔案路徑**（如 `output.html`），指向目錄會報錯。
+| 輸入 | 預設輸出 | `-o` 用途 |
+|------|----------|-----------|
+| 單一檔案 | `<name>.html` | 可選；為輸出檔案 |
+| 多個檔案 | `merge.html` | 可選；為輸出檔案 |
+| 單一資料夾 | `<dirname>.html` | 可選；為輸出檔案 |
 
 ```bash
-# 多個檔案合併 → merge.html 輸出至 CWD
-mdsone a.md b.md -m
-
-# 多個檔案合併，指定輸出路徑
-mdsone intro.md guide.md -m -o manual.html
-
-# 資料夾合併 → docs.html 輸出至 CWD
-mdsone ./docs -m
-
-# 資料夾合併，指定輸出路徑
-mdsone ./docs -m -o dist/manual.html
+npx mdsone intro.md guide.md -m
+npx mdsone intro.md guide.md -m -o manual.html
+npx mdsone ./docs -m
+npx mdsone ./docs -m -o dist/manual.html
 ```
 
-> 不支援「檔案與資料夾混合輸入」。
-
-## 多國語言
-
-多國語言的檔案結構、參數與預設值已統一收錄在 `04_多國語言.md`。
-
-## 覆蓋保護 (`-f`)
+## 覆蓋保護
 
 | 旗標 | 行為 |
 |------|------|
-| `-f true`（預設） | 直接覆蓋已存在的輸出 |
-| `-f false`（合併模式） | 目標檔已存在則中止並報錯 |
-| `-f false`（批次模式） | 目標檔已存在則**跳過**該檔並輸出警告，繼續處理其餘檔案 |
+| `-f true` | 直接覆蓋輸出 |
+| `-f false`（合併模式） | 目標已存在時中止 |
+| `-f false`（批次模式） | 已存在檔案會跳過，其餘繼續 |
 
-```bash
-# 若 output.html 已存在則中止
-npx mdsone README.md -o output.html -f false
+## 設定優先順序
+
+```text
+CLI 參數 > 環境變數 > config.toml > 預設值
 ```
 
-## 設定方式（優先順序）
-
-設定可透過以下四種方式指定，優先順序由高到低：
-
-> 布林值一律只接受 `true` / `false`（CLI 與環境變數）。
-
-### 1. CLI 參數（最高優先）
-
-```bash
-npx mdsone ./docs -o ./dist/index.html --template normal
-```
-
-### 2. 環境變數
-
-```bash
-export MARKDOWN_SOURCE_DIR="./docs"
-export OUTPUT_FILE="./dist/index.html"
-npx mdsone
-```
-
-在 CI 環境（如 GitHub Actions）中特別重要：
-
-```yaml
-env:
-  MARKDOWN_SOURCE_DIR: "./docs"
-  OUTPUT_FILE: "./dist/index.html"
-  SITE_TITLE: "My Documentation"
-steps:
-  - run: npm ci
-  - run: npx mdsone
-```
-
-### 3. config.toml（本地開發推薦）
-
-```toml
-[paths]
-source = "./docs"         # 無 CLI inputs 時的 fallback 來源
-output_file = "./dist/index.html"
-
-[build]
-default_template = "normal"
-
-[plugins]
-image = { base64_embed = true, max_width = 600, compress = 90 }
-```
-
-### 4. 預設值
-
-若上述三種皆未設定，使用內建預設值。
-
-## 參數與配置的對應
+## 對應關係
 
 | 功能 | CLI | 環境變數 | config.toml |
-|------|-----|---------|-------------|
+|------|-----|----------|-------------|
 | Markdown 來源 | `<inputs...>` | `MARKDOWN_SOURCE_DIR` | `[paths] source` |
 | 輸出路徑 | `-o, --output` | `OUTPUT_FILE` | `[paths] output_file` |
-| 模板目錄 | — | `TEMPLATES_DIR` | `[paths] templates_dir` |
-| 合併模式 | `-m, --merge` | — | — |
+| 模板目錄 | `--templates-dir` | `TEMPLATES_DIR` | `[paths] templates_dir` |
 | 模板 | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template` |
-| 語系 | `--locale` | `LOCALE` | `[i18n] locale` |
-| 頁面標題 | `--site-title` | `SITE_TITLE` | `[site] title` |
-| 主題 | `--theme-mode` | `THEME_MODE` | `[site] theme_mode` |
+| 模板變體 | `--template-type` | `TEMPLATE_TYPE` | `[build] template_type` |
+| 文件標題 | `--site-title` | `SITE_TITLE` | `[site] title` |
+| 明暗模式 | `--theme-mode` | `THEME_MODE` | `[site] theme_mode` |
 | 壓縮 HTML | `--minify-html` | `MINIFY_HTML` | `[build] minify_html` |
 | 建置日期 | — | `BUILD_DATE` | `[build] build_date` |
 | Markdown 擴充 | — | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
-| 圖片 base64 嵌入 | `--img-base64-embed [true|false]` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
+| 單語 UI 語系 | `--locale` | `LOCALE` | `[i18n] locale` |
+| 多語模式 | `--i18n-mode` | `I18N_MODE` | `[i18n] mode` |
+| 多語預設語系 | `--i18n-default` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
+| 圖片 base64 嵌入 | `--img-base64-embed` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
 | 圖片最大寬度 | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | 圖片壓縮品質 | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| 語法高亮 | `--code-highlight true|false` | `CODE_HIGHLIGHT` | `[plugins.highlight] enable` |
-| 複製按鈕 | `--code-copy [true|false|line|cmd]` | `CODE_COPY` | `[plugins.copy] enable` |
-| 複製模式 | `--code-copy line|cmd` | — | `[plugins.copy] mode` |
+| 語法高亮 | `--code-highlight` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
+| 程式碼複製 | `--code-copy` | `CODE_COPY` | `[plugins.copy] enable` |
 | 單行複製 | `--line-copy` | `CODE_LINE_COPY` | `[plugins.copy] line_copy` |
-| 高亮深色主題 | `--code-highlight-theme` | `CODE_HIGHLIGHT_THEME` | `[plugins.highlight] theme` |
-| 高亮淺色主題 | `--code-highlight-theme-light` | `CODE_HIGHLIGHT_THEME_LIGHT` | `[plugins.highlight] theme_light` |
+| 程式碼行號 | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins.line_number] enable` |
 
 ## 使用範例
 
 ```bash
-# --- 批次模式（預設）---
-
-# 單一檔案
-npx mdsone README.md
-npx mdsone README.md -o dist/index.html
-
-# 多個檔案 → 各自輸出至 CWD
-npx mdsone a.md b.md
-
-# 多個檔案 → 各自輸出至指定目錄
-npx mdsone a.md b.md -o ./out
-
-# 資料夾 → 每個 .md → 對應 .html（-o 目錄必填）
-npx mdsone ./docs -o ./dist
-
-# --- 合併模式（-m）---
-
-# 多個檔案合併 → merge.html 輸出至 CWD
-npx mdsone intro.md guide.md -m
-
-# 多個檔案合併，指定輸出路徑
-npx mdsone intro.md guide.md -m -o manual.html
-
-# 資料夾合併 → docs.html 輸出至 CWD
+# 合併資料夾
 npx mdsone ./docs -m
 
-# 資料夾合併，指定輸出路徑
-npx mdsone ./docs -m -o dist/manual.html --template normal
+# 套用模板變體
+npx mdsone ./docs -m --template normal --template-type warm-cream
 
-# 嵌入圖片為 base64
-npx mdsone ./docs -m -o dist/index.html --img-base64-embed
+# 多國語言
+npx mdsone ./docs --i18n-mode --i18n-default zh-TW -o dist/index.html
 
-# 嵌入圖片並 resize + 壓縮（需要 sharp）
-npx mdsone ./docs -m -o dist/index.html --img-base64-embed --img-max-width 600 --img-compress 90
+# 圖片嵌入 + 壓縮
+npx mdsone ./docs -m --img-base64-embed --img-max-width 600 --img-compress 90
 
-# 禁用語法高亮和複製按鈕
-npx mdsone ./docs -m -o dist/index.html --code-highlight false --code-copy false
+# 關閉高亮與複製
+npx mdsone ./docs -m --code-highlight false --code-copy false
 
-# 啟用單行複製按鈕
-npx mdsone ./docs -m -o dist/index.html --line-copy
-
-# 覆蓋保護
-npx mdsone README.md -o output.html -f false
+# 顯示行號
+npx mdsone ./docs -m --code-line-number true
 ```
-
-
