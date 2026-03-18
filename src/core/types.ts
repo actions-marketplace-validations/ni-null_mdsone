@@ -30,7 +30,6 @@ export interface Config {
   code_highlight: boolean;
   code_copy: boolean;
   code_copy_mode: string;
-  code_line_copy: boolean;
   code_line_number: boolean;
   template_type: string;
   // plugin settings (optional)
@@ -52,7 +51,6 @@ export interface CliArgs {
   i18nMode?: boolean;
   defaultLocale?: string;
   minifyHtml?: string;
-  templatesDir?: string;
   templateType?: string;
   configPath?: string;
   noConfig?: boolean;

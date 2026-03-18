@@ -37,7 +37,7 @@ default_locale = ""
 
 [plugins]
 order = ["image", "shiki", "copy", "line_number"]
-copy = { enable = true, mode = "none", line_copy = false }
+copy = { enable = true, mode = "none" }
 shiki = { enable = true }
 line_number = { enable = false }
 image = { base64_embed = false, max_width = 0, compress = 0 }

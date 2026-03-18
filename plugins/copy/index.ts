@@ -69,20 +69,13 @@ export const copyPlugin: Plugin = {
             "--code-copy [mode]",
             "Copy button mode: true/false or line/cmd (default: true)",
         );
-        program.option("--line-copy", "Enable per-line copy button on code blocks");
     },
 
     cliToConfig(opts, out) {
         const raw = opts["codeCopy"];
 
         // --code-copy 不帶值代表 true
-        if (raw === true || raw === undefined) {
-            if (opts["lineCopy"] === true) {
-                out.code_copy = true;
-                out.code_copy_mode = "line";
-            }
-            return;
-        }
+        if (raw === true || raw === undefined) return;
 
         const v = String(raw).toLowerCase();
         if (v === "false") {
@@ -100,7 +93,7 @@ export const copyPlugin: Plugin = {
     isEnabled: (config) => config.code_copy !== false,
 
     processHtml(html, config) {
-        const mode = (config.code_copy_mode ?? (config.code_line_copy ? "line" : "none")) as string;
+        const mode = (config.code_copy_mode ?? "none") as string;
         if (mode !== "line" && mode !== "cmd") return html;
 
         const $ = load(html, { decodeEntities: false }, false);
@@ -170,7 +163,7 @@ export const copyPlugin: Plugin = {
 
     getAssets(config): PluginAssets {
         const script   = getCopyButtonScript();
-        const mode     = (config.code_copy_mode ?? (config.code_line_copy ? "line" : "none")) as string;
+        const mode     = (config.code_copy_mode ?? "none") as string;
         const blockOn  = config.code_copy !== false;
 
         // initCall

@@ -30,7 +30,6 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `--img-compress <1-100>` | 圖片壓縮品質 | `--img-compress 80` |
 | `--code-highlight <true\|false>` | 啟用 / 關閉語法高亮 | `--code-highlight false` |
 | `--code-copy [mode]` | 程式碼複製模式：`true`、`false`、`line`、`cmd` | `--code-copy cmd` |
-| `--line-copy` | 快捷方式，等同讓 copy mode 走 `line` | `--line-copy` |
 | `--code-line-number [true\|false]` | 顯示程式碼行號 | `--code-line-number true` |
 
 ## 輸入模式
@@ -106,7 +105,6 @@ CLI 參數 > 環境變數 > config.toml > 預設值
 | 圖片壓縮品質 | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
 | 語法高亮 | `--code-highlight` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
 | 程式碼複製 | `--code-copy` | `CODE_COPY` | `[plugins.copy] enable` |
-| 單行複製 | `--line-copy` | `CODE_LINE_COPY` | `[plugins.copy] line_copy` |
 | 程式碼行號 | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins.line_number] enable` |
 
 ## 使用範例

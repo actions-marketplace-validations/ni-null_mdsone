@@ -32,7 +32,6 @@ export const DEFAULT_CONFIG: Config = {
   code_highlight: true,
   code_copy: true,
   code_copy_mode: "none",
-  code_line_copy: false,
   code_line_number: false,
   template_type: "default",
 };
@@ -65,8 +64,6 @@ function filterDefined<T extends object>(obj: Partial<T>): Partial<T> {
  */
 export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   const out: Partial<Config> = {};
-  // Paths
-  if (args.templatesDir) out.templates_dir = args.templatesDir;
   // Templates & Styling
   if (args.template) out.default_template = args.template;
   if (args.templateType) out.template_type = args.templateType;

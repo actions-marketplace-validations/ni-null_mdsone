@@ -57,7 +57,6 @@ export function envToConfig(): Partial<Config> {
   if (e["IMG_COMPRESS"] !== undefined) { const q = parseInt(e["IMG_COMPRESS"]!, 10); if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q)); }
   if (e["CODE_HIGHLIGHT"] !== undefined) out.code_highlight = parseBool(e["CODE_HIGHLIGHT"], true);
   if (e["CODE_COPY"] !== undefined) out.code_copy = parseBool(e["CODE_COPY"], true);
-  if (e["CODE_LINE_COPY"] !== undefined) out.code_line_copy = parseBool(e["CODE_LINE_COPY"], false);
   if (e["CODE_LINE_NUMBER"] !== undefined) out.code_line_number = parseBool(e["CODE_LINE_NUMBER"], false);
   if (e["MARKDOWN_EXTENSIONS"]) {
     out.markdown_extensions = parseList(e["MARKDOWN_EXTENSIONS"], DEFAULT_CONFIG.markdown_extensions);
@@ -111,10 +110,6 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   const copyMode = s(copy["mode"]);
   if (copyMode && ["none", "line", "cmd"].includes(copyMode)) {
     out.code_copy_mode = copyMode;
-  }
-  if (b(copy["line_copy"]) !== undefined) out.code_line_copy = b(copy["line_copy"])!;
-  if (out.code_copy_mode === undefined && out.code_line_copy === true) {
-    out.code_copy_mode = "line";
   }
   if (b(shiki["enable"]) !== undefined) out.code_highlight = b(shiki["enable"])!;
   if (b(image["base64_embed"]) !== undefined) out.img_to_base64 = b(image["base64_embed"])!;

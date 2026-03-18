@@ -54,6 +54,14 @@ function resolvePackageRoot(): string {
   return process.cwd();
 }
 
+function isTemplateFolder(templateDir: string): boolean {
+  return (
+    dirExists(templateDir) &&
+    fileExists(path.join(templateDir, "style.css")) &&
+    fileExists(path.join(templateDir, "template.html"))
+  );
+}
+
 async function main(): Promise<void> {
   const packageRoot = resolvePackageRoot();
 
@@ -232,13 +240,30 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // ⑩ 確認 template 存在
-  const availableTemplates = await scanTemplates(config.templates_dir);
+  // ⑩ 解析 template 來源：名稱或資料夾路徑
+  let templateRootDir = config.templates_dir;
+  let templateName = config.default_template;
+  const rawTemplate = (config.default_template || "").trim();
+  const templateLooksLikePath = path.isAbsolute(rawTemplate) || rawTemplate.includes("/") || rawTemplate.includes("\\");
+  if (templateLooksLikePath) {
+    const templateDir = path.isAbsolute(rawTemplate)
+      ? rawTemplate
+      : path.resolve(process.cwd(), rawTemplate);
+    if (!isTemplateFolder(templateDir)) {
+      console.error(`[ERROR] Template folder is invalid: ${templateDir}`);
+      console.error("[ERROR] Expected files: style.css, template.html");
+      process.exit(1);
+    }
+    templateRootDir = path.dirname(templateDir);
+    templateName = path.basename(templateDir);
+  }
+
+  // ⑩-b 確認 template 存在
+  const availableTemplates = await scanTemplates(templateRootDir);
   if (availableTemplates.length === 0) {
-    console.error("[ERROR] No templates found.");
+    console.error(`[ERROR] No templates found in: ${templateRootDir}`);
     process.exit(1);
   }
-  const templateName = config.default_template;
   if (!availableTemplates.includes(templateName)) {
     console.error(`[ERROR] Template not found: ${templateName}`);
     console.error(`[ERROR] Available: ${availableTemplates.join(", ")}`);
@@ -249,7 +274,7 @@ async function main(): Promise<void> {
   let templateData;
   try {
     templateData = await loadTemplateFiles(
-      config.templates_dir,
+      templateRootDir,
       templateName,
     );
   } catch (e) {
@@ -285,7 +310,7 @@ async function main(): Promise<void> {
       documents["index"] = html;
 
       const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
-      const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale || "en");
+      const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en");
       const localeFile = tplLocale?.template
         ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
         : globalLocale;
@@ -323,7 +348,7 @@ async function main(): Promise<void> {
       }
 
       const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
-      const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale || "en");
+      const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en");
       const localeFile = tplLocale?.template
         ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
         : globalLocale;
@@ -372,7 +397,7 @@ async function main(): Promise<void> {
       const localeFileMap: Record<string, Awaited<ReturnType<typeof loadLocaleFile>>> = {};
       for (const locale of locales) {
         const globalLocale = await loadLocaleFile(config.locales_dir, locale);
-        const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, locale);
+        const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, locale);
         localeFileMap[locale] = tplLocale?.template
           ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
           : globalLocale;
@@ -412,7 +437,7 @@ async function main(): Promise<void> {
       }
 
       const globalLocale = await loadLocaleFile(config.locales_dir, config.locale);
-      const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale);
+      const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale);
       const localeFile = tplLocale?.template
         ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
         : globalLocale;
@@ -452,7 +477,7 @@ async function main(): Promise<void> {
 
     // 載入共用 locale（批次中所有檔案共用同一組 i18n 字串）
     const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
-    const tplLocale = await loadTemplateLocaleFile(config.templates_dir, templateName, config.locale || "en");
+    const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en");
     const localeFile = tplLocale?.template
       ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
       : globalLocale;

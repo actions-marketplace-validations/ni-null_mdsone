@@ -1,20 +1,17 @@
-# Plugins
+﻿# Plugins
 
-目前內建四個 plugin：`image`、`shiki`、`copy`、`line_number`。
+?桀??批遣??plugin嚗image`?shiki`?copy`?line_number`??
+摰?冽敹?Markdown 頧? HTML 銋?隞嚗?
+1. `processHtml()`嚗撖?HTML
+2. `getAssets()`嚗釣?亙???閬? CSS / JS
 
-它們都在核心 Markdown 轉成 HTML 之後介入：
-
-1. `processHtml()`：改寫 HTML
-2. `getAssets()`：注入外掛需要的 CSS / JS
-
-這代表核心不需要知道 Shiki 或圖片處理細節，只要交給 plugin manager 依順序處理即可。
-
+?誨銵冽敹??閬??Shiki ?????敦蝭嚗閬漱蝯?plugin manager 靘?摨???胯?
 ## image
 
-- 功能：把 HTML 中的 `<img src="...">` 轉成 base64 data URL
-- 支援本地圖片與遠端 `http/https` 圖片
-- 可搭配縮放與壓縮
-- 啟用條件：`img_to_base64 = true`
+- ?嚗? HTML 銝剔? `<img src="...">` 頧? base64 data URL
+- ?舀?砍????蝡?`http/https` ??
+- ?舀?葬?曇?憯葬
+- ?璇辣嚗img_to_base64 = true`
 
 ```bash
 npx mdsone README.md -o index.html --img-base64-embed
@@ -22,87 +19,77 @@ npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400
 npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400 --img-compress 80
 ```
 
-對應設定：
-
+撠?閮剖?嚗?
 - `[plugins.image].base64_embed`
 - `[plugins.image].max_width`
 - `[plugins.image].compress`
 
 ## shiki
 
-- 功能：將一般 `<pre><code>` 區塊改寫成 Shiki 高亮 HTML
-- 啟用條件：`code_highlight = true`
-- 若 fenced code 沒指定語言，可依模板設定的 `auto_detect` 使用 `highlight.js` 自動判斷
-- Shiki 主題由模板的 `template.config.json` 控制
+- ?嚗?銝??`<pre><code>` ?憛撖急? Shiki 擃漁 HTML
+- ?璇辣嚗code_highlight = true`
+- ??fenced code 瘝?摰?閮嚗靘芋?輯身摰? `auto_detect` 雿輻 `highlight.js` ?芸??斗
+- Shiki 銝駁??望芋?輻? `template.config.json` ?批
 
-對應設定：
-
+撠?閮剖?嚗?
 - `[plugins.shiki].enable`
 
-模板設定位置：
-
+璅⊥閮剖?雿蔭嚗?
 - `config.types.<name>.code.Shiki.dark`
 - `config.types.<name>.code.Shiki.light`
 - `config.types.<name>.code.Shiki.auto_detect`
 
 ## copy
 
-- 功能：為程式碼區塊加入複製能力
-- 啟用條件：`code_copy = true`
-- 支援 `line` 與 `cmd` 兩種模式
+- ?嚗蝔?蝣澆?憛??亥?鋆質??- ?璇辣嚗code_copy = true`
+- ?舀 `line` ??`cmd` ?拍車璅∪?
 
 ```bash
-# 啟用 copy plugin（但不指定特殊模式）
+# ? copy plugin嚗?銝?摰畾芋撘?
 npx mdsone README.md -o index.html --code-copy true
 
-# 單行命令複製
+# ?株??賭誘銴ˊ
 npx mdsone README.md -o index.html --code-copy line
 
-# 依註解區塊複製命令段落
+# 區塊命令分段複製
 npx mdsone README.md -o index.html --code-copy cmd
 
-# 等同於把 mode 切成 line
-npx mdsone README.md -o index.html --line-copy
 ```
 
-對應設定：
-
+撠?閮剖?嚗?
 - `[plugins.copy].enable`
 - `[plugins.copy].mode`
-- `[plugins.copy].line_copy`
 
 ## line_number
 
-- 功能：在程式碼區塊加入行號
-- 啟用條件：`code_line_number = true`
-- 若 code block 已被其他 plugin 包成 `.code-line`，會直接補上行號欄位
+- ?嚗蝔?蝣澆?憛??亥???- ?璇辣嚗code_line_number = true`
+- ??code block 撌脰◤?嗡? plugin ?? `.code-line`嚗??湔鋆?銵?甈?
 
 ```bash
 npx mdsone README.md -o index.html --code-line-number true
 ```
 
-對應設定：
-
+撠?閮剖?嚗?
 - `[plugins.line_number].enable`
 
-## config.toml 範例
+## config.toml 蝭?
 
 ```toml
 [plugins]
 order = ["image", "shiki", "copy", "line_number"]
-copy = { enable = true, mode = "none", line_copy = false }
+copy = { enable = true, mode = "none" }
 shiki = { enable = true }
 line_number = { enable = false }
 image = { base64_embed = false, max_width = 0, compress = 0 }
 ```
 
-## 執行順序
+## ?瑁???
 
-預設內建 plugin 註冊順序為：
+?身?批遣 plugin 閮餃????綽?
 
 1. `image`
 2. `shiki`
 3. `copy`
 4. `line_number`
 
-若有設定 `[plugins].order`，會依該順序執行。
+?交?閮剖? `[plugins].order`嚗?靘府???瑁???
