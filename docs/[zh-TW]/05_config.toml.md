@@ -3,14 +3,8 @@
 以下是目前版本對應的 `config.toml` 範例。
 
 ```bash
-# 使用目前目錄下的 config.toml
-npx mdsone
-
 # 指定 config.toml
 npx mdsone --config ./config.toml
-
-# 忽略 config.toml
-npx mdsone --no-config
 ```
 
 ```toml
@@ -20,8 +14,7 @@ output_file = "./dist/index.html"
 templates_dir = "templates"
 
 [build]
-default_template = "normal"
-template_type = "default"
+default_template = "normal@warm-cream" # 格式：<theme-or-path>[@variant]
 minify_html = true
 markdown_extensions = ["tables", "fenced_code", "nl2br", "sane_lists", "attr_list"]
 build_date = ""
@@ -37,10 +30,10 @@ default_locale = ""
 
 [plugins]
 order = ["image", "shiki", "copy", "line_number"]
-copy = { enable = true, mode = "none" }
+copy = { enable = true, mode = "off" }
 shiki = { enable = true }
 line_number = { enable = false }
-image = { base64_embed = false, max_width = 0, compress = 0 }
+image = { embed = "off", max_width = 0, compress = 0 }
 ```
 
 ## 補充

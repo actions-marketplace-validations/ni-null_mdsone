@@ -14,17 +14,15 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `-m, --merge` | Merge all inputs into a **single** HTML output | `-m` |
 | `-o, --output PATH` | Output path (merge mode → file; batch mode → directory) | `-o dist/index.html` \| `-o dist/` |
 | `-f, --force <boolean>` | Overwrite mode toggle (default `true`) | `-f false` |
-| `--template NAME` | Template name | `--template minimal` |
-| `--template-type NAME` | Template style variant (fallback to `default` if missing) | `--template-type default` |
-| `--locale CODE` | Locale code (single-language mode) | `--locale en` |
-| `--i18n-mode` | Enable multi-language mode (boolean flag, automatically triggers merge) | `--i18n-mode` |
-| `--img-base64-embed [true\|false]` | Embed images as base64 (local + remote) | `--img-base64-embed` |
+| `-t, --template THEME_OR_PATH[@VARIANT]` | Template name/path with optional variant | `-t normal@warm-cream` |
+| `--i18n-mode [CODE]` | Enable multi-language mode (optional CODE sets default locale) | `--i18n-mode=en` |
+| `--img-embed=<off\|base64>` | Image embedding mode (`off` by default) | `--img-embed=base64` |
 | `--img-max-width PIXELS` | Limit maximum image width (requires sharp) | `--img-max-width 400` |
 | `--img-compress QUALITY` | Image compression quality 1–100 (requires sharp) | `--img-compress 80` |
-| `--code-highlight true\|false` | Syntax highlighting (default: true) | `--code-highlight false` |
-| `--code-copy [true\|false\|line\|cmd]` | Code copy button & mode (default: true) | `--code-copy cmd` |
+| `--code-highlight=<off>` | Disable syntax highlighting | `--code-highlight=off` |
+| `--code-copy=<off\|line\|cmd>` | Code copy mode | `--code-copy=cmd` |
+| `--code-line-number [off]` | Show code line numbers; use `=off` to disable | `--code-line-number` |
 | `--config PATH` | Specify config.toml path | `--config ./config.toml` |
-| `--no-config` | Ignore config.toml | `--no-config` |
 
 ## Two Operating Modes
 
@@ -87,11 +85,13 @@ mdsone ./docs -m -o dist/manual.html
 
 ## Multi-language Mode (`--i18n-mode`)
 
-`--i18n-mode` is a boolean flag — simply including it enables the mode, no `true`/`false` needed.  
+`--i18n-mode` enables multi-language mode.  
+`--i18n-mode=CODE` enables it and also sets the default locale.  
+When specifying `CODE`, only `--i18n-mode=CODE` is supported (not `--i18n-mode CODE`).  
 When enabled, merge logic is automatically applied. The input folder must contain `[locale]` subdirectories (e.g. `[en]`, `[zh-TW]`).
 
 ```bash
-mdsone ./docs --i18n-mode --i18n-default en -o dist/index.html
+mdsone ./docs --i18n-mode=en -o dist/index.html
 ```
 
 ## Overwrite Protection (`-f`)
@@ -149,10 +149,10 @@ source = "./docs"         # Fallback source when no CLI inputs are provided
 output_file = "./dist/index.html"
 
 [build]
-default_template = "normal"
+default_template = "normal@warm-cream" # format: <theme-or-path>[@variant]
 
 [plugins]
-image = { base64_embed = true, max_width = 600, compress = 90 }
+image = { embed = "base64", max_width = 600, compress = 90 }
 
 [i18n]
 mode = true
@@ -160,9 +160,7 @@ default_locale = "en"
 ```
 
 ```bash
-npx mdsone
-# Also usable for local development
-npm start
+npx mdsone --config ./config.toml
 ```
 
 ### 4. Default Values
@@ -178,21 +176,19 @@ If none of the above are configured, built-in default values are used.
 | Templates dir | — | `TEMPLATES_DIR` | `[paths] templates_dir` |
 | Merge mode | `-m, --merge` | — | — |
 | Template | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template` |
-| Template type | `--template-type` | `TEMPLATE_TYPE` | `[build] template_type` |
-| Locale | `--locale` | `LOCALE` | `[i18n] locale` |
+| Template variant | `--template` (`@variant`) | ?? | `[build] default_template` (`name@variant`) |
 | Multi-language mode | `--i18n-mode` | `I18N_MODE` | `[i18n] mode` |
-| Default locale | `--i18n-default` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
+| Default locale | `--i18n-mode=<CODE>` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
 | Page title | `--site-title` | `SITE_TITLE` | `[site] title` |
-| Theme | `--theme-mode` | `THEME_MODE` | `[site] theme_mode` |
 | Minify HTML | `--minify-html` | `MINIFY_HTML` | `[build] minify_html` |
 | Build date | — | `BUILD_DATE` | `[build] build_date` |
 | Markdown extensions | — | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
-| Image base64 embed | `--img-base64-embed [true|false]` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
+| Image embed mode | `--img-embed=<off|base64>` | `IMG_EMBED` | `[plugins.image] embed` |
 | Image max width | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | Image compression quality | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| Syntax highlighting | `--code-highlight true|false` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
-| Copy button | `--code-copy [true|false|line|cmd]` | `CODE_COPY` | `[plugins.copy] enable` |
-| Copy mode | `--code-copy line|cmd` | — | `[plugins.copy] mode` |
+| Syntax highlighting | `--code-highlight=<off>` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
+| Copy mode | `--code-copy=<off|line|cmd>` | `CODE_COPY` | `[plugins.copy] mode` |
+| Code line numbers | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins.line_number] enable` |
 
 ## Usage Examples
 
@@ -227,16 +223,16 @@ npx mdsone ./docs -m
 npx mdsone ./docs -m -o dist/manual.html --template normal
 
 # Multi-language mode (automatically applies merge logic)
-npx mdsone ./docs --i18n-mode --i18n-default en -o dist/index.html
+npx mdsone ./docs --i18n-mode=en -o dist/index.html
 
 # Embed images as base64
-npx mdsone ./docs -m -o dist/index.html --img-base64-embed
+npx mdsone ./docs -m -o dist/index.html --img-embed=base64
 
 # Embed images with resize + compression (requires sharp)
-npx mdsone ./docs -m -o dist/index.html --img-base64-embed --img-max-width 600 --img-compress 90
+npx mdsone ./docs -m -o dist/index.html --img-embed=base64 --img-max-width 600 --img-compress 90
 
 # Disable syntax highlighting and copy button
-npx mdsone ./docs -m -o dist/index.html --code-highlight false --code-copy false
+npx mdsone ./docs -m -o dist/index.html --code-highlight=off --code-copy=off
 
 # Overwrite protection
 npx mdsone README.md -o output.html -f false

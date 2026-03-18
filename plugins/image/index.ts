@@ -64,19 +64,28 @@ export const imageEmbedPlugin: Plugin = {
     name: "image",
 
     registerCli(program) {
-        program.option("--img-base64-embed [true|false]", "Embed images as base64 (default: false)");
+        const parseEmbedMode = (raw: string): "off" | "base64" => {
+            const v = String(raw ?? "").trim().toLowerCase();
+            if (v === "off" || v === "base64") return v;
+            throw new Error("Invalid value for --img-embed. Use off|base64.");
+        };
+        program.option(
+            "--img-embed <off|base64>",
+            "Image embedding mode (use --img-embed=base64|off)",
+            parseEmbedMode,
+        );
         program.option("--img-max-width <pixels>", "Max image width in pixels (requires 'sharp' package)");
         program.option("--img-compress <1-100>", "Image compression quality 1-100 (requires 'sharp' package)");
     },
 
     cliToConfig(opts, out) {
-        const raw = opts["imgBase64Embed"];
-        if (raw === true) {
-            out.img_to_base64 = true;
-        } else if (typeof raw === "string") {
-            const v = raw.toLowerCase();
-            if (v === "true") out.img_to_base64 = true;
-            if (v === "false") out.img_to_base64 = false;
+        const rawEmbed = opts["imgEmbed"];
+        if (typeof rawEmbed === "string") {
+            const mode = rawEmbed.toLowerCase();
+            if (mode === "off" || mode === "base64") {
+                out.img_embed = mode;
+                out.img_to_base64 = mode === "base64";
+            }
         }
         const maxWidth = opts["imgMaxWidth"];
         if (typeof maxWidth === "string" && maxWidth !== "") {
@@ -90,7 +99,7 @@ export const imageEmbedPlugin: Plugin = {
         }
     },
 
-    isEnabled: (config) => config.img_to_base64,
+    isEnabled: (config) => (config.img_embed ?? (config.img_to_base64 ? "base64" : "off")) === "base64",
 
     async processHtml(html, config, context) {
         return embedImagesInHtml(html, context.sourceDir, {

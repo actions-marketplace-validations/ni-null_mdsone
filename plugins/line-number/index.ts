@@ -14,7 +14,16 @@ export const lineNumberPlugin: Plugin = {
   name: "line_number",
 
   registerCli(program) {
-    program.option("--code-line-number [true|false]", "Show line numbers in code blocks (default: false)");
+    const parseMode = (raw: string): "off" => {
+      const v = String(raw ?? "").trim().toLowerCase();
+      if (v === "off") return "off";
+      throw new Error("Invalid value for --code-line-number. Use off.");
+    };
+    program.option(
+      "--code-line-number [off]",
+      "Show line numbers in code blocks (use --code-line-number or --code-line-number=off)",
+      parseMode,
+    );
   },
 
   cliToConfig(opts, out) {
@@ -23,8 +32,7 @@ export const lineNumberPlugin: Plugin = {
       out.code_line_number = true;
     } else if (typeof raw === "string") {
       const v = raw.toLowerCase();
-      if (v === "true") out.code_line_number = true;
-      if (v === "false") out.code_line_number = false;
+      if (v === "off") out.code_line_number = false;
     }
   },
 

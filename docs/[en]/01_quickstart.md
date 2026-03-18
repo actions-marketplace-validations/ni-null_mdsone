@@ -59,20 +59,20 @@ npx mdsone ./docs -m -o manual.html
 
 ```bash
 # Embed images as base64
-npx mdsone README.md -o index.html --img-base64-embed
+npx mdsone README.md -o index.html --img-embed=base64
 
 # Embed images with max width
-npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400
+npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400
 
 # Embed images with compression (requires sharp)
-npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400 --img-compress 80
+npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400 --img-compress 80
 ```
 
-### Template and Locale
+### Template Selection
 
 ```bash
-# Specify template and locale
-npx mdsone ./docs -m -o output.html --template minimal --locale zh-TW
+# Specify template (with optional variant)
+npx mdsone ./docs -m -o output.html --template normal@warm-cream
 ```
 
 ### Overwrite Protection
@@ -106,7 +106,7 @@ docs/
 Run with `--i18n-mode` flag:
 
 ```bash
-npx mdsone ./docs -m -o index.html --i18n-mode --i18n-default en
+npx mdsone ./docs -m -o index.html --i18n-mode=en
 ```
 
 ## Priority Order

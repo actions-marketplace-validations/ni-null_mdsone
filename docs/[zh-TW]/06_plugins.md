@@ -1,95 +1,129 @@
-﻿# Plugins
+# Plugins
 
-?桀??批遣??plugin嚗image`?shiki`?copy`?line_number`??
-摰?冽敹?Markdown 頧? HTML 銋?隞嚗?
-1. `processHtml()`嚗撖?HTML
-2. `getAssets()`嚗釣?亙???閬? CSS / JS
+目前內建 plugin：
 
-?誨銵冽敹??閬??Shiki ?????敦蝭嚗閬漱蝯?plugin manager 靘?摨???胯?
+- `image`
+- `shiki`
+- `copy`
+- `line_number`
+
+所有 plugin 都在核心 Markdown 轉 HTML 後才介入，流程如下：
+
+1. 核心先輸出一般 `<pre><code class="language-xxx">...</code></pre>`
+2. `PluginManager.processHtml()` 依序處理 HTML
+3. `PluginManager.getAssets()` 收集各 plugin 的 CSS / JS 注入最終頁面
+
 ## image
 
-- ?嚗? HTML 銝剔? `<img src="...">` 頧? base64 data URL
-- ?舀?砍????蝡?`http/https` ??
-- ?舀?葬?曇?憯葬
-- ?璇辣嚗img_to_base64 = true`
+用途：
+
+- 掃描 HTML 內 `<img src="...">`
+- 將本機或遠端圖片轉為 base64 data URL
+- 已經是 `data:` 的圖片會略過
+
+CLI：
 
 ```bash
-npx mdsone README.md -o index.html --img-base64-embed
-npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400
-npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400 --img-compress 80
+npx mdsone README.md -o index.html --img-embed=base64
+npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400
+npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400 --img-compress 80
 ```
 
-撠?閮剖?嚗?
-- `[plugins.image].base64_embed`
+TOML：
+
+- `[plugins.image].embed`（`off` 或 `base64`）
 - `[plugins.image].max_width`
 - `[plugins.image].compress`
 
 ## shiki
 
-- ?嚗?銝??`<pre><code>` ?憛撖急? Shiki 擃漁 HTML
-- ?璇辣嚗code_highlight = true`
-- ??fenced code 瘝?摰?閮嚗靘芋?輯身摰? `auto_detect` 雿輻 `highlight.js` ?芸??斗
-- Shiki 銝駁??望芋?輻? `template.config.json` ?批
+用途：
 
-撠?閮剖?嚗?
+- 將 `<pre><code>` 區塊改寫為 Shiki 高亮結果
+- 高亮在 plugin 層處理，核心不直接耦合 Shiki
+
+CLI：
+
+```bash
+npx mdsone README.md -o index.html --code-highlight=off
+```
+
+TOML：
+
 - `[plugins.shiki].enable`
 
-璅⊥閮剖?雿蔭嚗?
+模板設定（`template.config.json`）：
+
 - `config.types.<name>.code.Shiki.dark`
 - `config.types.<name>.code.Shiki.light`
 - `config.types.<name>.code.Shiki.auto_detect`
 
+說明：
+
+- fenced code 有指定語言時直接使用該語言
+- 未指定語言時，若 `auto_detect=true`，會用 `highlight.js` 自動判斷語言再交給 Shiki
+
 ## copy
 
-- ?嚗蝔?蝣澆?憛??亥?鋆質??- ?璇辣嚗code_copy = true`
-- ?舀 `line` ??`cmd` ?拍車璅∪?
+用途：
+
+- 在程式碼區塊提供複製功能
+- 支援一般區塊複製，以及額外的逐行 / 指令段落複製模式
+
+CLI：
 
 ```bash
-# ? copy plugin嚗?銝?摰畾芋撘?
-npx mdsone README.md -o index.html --code-copy true
+# 關閉複製
+npx mdsone README.md -o index.html --code-copy=off
 
-# ?株??賭誘銴ˊ
-npx mdsone README.md -o index.html --code-copy line
+# 逐行指令複製
+npx mdsone README.md -o index.html --code-copy=line
 
-# 區塊命令分段複製
-npx mdsone README.md -o index.html --code-copy cmd
-
+# 指令段落複製（以註解區塊分段）
+npx mdsone README.md -o index.html --code-copy=cmd
 ```
 
-撠?閮剖?嚗?
+TOML：
+
 - `[plugins.copy].enable`
-- `[plugins.copy].mode`
+- `[plugins.copy].mode`（`off` / `line` / `cmd`）
 
 ## line_number
 
-- ?嚗蝔?蝣澆?憛??亥???- ?璇辣嚗code_line_number = true`
-- ??code block 撌脰◤?嗡? plugin ?? `.code-line`嚗??湔鋆?銵?甈?
+用途：
+
+- 在程式碼區塊加上行號
+- 若 copy plugin 已先包裝 `.code-line`，會在原結構上補行號，不重複包裝
+
+CLI：
 
 ```bash
-npx mdsone README.md -o index.html --code-line-number true
+npx mdsone README.md -o index.html --code-line-number
+npx mdsone README.md -o index.html --code-line-number=off
 ```
 
-撠?閮剖?嚗?
+TOML：
+
 - `[plugins.line_number].enable`
 
-## config.toml 蝭?
+## config.toml 範例
 
 ```toml
 [plugins]
 order = ["image", "shiki", "copy", "line_number"]
-copy = { enable = true, mode = "none" }
+copy = { enable = true, mode = "off" }
 shiki = { enable = true }
 line_number = { enable = false }
-image = { base64_embed = false, max_width = 0, compress = 0 }
+image = { embed = "off", max_width = 0, compress = 0 }
 ```
 
-## ?瑁???
+## 執行順序
 
-?身?批遣 plugin 閮餃????綽?
+預設順序：
 
 1. `image`
 2. `shiki`
 3. `copy`
 4. `line_number`
 
-?交?閮剖? `[plugins].order`嚗?靘府???瑁???
+可用 `[plugins].order` 自訂順序；未列出的 plugin 會排在後面。

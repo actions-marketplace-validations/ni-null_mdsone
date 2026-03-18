@@ -14,23 +14,17 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `-m, --merge` | 合併所有輸入為單一 HTML | `-m` |
 | `-o, --output PATH` | 輸出路徑；合併模式為檔案，批次模式多檔 / 資料夾為目錄 | `-o dist/index.html` |
 | `-f, --force <boolean>` | 是否覆蓋既有輸出（預設 `true`） | `-f false` |
-| `--templates-dir <DIR>` | 模板目錄 | `--templates-dir ./templates` |
-| `--template <NAME>` | 模板名稱（目前內建為 `normal`） | `--template normal` |
-| `--template-type <NAME>` | 模板變體名稱；不存在時回退 `default` | `--template-type warm-cream` |
+| `-t, --template <theme-or-path>[@variant]` | 模板名稱或路徑（可附加變體） | `-t normal@warm-cream` |
 | `--site-title <TEXT>` | 文件標題 | `--site-title "My Docs"` |
-| `--theme-mode <light\|dark>` | 初始明暗模式 | `--theme-mode dark` |
 | `--minify-html <true\|false>` | 是否壓縮 HTML（預設 `true`） | `--minify-html false` |
-| `--locale <CODE>` | 單語模式 UI 語系 | `--locale zh-TW` |
-| `--i18n-mode` | 啟用多國語言模式 | `--i18n-mode` |
-| `--i18n-default <CODE>` | 多國語言模式的預設語系 | `--i18n-default zh-TW` |
+| `--i18n-mode [CODE]` | 啟用多國語言模式（可選 CODE 指定預設語系；指定時僅支援 `--i18n-mode=CODE`） | `--i18n-mode=zh-TW` |
 | `--config <PATH>` | 指定 `config.toml` 路徑 | `--config ./config.toml` |
-| `--no-config` | 忽略 `config.toml` | `--no-config` |
-| `--img-base64-embed [true\|false]` | 將圖片嵌入為 base64 | `--img-base64-embed` |
+| `--img-embed=<off\|base64>` | 圖片嵌入模式（預設 `off`） | `--img-embed=base64` |
 | `--img-max-width <pixels>` | 圖片最大寬度 | `--img-max-width 400` |
 | `--img-compress <1-100>` | 圖片壓縮品質 | `--img-compress 80` |
-| `--code-highlight <true\|false>` | 啟用 / 關閉語法高亮 | `--code-highlight false` |
-| `--code-copy [mode]` | 程式碼複製模式：`true`、`false`、`line`、`cmd` | `--code-copy cmd` |
-| `--code-line-number [true\|false]` | 顯示程式碼行號 | `--code-line-number true` |
+| `--code-highlight=<off>` | 關閉語法高亮 | `--code-highlight=off` |
+| `--code-copy=<off\|line\|cmd>` | 程式碼複製模式 | `--code-copy=cmd` |
+| `--code-line-number [off]` | 顯示程式碼行號；用 `=off` 可關閉 | `--code-line-number` |
 
 ## 輸入模式
 
@@ -89,22 +83,18 @@ CLI 參數 > 環境變數 > config.toml > 預設值
 |------|-----|----------|-------------|
 | Markdown 來源 | `<inputs...>` | `MARKDOWN_SOURCE_DIR` | `[paths] source` |
 | 輸出路徑 | `-o, --output` | `OUTPUT_FILE` | `[paths] output_file` |
-| 模板目錄 | `--templates-dir` | `TEMPLATES_DIR` | `[paths] templates_dir` |
-| 模板 | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template` |
-| 模板變體 | `--template-type` | `TEMPLATE_TYPE` | `[build] template_type` |
+| 模板 | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template`（可用 `name@variant`） |
 | 文件標題 | `--site-title` | `SITE_TITLE` | `[site] title` |
-| 明暗模式 | `--theme-mode` | `THEME_MODE` | `[site] theme_mode` |
 | 壓縮 HTML | `--minify-html` | `MINIFY_HTML` | `[build] minify_html` |
 | 建置日期 | — | `BUILD_DATE` | `[build] build_date` |
 | Markdown 擴充 | — | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
-| 單語 UI 語系 | `--locale` | `LOCALE` | `[i18n] locale` |
 | 多語模式 | `--i18n-mode` | `I18N_MODE` | `[i18n] mode` |
-| 多語預設語系 | `--i18n-default` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
-| 圖片 base64 嵌入 | `--img-base64-embed` | `IMG_TO_BASE64` | `[plugins.image] base64_embed` |
+| 多語預設語系 | `--i18n-mode=<CODE>` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
+| 圖片嵌入模式 | `--img-embed=<off\|base64>` | `IMG_EMBED` | `[plugins.image] embed` |
 | 圖片最大寬度 | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | 圖片壓縮品質 | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| 語法高亮 | `--code-highlight` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
-| 程式碼複製 | `--code-copy` | `CODE_COPY` | `[plugins.copy] enable` |
+| 語法高亮 | `--code-highlight=<off>` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
+| 程式碼複製模式 | `--code-copy=<off\|line\|cmd>` | `CODE_COPY` | `[plugins.copy] mode` |
 | 程式碼行號 | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins.line_number] enable` |
 
 ## 使用範例
@@ -114,17 +104,17 @@ CLI 參數 > 環境變數 > config.toml > 預設值
 npx mdsone ./docs -m
 
 # 套用模板變體
-npx mdsone ./docs -m --template normal --template-type warm-cream
+npx mdsone ./docs -m --template normal@warm-cream
 
 # 多國語言
-npx mdsone ./docs --i18n-mode --i18n-default zh-TW -o dist/index.html
+npx mdsone ./docs --i18n-mode=zh-TW -o dist/index.html
 
 # 圖片嵌入 + 壓縮
-npx mdsone ./docs -m --img-base64-embed --img-max-width 600 --img-compress 90
+npx mdsone ./docs -m --img-embed=base64 --img-max-width 600 --img-compress 90
 
 # 關閉高亮與複製
-npx mdsone ./docs -m --code-highlight false --code-copy false
+npx mdsone ./docs -m --code-highlight=off --code-copy=off
 
 # 顯示行號
-npx mdsone ./docs -m --code-line-number true
+npx mdsone ./docs -m --code-line-number
 ```

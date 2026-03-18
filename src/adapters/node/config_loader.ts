@@ -43,7 +43,6 @@ export function envToConfig(): Partial<Config> {
   if (e["MARKDOWN_SOURCE_DIR"]) out.markdown_source_dir = e["MARKDOWN_SOURCE_DIR"];
   if (e["OUTPUT_FILE"]) out.output_file = e["OUTPUT_FILE"];
   if (e["TEMPLATES_DIR"]) out.templates_dir = e["TEMPLATES_DIR"];
-  if (e["TEMPLATE_TYPE"]) out.template_type = e["TEMPLATE_TYPE"];
   if (e["DEFAULT_TEMPLATE"]) out.default_template = e["DEFAULT_TEMPLATE"];
   if (e["BUILD_DATE"]) out.build_date = e["BUILD_DATE"];
   if (e["SITE_TITLE"]) out.site_title = e["SITE_TITLE"];
@@ -52,11 +51,33 @@ export function envToConfig(): Partial<Config> {
   if (e["DEFAULT_LOCALE"]) out.default_locale = e["DEFAULT_LOCALE"];
   if (e["MINIFY_HTML"] !== undefined) out.minify_html = parseBool(e["MINIFY_HTML"], true);
   if (e["I18N_MODE"] !== undefined) out.i18n_mode = parseBool(e["I18N_MODE"], false);
-  if (e["IMG_TO_BASE64"] !== undefined) out.img_to_base64 = parseBool(e["IMG_TO_BASE64"], false);
+  if (e["IMG_EMBED"] !== undefined) {
+    const mode = String(e["IMG_EMBED"]).trim().toLowerCase();
+    if (mode === "off" || mode === "base64") {
+      out.img_embed = mode;
+      out.img_to_base64 = mode === "base64";
+    } else if (e["IMG_TO_BASE64"] !== undefined) {
+      const legacy = parseBool(e["IMG_TO_BASE64"], false);
+      out.img_to_base64 = legacy;
+      out.img_embed = legacy ? "base64" : "off";
+    }
+  } else if (e["IMG_TO_BASE64"] !== undefined) {
+    const legacy = parseBool(e["IMG_TO_BASE64"], false);
+    out.img_to_base64 = legacy;
+    out.img_embed = legacy ? "base64" : "off";
+  }
   if (e["IMG_MAX_WIDTH"] !== undefined) { const w = parseInt(e["IMG_MAX_WIDTH"]!, 10); if (!isNaN(w) && w > 0) out.img_max_width = w; }
   if (e["IMG_COMPRESS"] !== undefined) { const q = parseInt(e["IMG_COMPRESS"]!, 10); if (!isNaN(q)) out.img_compress = Math.max(1, Math.min(100, q)); }
   if (e["CODE_HIGHLIGHT"] !== undefined) out.code_highlight = parseBool(e["CODE_HIGHLIGHT"], true);
-  if (e["CODE_COPY"] !== undefined) out.code_copy = parseBool(e["CODE_COPY"], true);
+  if (e["CODE_COPY"] !== undefined) {
+    const raw = String(e["CODE_COPY"]).trim().toLowerCase();
+    if (raw === "off" || raw === "line" || raw === "cmd") {
+      out.code_copy = raw !== "off";
+      out.code_copy_mode = raw;
+    } else {
+      out.code_copy = parseBool(e["CODE_COPY"], true);
+    }
+  }
   if (e["CODE_LINE_NUMBER"] !== undefined) out.code_line_number = parseBool(e["CODE_LINE_NUMBER"], false);
   if (e["MARKDOWN_EXTENSIONS"]) {
     out.markdown_extensions = parseList(e["MARKDOWN_EXTENSIONS"], DEFAULT_CONFIG.markdown_extensions);
@@ -86,7 +107,6 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   if (s(paths["templates_dir"])) out.templates_dir = s(paths["templates_dir"]);
 
   if (s(build["default_template"])) out.default_template = s(build["default_template"]);
-  if (s(build["template_type"])) out.template_type = s(build["template_type"]);
   if (b(build["minify_html"]) !== undefined) out.minify_html = b(build["minify_html"]);
   if (l(build["markdown_extensions"])) out.markdown_extensions = l(build["markdown_extensions"]);
   if (s(build["build_date"])) out.build_date = s(build["build_date"]);
@@ -108,11 +128,23 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   }
   if (b(copy["enable"]) !== undefined) out.code_copy = b(copy["enable"])!;
   const copyMode = s(copy["mode"]);
-  if (copyMode && ["none", "line", "cmd"].includes(copyMode)) {
-    out.code_copy_mode = copyMode;
+  if (copyMode) {
+    const normalizedMode = copyMode === "none" ? "off" : copyMode;
+    if (["off", "line", "cmd"].includes(normalizedMode)) {
+      out.code_copy_mode = normalizedMode;
+    }
   }
   if (b(shiki["enable"]) !== undefined) out.code_highlight = b(shiki["enable"])!;
-  if (b(image["base64_embed"]) !== undefined) out.img_to_base64 = b(image["base64_embed"])!;
+  const imageEmbedRaw = s(image["embed"]);
+  const imageEmbed = imageEmbedRaw?.toLowerCase();
+  if (imageEmbed && (imageEmbed === "off" || imageEmbed === "base64")) {
+    out.img_embed = imageEmbed;
+    out.img_to_base64 = imageEmbed === "base64";
+  } else if (b(image["base64_embed"]) !== undefined) {
+    const legacy = b(image["base64_embed"])!;
+    out.img_to_base64 = legacy;
+    out.img_embed = legacy ? "base64" : "off";
+  }
   if (typeof image["max_width"] === "number" && (image["max_width"] as number) > 0) {
     out.img_max_width = image["max_width"] as number;
   }

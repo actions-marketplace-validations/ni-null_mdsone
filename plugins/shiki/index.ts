@@ -106,16 +106,21 @@ export const shikiPlugin: Plugin = {
   name: "shiki",
 
   registerCli(program) {
-    program.option("--code-highlight <true|false>", "Syntax highlighting (default: true)");
+    const parseHighlightMode = (raw: string): "off" => {
+      const v = String(raw ?? "").trim().toLowerCase();
+      if (v === "off") return "off";
+      throw new Error("Invalid value for --code-highlight. Use off.");
+    };
+    program.option(
+      "--code-highlight <off>",
+      "Disable syntax highlighting (use --code-highlight=off)",
+      parseHighlightMode,
+    );
   },
 
   cliToConfig(opts, out) {
     const raw = opts["codeHighlight"];
-    if (typeof raw === "string") {
-      const v = raw.toLowerCase();
-      if (v === "true") out.code_highlight = true;
-      if (v === "false") out.code_highlight = false;
-    }
+    if (String(raw ?? "").toLowerCase() === "off") out.code_highlight = false;
   },
 
   isEnabled: (config) => config.code_highlight,
@@ -123,7 +128,7 @@ export const shikiPlugin: Plugin = {
   async processHtml(html, config, context) {
     const $ = load(html, { decodeEntities: false }, false);
     const codeNodes = $("pre > code").toArray();
-    const typeName = config.template_type || "default";
+    const typeName = config.template_variant || "default";
     const typeCfg = context.templateData?.config?.types?.[typeName]
       ?? context.templateData?.config?.types?.default;
     const shikiCfg = typeCfg?.code?.Shiki;

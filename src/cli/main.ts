@@ -62,6 +62,23 @@ function isTemplateFolder(templateDir: string): boolean {
   );
 }
 
+function parseTemplateSpec(raw: string): { template: string; variant: string } {
+  const input = raw.trim();
+  const idx = input.lastIndexOf("@");
+  if (idx === -1) {
+    return { template: input, variant: "default" };
+  }
+  const template = input.slice(0, idx).trim();
+  const variant = input.slice(idx + 1).trim();
+  if (!template) {
+    throw new Error("Invalid --template value: missing template before '@'.");
+  }
+  if (!variant) {
+    throw new Error("Invalid --template value: missing variant after '@'.");
+  }
+  return { template, variant };
+}
+
 async function main(): Promise<void> {
   const packageRoot = resolvePackageRoot();
 
@@ -69,11 +86,11 @@ async function main(): Promise<void> {
   const args = parseArgs();
   const cliOverride = cliArgsToConfig(args);
 
-  // ② 載入 .env + config.toml，合併設定（CLI > env > toml > default）
+  // ② 載入 .env + （可選）config.toml，合併設定（CLI > env > toml > default）
   loadEnvFile();
   let toml = {};
-  if (!args.noConfig) {
-    const cfgPath = args.configPath ? path.resolve(process.cwd(), args.configPath) : undefined;
+  if (args.configPath) {
+    const cfgPath = path.resolve(process.cwd(), args.configPath);
     toml = await loadConfigFile(cfgPath);
   }
   let config: Config = buildConfig(toml, cliOverride);
@@ -242,8 +259,19 @@ async function main(): Promise<void> {
 
   // ⑩ 解析 template 來源：名稱或資料夾路徑
   let templateRootDir = config.templates_dir;
-  let templateName = config.default_template;
-  const rawTemplate = (config.default_template || "").trim();
+  const rawTemplateSpec = (config.default_template || "").trim();
+  let parsedTemplate: { template: string; variant: string };
+  try {
+    parsedTemplate = parseTemplateSpec(rawTemplateSpec);
+  } catch (e) {
+    console.error(`[ERROR] ${e instanceof Error ? e.message : String(e)}`);
+    process.exit(1);
+  }
+
+  const rawTemplate = parsedTemplate.template;
+  config.default_template = rawTemplate;
+  config.template_variant = parsedTemplate.variant;
+  let templateName = rawTemplate;
   const templateLooksLikePath = path.isAbsolute(rawTemplate) || rawTemplate.includes("/") || rawTemplate.includes("\\");
   if (templateLooksLikePath) {
     const templateDir = path.isAbsolute(rawTemplate)
@@ -282,10 +310,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const typeName = config.template_type || "default";
-  if (templateData.config.types && !templateData.config.types[typeName]) {
-    console.warn(`[WARN] template_type '${typeName}' not found. Falling back to 'default'.`);
-    config.template_type = "default";
+  const variantName = config.template_variant || "default";
+  if (templateData.config.types && !templateData.config.types[variantName]) {
+    console.warn(`[WARN] template variant '${variantName}' not found. Falling back to 'default'.`);
+    config.template_variant = "default";
   }
 
   // ⑪-b 透過 PluginManager 收集 plugin 靜態資源
@@ -523,16 +551,17 @@ async function main(): Promise<void> {
 
   // ⑬ 印出等效指令
   const tpl = config.default_template;
-  const tplType = config.template_type || "default";
+  const tplVariant = config.template_variant || "default";
+  const tplSpec = tplVariant !== "default" ? `${tpl}@${tplVariant}` : tpl;
   const inputsStr = inputs.map((p) => `"${p}"`).join(" ");
   const parts = [`npx mdsone ${inputsStr}`];
-  if (tpl !== "normal") parts.push(`--template ${tpl}`);
-  if (tplType !== "default") parts.push(`--template-type ${tplType}`);
+  if (tplSpec !== "normal") parts.push(`--template ${tplSpec}`);
   if (config.i18n_mode) {
-    parts.push(`--i18n-mode`);
-    if (config.default_locale) parts.push(`--i18n-default ${config.default_locale}`);
-  } else if (config.locale !== "en") {
-    parts.push(`--locale ${config.locale}`);
+    if (config.default_locale) {
+      parts.push(`--i18n-mode=${config.default_locale}`);
+    } else {
+      parts.push(`--i18n-mode`);
+    }
   }
   if (args.merge) parts.push(`-m`);
   if (args.output) {

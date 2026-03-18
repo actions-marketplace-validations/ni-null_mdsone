@@ -44,7 +44,7 @@ npx mdsone ./docs -m -o manual.html
 含圖片嵌入：
 
 ```bash
-npx mdsone README.md -o index.html --img-base64-embed --img-max-width 400
+npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400
 ```
 
 ## 授權條款

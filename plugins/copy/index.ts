@@ -65,22 +65,26 @@ export const copyPlugin: Plugin = {
     name: "copy",
 
     registerCli(program) {
+        const parseMode = (raw: string): "off" | "line" | "cmd" => {
+            const v = String(raw ?? "").trim().toLowerCase();
+            if (v === "off" || v === "line" || v === "cmd") return v;
+            throw new Error("Invalid value for --code-copy. Use off|line|cmd.");
+        };
         program.option(
-            "--code-copy [mode]",
-            "Copy button mode: true/false or line/cmd (default: true)",
+            "--code-copy <off|line|cmd>",
+            "Copy button mode (use --code-copy=off|line|cmd)",
+            parseMode,
         );
     },
 
     cliToConfig(opts, out) {
         const raw = opts["codeCopy"];
-
-        // --code-copy 不帶值代表 true
-        if (raw === true || raw === undefined) return;
+        if (raw === undefined) return;
 
         const v = String(raw).toLowerCase();
-        if (v === "false") {
+        if (v === "off") {
             out.code_copy      = false;
-            out.code_copy_mode = "none";
+            out.code_copy_mode = "off";
         } else if (v === "line") {
             out.code_copy      = true;
             out.code_copy_mode = "line";
@@ -90,7 +94,7 @@ export const copyPlugin: Plugin = {
         }
     },
 
-    isEnabled: (config) => config.code_copy !== false,
+    isEnabled: (config) => config.code_copy !== false && (config.code_copy_mode ?? "none") !== "off",
 
     processHtml(html, config) {
         const mode = (config.code_copy_mode ?? "none") as string;
@@ -164,7 +168,7 @@ export const copyPlugin: Plugin = {
     getAssets(config): PluginAssets {
         const script   = getCopyButtonScript();
         const mode     = (config.code_copy_mode ?? "none") as string;
-        const blockOn  = config.code_copy !== false;
+        const blockOn  = config.code_copy !== false && mode !== "off";
 
         // initCall
         const calls: string[] = [];

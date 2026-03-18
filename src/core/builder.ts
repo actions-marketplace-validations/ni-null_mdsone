@@ -62,8 +62,8 @@ function buildConfigPayload(
   templatePalette?: string,
   templateTypes?: Record<string, { palette?: string }>,
 ): mdsoneData["config"] {
-  const templateType = config.template_type || "default";
-  const typePalette = templateTypes?.[templateType]?.palette ?? templateTypes?.default?.palette;
+  const templateVariant = config.template_variant || "default";
+  const typePalette = templateTypes?.[templateVariant]?.palette ?? templateTypes?.default?.palette;
   const resolvedPalette = typePalette ?? templatePalette;
 
   return {
@@ -71,7 +71,7 @@ function buildConfigPayload(
     theme_mode: config.theme_mode,
     build_date: buildDate,
     toc,
-    template_type: templateType,
+    template_variant: templateVariant,
     ...(resolvedPalette ? { palette: resolvedPalette } : {}),
     ...(templateTypes ? { types: templateTypes } : {}),
   };

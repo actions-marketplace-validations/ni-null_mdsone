@@ -25,6 +25,7 @@ export const DEFAULT_CONFIG: Config = {
   i18n_mode: false,
   default_locale: "",
   // advanced
+  img_embed: "off",
   img_to_base64: false,
   img_max_width: 0,
   img_compress: 0,
@@ -33,7 +34,7 @@ export const DEFAULT_CONFIG: Config = {
   code_copy: true,
   code_copy_mode: "none",
   code_line_number: false,
-  template_type: "default",
+  template_variant: "default",
 };
 
 /**
@@ -66,18 +67,25 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   const out: Partial<Config> = {};
   // Templates & Styling
   if (args.template) out.default_template = args.template;
-  if (args.templateType) out.template_type = args.templateType;
   if (args.siteTitle) out.site_title = args.siteTitle;
-  if (args.themeMode) out.theme_mode = args.themeMode;
   if (args.minifyHtml !== undefined) {
     const v = args.minifyHtml!.toLowerCase();
     if (v === "true") out.minify_html = true;
     if (v === "false") out.minify_html = false;
   }
   // Internationalization
-  if (args.locale) out.locale = args.locale;
-  if (args.i18nMode) out.i18n_mode = true;
-  if (args.defaultLocale) out.default_locale = args.defaultLocale;
+  if (typeof args.i18nMode === "string") {
+    const modeValue = args.i18nMode.trim();
+    const lower = modeValue.toLowerCase();
+    if (lower === "false") {
+      out.i18n_mode = false;
+    } else {
+      out.i18n_mode = true;
+      if (modeValue && lower !== "true") out.default_locale = modeValue;
+    }
+  } else if (args.i18nMode) {
+    out.i18n_mode = true;
+  }
   // Plugin CLI overrides
   if (args.pluginOverrides) Object.assign(out, args.pluginOverrides);
   return out;

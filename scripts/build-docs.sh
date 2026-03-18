@@ -1,47 +1,23 @@
 #!/bin/bash
-# Build and generate multi-language documentation locally
+# Build and generate documentation locally
 
 set -e
 
-echo "🏗️  Building mdsone package..."
+echo "[1/4] Building mdsone package..."
 npm run build
 
-echo "📁 Creating output directory..."
+echo "[2/4] Creating output directory..."
 mkdir -p docs-dist
 
-echo "🇬🇧 Building English documentation..."
-npx mdsone \
-  --source ./docs/[en] \
-  --output ./docs-dist/en.html \
-  --template normal \
-  --locale en \
-  --site-title "MDSone Documentation - English" \
-  --theme-mode light
+echo "[3/4] Building single-locale pages..."
+npx mdsone ./docs/[en] -m -o ./docs-dist/en.html --template normal --site-title "MDSone Documentation - English"
+npx mdsone ./docs/[zh-TW] -m -o ./docs-dist/zh-TW.html --template normal --site-title "MDSone Documentation - Traditional Chinese"
 
-echo "🇹🇼 Building Traditional Chinese documentation..."
-npx mdsone \
-  --source ./docs/[zh-TW] \
-  --output ./docs-dist/zh-TW.html \
-  --template normal \
-  --locale zh-TW \
-  --site-title "MDSone 文檔 - 繁體中文" \
-  --theme-mode light
+echo "[4/4] Building combined i18n page..."
+npx mdsone ./docs --i18n-mode=zh-TW --template normal --site-title "MDSone Documentation" -o ./docs-dist/index.html
 
-echo "🌐 Building combined multi-language documentation..."
-npx mdsone \
-  --source ./docs \
-  --output ./docs-dist/index.html \
-  --template normal \
-  --i18n-mode true \
-  --i18n-default zh-TW \
-  --locale zh-TW \
-  --site-title "MDSone Documentation" \
-  --theme-mode light
-
-echo "✅ Documentation built successfully!"
-echo "📍 Output directory: ./docs-dist"
-echo ""
-echo "Files generated:"
-echo "  - en.html (English version)"
-echo "  - zh-TW.html (Traditional Chinese version)"
-echo "  - index.html (Multi-language version)"
+echo "Done. Output directory: ./docs-dist"
+echo "Generated files:"
+echo "  - en.html"
+echo "  - zh-TW.html"
+echo "  - index.html"

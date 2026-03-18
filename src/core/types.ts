@@ -23,6 +23,7 @@ export interface Config {
   i18n_mode: boolean;
   default_locale: string;
   // advanced
+  img_embed: "off" | "base64" | string;
   img_to_base64: boolean;
   img_max_width: number;
   img_compress: number;
@@ -31,7 +32,7 @@ export interface Config {
   code_copy: boolean;
   code_copy_mode: string;
   code_line_number: boolean;
-  template_type: string;
+  template_variant: string;
   // plugin settings (optional)
   plugins?: {
     order?: string[];
@@ -43,17 +44,12 @@ export interface CliArgs {
   inputs?: string[];
   merge?: boolean;
   template?: string;
-  locale?: string;
   output?: string;
   force?: string;
   siteTitle?: string;
-  themeMode?: string;
-  i18nMode?: boolean;
-  defaultLocale?: string;
+  i18nMode?: boolean | string;
   minifyHtml?: string;
-  templateType?: string;
   configPath?: string;
-  noConfig?: boolean;
   pluginOverrides?: Partial<Config>;
   version?: boolean;
 }
@@ -183,7 +179,7 @@ export interface mdsoneConfigPayload {
   theme_mode: string;
   build_date: string;
   toc: TocConfig;
-  template_type?: string;
+  template_variant?: string;
   palette?: string;
   types?: Record<string, { palette?: string }>;
 }

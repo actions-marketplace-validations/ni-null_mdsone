@@ -12,13 +12,15 @@ npx mdsone --template normal
 npx mdsone --template minimal
 ```
 
-## Template Type
+## Template Variant
 
-Use `--template-type <name>` to select a variant defined by the template.
-If the type does not exist, mdsone falls back to `default`.
+Use `--template <theme-or-path>@<variant>` to select a variant defined by the template.
+If the variant does not exist, mdsone falls back to `default`.
 
 ```bash
-npx mdsone ./docs -m --template normal --template-type default
+npx mdsone ./docs -m --template normal@default
+npx mdsone ./docs -m --template normal@warm-cream
+npx mdsone ./docs -m --template ./themes/dark-doc@ocean
 ```
 
 ## Code Highlighting (Shiki)
