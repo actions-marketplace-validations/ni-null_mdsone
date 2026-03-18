@@ -12,6 +12,36 @@ npm install mdsone
 
 - Core API：`mdsone/core`
 - Node I/O API：`mdsone/node`
+- Plugin API（各自獨立導出）：
+  - `mdsone/plugins/shiki`
+  - `mdsone/plugins/copy`
+  - `mdsone/plugins/line-number`
+  - `mdsone/plugins/image`（Node-only）
+
+## Plugin 單獨調用（鏈式）
+
+```ts
+import { shiki } from "mdsone/plugins/shiki";
+import { copy } from "mdsone/plugins/copy";
+import { lineNumber } from "mdsone/plugins/line-number";
+
+let result = "<pre><code class=\"language-bash\">npx mdsone</code></pre>";
+result = await shiki(result);
+result = await copy(result, { mode: "line" });
+result = await lineNumber(result);
+```
+
+如需樣式或腳本，請同時注入 plugin 的 assets：
+
+```ts
+import { copyAssets } from "mdsone/plugins/copy";
+import { lineNumberAssets } from "mdsone/plugins/line-number";
+
+const copyLib = await copyAssets({ mode: "line" });
+const lnLib = await lineNumberAssets();
+const libCss = `${copyLib.css ?? ""}\n${lnLib.css ?? ""}`;
+const libJs = `${copyLib.js ?? ""}\n${lnLib.js ?? ""}`;
+```
 
 ## 單一 Markdown 轉 HTML（Node）
 
@@ -79,64 +109,52 @@ const html = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, true, 0);
 document.querySelector("#preview")!.innerHTML = html;
 ```
 
-### 方式二：前端自行提供模板，輸出完整 HTML
+### 搭配 plugin 的完整範例（Web）
 
 ```ts
-import {
-  DEFAULT_CONFIG,
-  markdownToHtml,
-  buildHtml,
-  getAllTemplateStrings,
-} from "mdsone/core";
+import { markdownToHtml, DEFAULT_CONFIG } from "mdsone/core";
+import { shiki, shikiAssets } from "mdsone/plugins/shiki";
+import { copy, copyAssets } from "mdsone/plugins/copy";
+import { lineNumber, lineNumberAssets } from "mdsone/plugins/line-number";
 
-const templateData = {
-  css: "body{font-family:sans-serif;max-width:860px;margin:40px auto;padding:0 16px;}",
-  template: `
-<!doctype html>
-<html lang="{LANG}">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{TITLE}</title>
-  <style>{CSS_CONTENT}</style>
-  {LIB_CSS}
-  {EXTRA_CSS}
-</head>
-<body>
-  <main id="app"></main>
-  {MDSONE_DATA_SCRIPT}
-  <script>
-    const docs = window.mdsone_DATA?.docs || [];
-    document.getElementById("app").innerHTML = docs[0]?.html || "";
-  </script>
-  {LIB_JS}
-  {EXTRA_JS}
-</body>
-</html>
-`,
-  assets_css: [],
-  assets_js: [],
-  version: "1.0.0",
-  schema_version: "v1",
-  metadata: {},
-  toc_config: { enabled: false, levels: [2, 3] },
-  config: { palette: "default", types: { default: { palette: "default" } } },
-} as const;
+function injectAssets(css?: string, js?: string) {
+  if (css) document.head.insertAdjacentHTML("beforeend", css);
+  if (js) {
+    const container = document.createElement("div");
+    container.innerHTML = js;
+    container.querySelectorAll("script").forEach((oldScript) => {
+      const script = document.createElement("script");
+      script.textContent = oldScript.textContent ?? "";
+      document.body.appendChild(script);
+    });
+  }
+}
 
-const md = "# Frontend Build\\n\\n這是由 mdsone/core 組裝的完整 HTML。";
-const bodyHtml = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, true, 0);
+const md = `
+\`\`\`bash
+npx mdsone ./docs -m --code-copy=cmd
+\`\`\`
+`;
 
-const fullHtml = buildHtml({
-  config: { ...DEFAULT_CONFIG, site_title: "Web Demo", i18n_mode: false, template_variant: "default" },
-  templateData,
-  documents: { index: bodyHtml },
-  i18nStrings: getAllTemplateStrings({ cli: {}, template: { html_lang: "zh-TW" } }, "2026.03.18"),
-});
+let result = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, true, 0);
+result = await shiki(result);
+result = await copy(result, { mode: "line" });
+result = await lineNumber(result);
 
-console.log(fullHtml);
+const shikiLib = await shikiAssets();
+const copyLib = await copyAssets({ mode: "line" });
+const lnLib = await lineNumberAssets();
+
+injectAssets(
+  `${shikiLib.css ?? ""}\n${copyLib.css ?? ""}\n${lnLib.css ?? ""}`,
+  `${copyLib.js ?? ""}\n${lnLib.js ?? ""}`,
+);
+
+document.querySelector("#preview")!.innerHTML = result;
 ```
 
 ## 注意
 
 - `mdsone/core` 只負責核心轉換與組裝，不會自動執行 plugins。
-- 若你要完整 plugin 流程（例如 image/shiki/copy/line-number），目前建議先使用 CLI。
+- Web 可手動串接 `shiki`、`copy`、`line-number`，並自行注入 assets。
+- `image` plugin 依賴 Node.js（`fs/path` 與處理流程），屬於 Node-only。

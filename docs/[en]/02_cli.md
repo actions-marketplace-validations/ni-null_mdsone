@@ -112,6 +112,8 @@ npx mdsone README.md -o output.html -f false
 Settings can be specified in four ways, in descending priority:
 
 > Boolean values only accept `true` / `false` (CLI and environment variables).
+> Environment variables are read only from runtime `process.env` (shell export, Docker, CI injection).
+> `.env` / `.env.local` are not auto-loaded.
 
 ### 1. CLI Arguments (Highest Priority)
 

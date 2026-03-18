@@ -2,7 +2,8 @@
 // plugins/copy/index.ts — 複製按鈕 Plugin
 // ============================================================
 
-import type { Plugin, PluginAssets } from "../../src/core/types.js";
+import type { Config, Plugin, PluginAssets } from "../../src/core/types.js";
+import { DEFAULT_CONFIG } from "../../src/core/config.js";
 import { getCopyButtonScript, getLineCopyStyle, getCmdCopyStyle } from "./copy-button.js";
 import { load } from "cheerio";
 
@@ -100,7 +101,7 @@ export const copyPlugin: Plugin = {
         const mode = (config.code_copy_mode ?? "none") as string;
         if (mode !== "line" && mode !== "cmd") return html;
 
-        const $ = load(html, { decodeEntities: false }, false);
+        const $ = load(html, {}, false);
         $("pre > code").each((_i, el) => {
             const codeEl = $(el);
             if (codeEl.find(".code-line").length > 0) return;
@@ -211,3 +212,41 @@ export const copyPlugin: Plugin = {
         };
     },
 };
+
+export interface CopyOptions {
+    /**
+     * off: disable
+     * line: per-command line copy
+     * cmd: section copy by comments
+     */
+    mode?: "off" | "line" | "cmd";
+    /** Enable/disable copy plugin globally. */
+    enable?: boolean;
+    /** Advanced override for full config control. */
+    config?: Partial<Config>;
+}
+
+function resolveCopyConfig(options: CopyOptions = {}): Config {
+    const mode = options.mode ?? "line";
+    const enable = options.enable ?? true;
+    return {
+        ...DEFAULT_CONFIG,
+        ...options.config,
+        code_copy: enable,
+        code_copy_mode: mode,
+    };
+}
+
+/** Convenience transformer: `result = await copy(result)` */
+export async function copy(html: string, options: CopyOptions = {}): Promise<string> {
+    const config = resolveCopyConfig(options);
+    if (!copyPlugin.isEnabled(config) || !copyPlugin.processHtml) return html;
+    return await copyPlugin.processHtml(html, config, { sourceDir: "" });
+}
+
+/** Plugin CSS/JS assets for host template injection. */
+export async function copyAssets(options: CopyOptions = {}): Promise<PluginAssets> {
+    const config = resolveCopyConfig(options);
+    if (!copyPlugin.isEnabled(config) || !copyPlugin.getAssets) return {};
+    return await copyPlugin.getAssets(config);
+}

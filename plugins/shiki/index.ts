@@ -7,7 +7,8 @@
 import { load } from "cheerio";
 import { codeToHtml } from "shiki";
 import hljs from "highlight.js";
-import type { Plugin, PluginAssets } from "../../src/core/types.js";
+import type { Config, Plugin, PluginAssets, TemplateData } from "../../src/core/types.js";
+import { DEFAULT_CONFIG } from "../../src/core/config.js";
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -126,7 +127,7 @@ export const shikiPlugin: Plugin = {
   isEnabled: (config) => config.code_highlight,
 
   async processHtml(html, config, context) {
-    const $ = load(html, { decodeEntities: false }, false);
+    const $ = load(html, {}, false);
     const codeNodes = $("pre > code").toArray();
     const typeName = config.template_variant || "default";
     const typeCfg = context.templateData?.config?.types?.[typeName]
@@ -156,7 +157,7 @@ export const shikiPlugin: Plugin = {
       const rendered = await renderShikiFence(codeText, lang, themeDark, themeLight);
       if (!rendered) continue;
 
-      const $frag = load(rendered, { decodeEntities: false }, false);
+      const $frag = load(rendered, {}, false);
       const newPre = $frag("pre").first();
       if (!newPre.length) continue;
 
@@ -189,3 +190,40 @@ export const shikiPlugin: Plugin = {
     };
   },
 };
+
+export interface ShikiOptions {
+  /** Enable/disable highlighting. */
+  enable?: boolean;
+  /** Optional template data for theme lookup (types.<variant>.code.Shiki.*). */
+  templateData?: TemplateData;
+  /** Source directory passed to plugin context. */
+  sourceDir?: string;
+  /** Advanced override for full config control. */
+  config?: Partial<Config>;
+}
+
+function resolveShikiConfig(options: ShikiOptions = {}): Config {
+  const enable = options.enable ?? true;
+  return {
+    ...DEFAULT_CONFIG,
+    ...options.config,
+    code_highlight: enable,
+  };
+}
+
+/** Convenience transformer: `result = await shiki(result)` */
+export async function shiki(html: string, options: ShikiOptions = {}): Promise<string> {
+  const config = resolveShikiConfig(options);
+  if (!shikiPlugin.isEnabled(config) || !shikiPlugin.processHtml) return html;
+  return await shikiPlugin.processHtml(html, config, {
+    sourceDir: options.sourceDir ?? "",
+    templateData: options.templateData,
+  });
+}
+
+/** Plugin CSS assets for host template injection. */
+export async function shikiAssets(options: ShikiOptions = {}): Promise<PluginAssets> {
+  const config = resolveShikiConfig(options);
+  if (!shikiPlugin.isEnabled(config) || !shikiPlugin.getAssets) return {};
+  return await shikiPlugin.getAssets(config);
+}

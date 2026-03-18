@@ -47,3 +47,15 @@ npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400
 
 [MIT](./LICENSE)
 
+## Acknowledgements
+
+mdsone is built on top of excellent open-source packages:
+
+- `markdown-it` ecosystem (`markdown-it`, `markdown-it-anchor`, `markdown-it-attrs`): Core Markdown parsing/rendering, heading ID generation, and attribute support.
+- `shiki`: High-quality syntax highlighting output.
+- `highlight.js`: Language auto-detection fallback for unlabeled code fences.
+- `cheerio`: HTML AST-style rewriting for plugin post-processing.
+- `sharp`: Optional image resize/compression during image embedding.
+- `commander`: CLI argument parsing.
+- `@iarna/toml`: `config.toml` parsing.
+

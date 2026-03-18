@@ -77,6 +77,9 @@ npx mdsone ./docs -m -o dist/manual.html
 CLI 參數 > 環境變數 > config.toml > 預設值
 ```
 
+> 注意：環境變數僅讀取執行當下的 `process.env`（例如 shell export、Docker、CI 注入）。  
+> 不會自動搜尋或載入 `.env`、`.env.local`。
+
 ## 對應關係
 
 | 功能 | CLI | 環境變數 | config.toml |

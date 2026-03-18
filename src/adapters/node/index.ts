@@ -6,7 +6,6 @@
 // Config loader
 export {
   envToConfig,
-  loadEnvFile,
   loadConfigFile,
   buildConfig,
   validateDirExists,

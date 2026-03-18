@@ -1,12 +1,11 @@
 // ============================================================
 // src/adapters/node/config_loader.ts — 設定載入與合併
-// 負責讀取 config.toml、.env，並將 env var 對映至 Partial<Config>
+// 負責讀取 config.toml，並將 process.env 對映至 Partial<Config>
 // 對應 Python src/config.py（I/O 部分）
 // ============================================================
 
 import fs from "node:fs";
 import path from "node:path";
-import { config as dotenvConfig } from "dotenv";
 import type { Config, ValidationResult } from "../../core/types.js";
 import { DEFAULT_CONFIG, mergeConfigs } from "../../core/config.js";
 import { dirExists } from "./fs.js";
@@ -157,17 +156,6 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
 }
 
 // ── 主要載入函式 ──────────────────────────────────────────
-
-/**
- * 載入 .env 檔（若存在），注入至 process.env。
- * 對應 Python 版 DeploySingleFile 的 dotenv 邏輯。
- */
-export function loadEnvFile(envPath?: string): void {
-  const target = envPath ?? path.join(process.cwd(), ".env");
-  if (fs.existsSync(target)) {
-    dotenvConfig({ path: target });
-  }
-}
 
 /**
  * 讀取 config.toml 並解析為 Partial<Config>。

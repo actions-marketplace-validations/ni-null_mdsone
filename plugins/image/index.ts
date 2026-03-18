@@ -9,7 +9,8 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Plugin } from "../../src/core/types.js";
+import type { Config, Plugin, PluginAssets } from "../../src/core/types.js";
+import { DEFAULT_CONFIG } from "../../src/core/config.js";
 import { fetchRemoteImage, MIME_MAP } from "./fetch-image.js";
 import { processImageBuffer } from "./process-image.js";
 
@@ -108,3 +109,44 @@ export const imageEmbedPlugin: Plugin = {
         });
     },
 };
+
+export interface ImageOptions {
+    /** Enable/disable image embedding. */
+    enable?: boolean;
+    /** Embedding mode; currently supports off|base64. */
+    embed?: "off" | "base64";
+    /** Source directory for resolving relative image paths. */
+    sourceDir?: string;
+    /** Max output width (requires sharp). */
+    maxWidth?: number;
+    /** Compression quality 1-100 (requires sharp). */
+    compress?: number;
+    /** Advanced override for full config control. */
+    config?: Partial<Config>;
+}
+
+function resolveImageConfig(options: ImageOptions = {}): Config {
+    const embed = options.embed ?? (options.enable === false ? "off" : "base64");
+    return {
+        ...DEFAULT_CONFIG,
+        ...options.config,
+        img_embed: embed,
+        img_to_base64: embed === "base64",
+        img_max_width: options.maxWidth ?? options.config?.img_max_width ?? DEFAULT_CONFIG.img_max_width,
+        img_compress: options.compress ?? options.config?.img_compress ?? DEFAULT_CONFIG.img_compress,
+    };
+}
+
+/** Convenience transformer: `result = await image(result)` (Node-only) */
+export async function image(html: string, options: ImageOptions = {}): Promise<string> {
+    const config = resolveImageConfig(options);
+    if (!imageEmbedPlugin.isEnabled(config) || !imageEmbedPlugin.processHtml) return html;
+    return await imageEmbedPlugin.processHtml(html, config, {
+        sourceDir: options.sourceDir ?? process.cwd(),
+    });
+}
+
+/** Image plugin currently has no CSS/JS assets. */
+export async function imageAssets(_options: ImageOptions = {}): Promise<PluginAssets> {
+    return {};
+}

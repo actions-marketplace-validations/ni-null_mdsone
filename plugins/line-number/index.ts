@@ -2,7 +2,8 @@
 // plugins/line-number/index.ts — Line number plugin
 // ============================================================
 
-import type { Plugin, PluginAssets } from "../../src/core/types.js";
+import type { Config, Plugin, PluginAssets } from "../../src/core/types.js";
+import { DEFAULT_CONFIG } from "../../src/core/config.js";
 import { getLineNumberStyle } from "./line-number.js";
 import { load } from "cheerio";
 
@@ -39,7 +40,7 @@ export const lineNumberPlugin: Plugin = {
   isEnabled: (config) => config.code_line_number === true,
 
   processHtml(html) {
-    const $ = load(html, { decodeEntities: false }, false);
+    const $ = load(html, {}, false);
     $("pre > code").each((_i, el) => {
       const codeEl = $(el);
       const preEl = codeEl.parent("pre");
@@ -73,3 +74,33 @@ export const lineNumberPlugin: Plugin = {
     return { css };
   },
 };
+
+export interface LineNumberOptions {
+  /** true to enable line numbers, false to disable. */
+  enable?: boolean;
+  /** Advanced override for full config control. */
+  config?: Partial<Config>;
+}
+
+function resolveLineNumberConfig(options: LineNumberOptions = {}): Config {
+  const enable = options.enable ?? true;
+  return {
+    ...DEFAULT_CONFIG,
+    ...options.config,
+    code_line_number: enable,
+  };
+}
+
+/** Convenience transformer: `result = await lineNumber(result)` */
+export async function lineNumber(html: string, options: LineNumberOptions = {}): Promise<string> {
+  const config = resolveLineNumberConfig(options);
+  if (!lineNumberPlugin.isEnabled(config) || !lineNumberPlugin.processHtml) return html;
+  return await lineNumberPlugin.processHtml(html, config, { sourceDir: "" });
+}
+
+/** Plugin CSS assets for host template injection. */
+export async function lineNumberAssets(options: LineNumberOptions = {}): Promise<PluginAssets> {
+  const config = resolveLineNumberConfig(options);
+  if (!lineNumberPlugin.isEnabled(config) || !lineNumberPlugin.getAssets) return {};
+  return await lineNumberPlugin.getAssets(config);
+}

@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig([
-  // ── CLI entry ───────────────────────────────────────────
+  // CLI entry
   {
     entry: { cli: "src/cli/main.ts" },
     format: ["esm"],
@@ -13,16 +13,15 @@ export default defineConfig([
     clean: true,
     dts: false,
     sourcemap: true,
-    // 不打包 dependencies — 保持 external
+    // Keep runtime deps external.
     external: [
       "@iarna/toml",
       "commander",
-      "dotenv",
       "markdown-it",
       "markdown-it-attrs",
     ],
   },
-  // ── Core library entry（純函數，zero I/O）──────────────
+  // Core library entry (pure functions, zero I/O)
   {
     entry: { index: "src/core/index.ts" },
     format: ["esm"],
@@ -30,7 +29,7 @@ export default defineConfig([
     target: "node18",
     platform: "node",
     splitting: false,
-    clean: false, // 不清除上一步產出
+    clean: false,
     dts: true,
     sourcemap: true,
     external: [
@@ -38,7 +37,7 @@ export default defineConfig([
       "markdown-it-attrs",
     ],
   },
-  // ── Node adapter entry（I/O 層）────────────────────────
+  // Node adapter entry (I/O layer)
   {
     entry: { node: "src/adapters/node/index.ts" },
     format: ["esm"],
@@ -52,7 +51,31 @@ export default defineConfig([
     external: [
       "@iarna/toml",
       "commander",
-      "dotenv",
+      "markdown-it",
+      "markdown-it-attrs",
+    ],
+  },
+  // Plugin entries (each plugin owns its own public API)
+  {
+    entry: {
+      "plugins/shiki": "plugins/shiki/index.ts",
+      "plugins/copy": "plugins/copy/index.ts",
+      "plugins/image": "plugins/image/index.ts",
+      "plugins/line-number": "plugins/line-number/index.ts",
+    },
+    format: ["esm"],
+    outDir: "dist",
+    target: "node18",
+    platform: "node",
+    splitting: false,
+    clean: false,
+    dts: true,
+    sourcemap: true,
+    external: [
+      "cheerio",
+      "highlight.js",
+      "shiki",
+      "sharp",
       "markdown-it",
       "markdown-it-attrs",
     ],

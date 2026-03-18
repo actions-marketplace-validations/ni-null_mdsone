@@ -11,7 +11,6 @@ import { markdownToHtml } from "../core/markdown.js";
 import { getAllTemplateStrings, getAllLocalesTemplateStrings } from "../core/i18n.js";
 import { buildHtml } from "../core/builder.js";
 import {
-  loadEnvFile,
   loadConfigFile,
   buildConfig,
 } from "../adapters/node/config_loader.js";
@@ -86,8 +85,7 @@ async function main(): Promise<void> {
   const args = parseArgs();
   const cliOverride = cliArgsToConfig(args);
 
-  // ② 載入 .env + （可選）config.toml，合併設定（CLI > env > toml > default）
-  loadEnvFile();
+  // ② 載入（可選）config.toml，合併設定（CLI > env > toml > default）
   let toml = {};
   if (args.configPath) {
     const cfgPath = path.resolve(process.cwd(), args.configPath);
