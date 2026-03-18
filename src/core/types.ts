@@ -1,8 +1,9 @@
-﻿// ============================================================
-// src/core/types.ts ??????TypeScript 隞????// ?詨?撅日靘陷嚗?撘隞颱? Node.js / runtime API
+// ============================================================
+// src/core/types.ts
+// Shared TypeScript interfaces for core, adapters, and plugins.
 // ============================================================
 
-/** 摰閮剖??拐辣嚗???Python CONFIG dict嚗?*/
+/** Runtime configuration object. */
 export interface Config {
   // paths
   markdown_source_dir: string;
@@ -38,7 +39,7 @@ export interface Config {
   };
 }
 
-/** CLI 撘?拐辣嚗ommander 閫??敺? */
+/** Parsed CLI arguments. */
 export interface CliArgs {
   inputs?: string[];
   merge?: boolean;
@@ -59,16 +60,16 @@ export interface CliArgs {
   version?: boolean;
 }
 
-/** locale JSON 瑼???瑽?en.json / zh-TW.json嚗?*/
+/** Locale JSON structure (for example: en.json, zh-TW.json). */
 export interface I18nFile {
   _comment?: string;
   _locale?: string;
   cli: Record<string, string>;
-  /** template ?憛?勗?璅⊥??locales/ ??嚗??獢? */
+  /** Optional template-level strings merged from template locales. */
   template?: Record<string, string>;
 }
 
-/** ?桐??辣?嚗???mdsone_DATA.docs[n]嚗?*/
+/** One document entry used by mdsone_DATA.docs. */
 export interface DocItem {
   id: string;
   title: string;
@@ -76,13 +77,13 @@ export interface DocItem {
   html: string;
 }
 
-/** TOC 閮剖? */
+/** Table-of-contents configuration. */
 export interface TocConfig {
   enabled: boolean;
   levels: number[];
 }
 
-/** Template config.json 銝?_metadata ?拐辣 */
+/** Metadata section in template.config.json. */
 export interface TemplateMetadata {
   name?: string;
   description?: string;
@@ -91,7 +92,7 @@ export interface TemplateMetadata {
   author?: string;
 }
 
-/** Template-level user-overridable config */
+/** Template-level runtime overrides. */
 export interface TemplateRuntimeConfig {
   palette?: string;
   code?: {
@@ -113,21 +114,15 @@ export interface TemplateRuntimeConfig {
   }>;
 }
 
-/** template_loader 頛敺?摰璅⊥鞈?嚗撌脰???瑼??批捆嚗?*/
+/** Loaded template payload. */
 export interface TemplateData {
-  /** style.css ???? */
+  /** Raw content of style.css. */
   css: string;
-  /** template.html ????嚗 {PLACEHOLDER}嚗?/
+  /** Raw content of template.html containing placeholders. */
   template: string;
-  /**
-   * assets/ 鞈?憭曆葉靘摮?蝬湔?摨? CSS 瑼?皜嚗歇霈?亙摰對?
-   * 撱箇蔭?誑 <style> inline 瘜典 {EXTRA_CSS}
-   */
+  /** Extra CSS files loaded from template assets/. */
   assets_css: Array<{ filename: string; content: string }>;
-  /**
-   * assets/ 鞈?憭曆葉靘摮?蝬湔?摨? JS 瑼?皜嚗歇霈?亙摰對?
-   * 撱箇蔭?誑 <script> inline 瘜典 {EXTRA_JS}
-   */
+  /** Extra JS files loaded from template assets/. */
   assets_js: Array<{ filename: string; content: string }>;
   version: string;
   schema_version: string;
@@ -136,35 +131,35 @@ export interface TemplateData {
   config: TemplateRuntimeConfig;
 }
 
-/** buildHtml() ?撓?亙???*/
+/** Input parameters for buildHtml(). */
 export interface BuildParams {
   config: Config;
-  /** ?株?璅∪?嚗 tab_name: html } */
+  /** Single-language docs: { tab_name: html } */
   documents?: Record<string, string>;
-  /** 憭?璅∪?嚗 locale: { tab_name: html } } */
+  /** Multi-language docs: { locale: { tab_name: html } } */
   multiDocuments?: Record<string, Record<string, string>>;
   templateData: TemplateData;
-  /** ?株? i18n 摮葡嚗???getAllTemplateStrings嚗?*/
+  /** Single-language template strings. */
   i18nStrings?: Record<string, string>;
-  /** 憭? i18n 摮葡 { locale: { key: val } } */
+  /** Multi-language template strings. */
   multiI18nStrings?: Record<string, Record<string, string>>;
-  /** 全域語言顯示名稱對照（來源：locales/config.json） */
+  /** Global locale display-name map loaded from locales/config.json. */
   localeNames?: Record<string, string>;
-  /** 敺?lib/ 蝯??見撘?蝐歹?? {LIB_CSS}嚗?*/
+  /** Aggregated CSS from plugins. */
   libCss?: string;
-  /** 敺?lib/ 蝯???祆?蝐歹?? {LIB_JS}嚗?*/
+  /** Aggregated JS from plugins. */
   libJs?: string;
 }
 
-/** validateConfig() ???喳???*/
+/** Validation result container. */
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
 }
 
-// ?? mdsone_DATA 蝯?嚗釣?亥 HTML ??JSON payload嚗??
+// mdsone_DATA payloads embedded into output HTML.
 
-/** ?株?璅∪???mdsone_DATA */
+/** Single-language mdsone_DATA shape. */
 export interface mdsoneDataSingle {
   docs: DocItem[];
   config: mdsoneConfigPayload;
@@ -172,7 +167,7 @@ export interface mdsoneDataSingle {
   localeNames?: Record<string, string>;
 }
 
-/** 憭?璅∪???mdsone_DATA */
+/** Multi-language mdsone_DATA shape. */
 export interface mdsoneDataMulti {
   locales: string[];
   defaultLocale: string;
@@ -184,7 +179,7 @@ export interface mdsoneDataMulti {
 
 export type mdsoneData = mdsoneDataSingle | mdsoneDataMulti;
 
-/** mdsone_DATA.config 畾菔 */
+/** Config payload embedded in mdsone_DATA.config. */
 export interface mdsoneConfigPayload {
   site_title: string;
   theme_mode: string;
@@ -195,66 +190,53 @@ export interface mdsoneConfigPayload {
   types?: Record<string, { palette?: string }>;
 }
 
-// ?? Plugin 蝟餌絞 ??????????????????????????????????????????????
+// Plugin interfaces.
 
-/** Plugin getAssets() ???喳??伐?css/js ?箏璅惜????HTML 摮葡 */
+/** CSS/JS assets provided by a plugin. */
 export interface PluginAssets {
-  /** 摰 HTML嚗 <style> 璅惜嚗?憒?<style id="...">...</style>嚗?*/
+  /** Inline style tag string(s). */
   css?: string;
-  /** 摰 HTML嚗 <script> 璅惜嚗?憒?<script>...</script>嚗?*/
+  /** Inline script tag string(s). */
   js?: string;
 }
 
-/** Plugin processHtml() ?嗅?銵?銝? */
+/** Context passed to plugin processHtml(). */
 export interface PluginContext {
-  /** ?嗅?????Markdown 瑼???函???冽閫???砍???詨?頝臬?嚗?*/
+  /** Source markdown directory used for relative path resolution. */
   sourceDir: string;
+  /** Loaded template metadata/config for plugin decisions. */
   templateData?: TemplateData;
 }
 
-/** CLI program 隞嚗??core ?湔靘陷 commander嚗?*/
+/** Minimal CLI program surface used by plugins. */
 export interface CliProgram {
   option: (...args: unknown[]) => unknown;
 }
 
-/** Plugin 隞嚗???plugin 敹?撖虫? name ??isEnabled */
+/** Plugin contract. */
 export interface Plugin {
-  /** plugin ?迂嚗銝霅嚗?潭隤? */
+  /** Unique plugin name used by plugin ordering and logs. */
   readonly name: string;
 
-  /**
-   * 閮餃? CLI ?嚗?賂?
-   */
+  /** Register plugin-specific CLI options. */
   registerCli?: (program: CliProgram) => void;
 
-  /**
-   * 撠?CLI ?頧 config 閬?嚗?賂?
-   */
+  /** Map parsed CLI options into Partial<Config> overrides. */
   cliToConfig?: (opts: Record<string, unknown>, out: Partial<Config>) => void;
 
-  /**
-   * ?斗甇?plugin ?函策摰?config 銝?血??具?   * ??plugin ?芾?摰???璇辣嚗anager 銝??仿?蝝啁???   */
+  /** Return whether this plugin is enabled for current config. */
   isEnabled: (config: Config) => boolean;
 
-  /**
-   * HTML 敺???畾蛛??舫嚗?   * ??markdownToHtml() 銋??uildHtml() 銋??瑁???   * @returns ??敺? HTML 摮葡
-   */
+  /** Post-process HTML after markdown-to-HTML conversion. */
   processHtml?: (
     html: string,
     config: Config,
     context: PluginContext,
   ) => string | Promise<string>;
 
-  /**
-   * ???瘜典頛詨 HTML ????皞??舫嚗?   * ???css/js ?摰??<style>/<script> 璅惜??   */
+  /** Return CSS/JS assets to be injected into final output. */
   getAssets?: (config: Config) => PluginAssets | Promise<PluginAssets>;
 
-  /**
-   * 撽? config ???改??舫嚗?   * @returns ?航炊閮???嚗征???銵函內撽???
-   */
+  /** Validate plugin-specific config and return warning/error messages. */
   validateConfig?: (config: Config) => string[];
 }
-
-
-
-

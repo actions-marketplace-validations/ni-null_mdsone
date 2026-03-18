@@ -34,6 +34,17 @@
           }
         }
       },
+      "fog-gray-code-dark": {
+        "_description": "Fog-gray light UI with dark code blocks in both theme modes.",
+        "palette": "fog-gray-code-dark",
+        "code": {
+          "Shiki": {
+            "dark": "github-dark",
+            "light": "github-dark",
+            "auto_detect": true
+          }
+        }
+      },
       "warm-cream": {
         "_description": "Warm off-white with amber-brown tones ??easy on the eyes for long reading sessions.",
         "palette": "warm-cream",

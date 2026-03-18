@@ -1,25 +1,24 @@
-:root {
-  /* Structural / layout vars — not palette-specific */
+﻿:root {
+  /* Structural/layout vars (not palette specific) */
   --glow-primary: none;
   --glow-strong: none;
   --sidebar-width: 240px;
   --grid-color: transparent;
   /* cb-dot colors are universal (macOS traffic lights) */
-  --cb-dot-red:    #e6a8a4;
-  --cb-dot-yellow: #e8d4a2;
-  --cb-dot-green:  #a8d2b0;
+  --cb-dot-red:    #d98b84;
+  --cb-dot-yellow: #d8bb73;
+  --cb-dot-green:  #7fb693;
 }
 
 
 
-/* ═══════════════════════════════════════════════════
-   PALETTE SYSTEM
+/* -------------------- PALETTE SYSTEM --------------------
    Applied via data-palette="<name>" on <html>.
    Each palette defines dark-mode variables by default,
    and light-mode overrides under [data-theme="light"].
-   ═══════════════════════════════════════════════════ */
+--------------------------------------------------------- */
 
-/* ── fog-gray (default) ── */
+/* -- fog-gray (default) -- */
 [data-palette="fog-gray"] {
   --bg-void:       #0f1115;
   --bg-deep:       #14171d;
@@ -89,7 +88,78 @@
   --tab-active-bg: #dfe6ef;
 }
 
-/* ── warm-cream ── */
+/* -- fog-gray-code-dark: light UI + dark code blocks -- */
+[data-palette="fog-gray-code-dark"] {
+  --bg-void:       #0f1115;
+  --bg-deep:       #14171d;
+  --bg-surface:    #181c24;
+  --bg-raised:     #1c212b;
+  --bg-hover:      #1f2531;
+  --accent-primary:   #6f86b8;
+  --accent-secondary: #8ea0c8;
+  --accent-hot:    #f85149;
+  --accent-warm:   #e3b341;
+  --text-primary:  #e8ecf2;
+  --text-secondary:#c0c6d0;
+  --text-muted:    #8b93a3;
+  --border-dim:    #242a36;
+  --border-glow:   #2b3240;
+  --code-block-bg: #161b26;
+  --pre-code-color:#e6edf3;
+  --cb-bg:         #161b26;
+  --cb-border:     #21262d;
+  --cb-shadow:     0 6px 16px rgba(5, 8, 14, 0.16);
+  --cb-header-bg:  #1c2333;
+  --cb-header-border: #21262d;
+  --cb-badge-bg:   rgba(68,147,248,0.10);
+  --cb-badge-color:#4493f8;
+  --cb-ln-border:  #30363d;
+  --cb-ln-color:   #768390;
+  --cb-copy-color: rgba(255,255,255,0.25);
+  --cb-copy-hover-bg:    rgba(68,147,248,0.12);
+  --cb-copy-hover-color: #4493f8;
+  --cb-copy-copied-color:#3fb950;
+  --cb-hover-line: rgba(68,147,248,0.08);
+  --cb-flash-line: rgba(68,147,248,0.15);
+  --tab-active-bg: rgba(111, 134, 184, 0.32);
+}
+[data-palette="fog-gray-code-dark"][data-theme="light"] {
+  --bg-void:       #ffffff;
+  --bg-deep:       #eeeff0;
+  --bg-surface:    #e6e8ea;
+  --bg-raised:     #dfe1e3;
+  --bg-hover:      #d8dadc;
+  --accent-primary:   #6c82ad;
+  --accent-secondary: #8f9fc0;
+  --accent-hot:    #cf222e;
+  --accent-warm:   #9a6700;
+  --text-primary:  #141820;
+  --text-secondary:#505860;
+  --text-muted:    #8090a0;
+  --border-dim:    #d8dadc;
+  --border-glow:   #c8cacc;
+
+  /* Keep code area dark even in light UI mode */
+  --code-block-bg: #161b26;
+  --pre-code-color:#e6edf3;
+  --cb-bg:         #161b26;
+  --cb-border:     #21262d;
+  --cb-shadow:     0 6px 16px rgba(5, 8, 14, 0.16);
+  --cb-header-bg:  #1c2333;
+  --cb-header-border: #21262d;
+  --cb-badge-bg:   rgba(68,147,248,0.10);
+  --cb-badge-color:#4493f8;
+  --cb-ln-border:  #30363d;
+  --cb-ln-color:   #768390;
+  --cb-copy-color: rgba(255,255,255,0.25);
+  --cb-copy-hover-bg:    rgba(68,147,248,0.12);
+  --cb-copy-hover-color: #4493f8;
+  --cb-copy-copied-color:#3fb950;
+  --cb-hover-line: rgba(68,147,248,0.08);
+  --cb-flash-line: rgba(68,147,248,0.15);
+  --tab-active-bg: #dfe6ef;
+}
+/* -- warm-cream -- */
 [data-palette="warm-cream"] {
   --bg-void:       #12100d;
   --bg-deep:       #1a1612;
@@ -159,7 +229,7 @@
   --tab-active-bg: #e5ddd3;
 }
 
-/* ── sage-mist ── */
+/* -- sage-mist -- */
 [data-palette="sage-mist"] {
   --bg-void:       #0d1210;
   --bg-deep:       #121a16;
@@ -229,7 +299,7 @@
   --tab-active-bg: #dbe6db;
 }
 
-/* ── soft-dusk ── */
+/* -- soft-dusk -- */
 [data-palette="soft-dusk"] {
   --bg-void:       #0e0d18;
   --bg-deep:       #131220;
@@ -344,7 +414,7 @@ body {
   z-index: 1;
 }
 
-/* ?�?�?� SIDEBAR ?�?�?� */
+/* -- SIDEBAR -- */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-deep);
@@ -465,7 +535,7 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* ?�?�?� MAIN CONTENT ?�?�?� */
+/* -- MAIN CONTENT -- */
 .main-content {
   flex: 1;
   display: flex;
@@ -481,7 +551,7 @@ body {
   background: var(--bg-void);
 }
 
-/* ?�?�?� SIDEBAR CONTROLS (theme + lang, bottom of sidebar) ?�?�?� */
+/* -- SIDEBAR CONTROLS (theme + language) -- */
 .sidebar-controls {
   display: flex;
   align-items: center;
@@ -516,7 +586,7 @@ body {
   }
 }
 
-/* ?�?�?� MARKDOWN STYLES ?�?�?� */
+/* -- MARKDOWN STYLES -- */
 .tab-content h1 {
   font-family: "IBM Plex Sans", "Noto Sans", "Segoe UI", sans-serif;
   font-weight: 800;
@@ -594,7 +664,7 @@ body {
   border-radius: 3px;
 }
 
-/* ?�?�?� CODE BLOCK ??Clean Card Style ?�?�?� */
+/* -- CODE BLOCK: clean card style -- */
 
 /* Light mode overrides */
 .tab-content pre {
@@ -610,7 +680,7 @@ body {
   transition: background 0.35s, box-shadow 0.35s;
 }
 
-/* ?�?� Header background + lang label ?�?� */
+/* -- Header background and language label -- */
 .tab-content pre::before {
   content: attr(data-lang);
   position: absolute;
@@ -637,7 +707,12 @@ body {
   transition: background 0.35s, color 0.35s, opacity 0.35s;
 }
 
-/* ?�?� Traffic-light dots ?�?� */
+/* Light mode: keep language label, remove header background fill */
+[data-theme="light"] .tab-content pre::before {
+  background: transparent;
+}
+
+/* -- Traffic-light dots -- */
 .tab-content pre::after {
   content: "";
   position: absolute;
@@ -654,7 +729,7 @@ body {
   z-index: 2;
 }
 
-/* ?�?� Code area ?�?� */
+/* -- Code area -- */
 .tab-content pre code {
   display: block;
   background: none;
@@ -666,7 +741,7 @@ body {
   overflow-x: auto;
 }
 
-/* ?�?� Copy button ?�?� */
+/* -- Copy button -- */
 .tab-content pre .copy-btn {
   position: absolute;
   top: 8px;
@@ -680,15 +755,11 @@ body {
   border: none;
   border-radius: 7px;
   cursor: pointer;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.18s, background 0.15s, color 0.15s;
   color: var(--cb-copy-color);
   padding: 0;
   z-index: 2;
-}
-
-.tab-content pre:hover .copy-btn {
-  opacity: 1;
 }
 
 .tab-content pre .copy-btn:hover {
@@ -702,7 +773,7 @@ body {
   opacity: 1;
 }
 
-/* ?�?� Line-number plugin integration ?�?� */
+/* -- Line-number plugin integration -- */
 .tab-content pre.mdsone-line-number {
   --mdsone-ln-gutter: 2em;
   --mdsone-ln-gap: 0.6em;
@@ -720,7 +791,7 @@ body {
   border-right-color: var(--cb-ln-border);
 }
 
-/* ?�?� Per-line copy hover/flash (line plugin) ?�?� */
+/* -- Per-line copy hover/flash (line plugin) -- */
 .tab-content .code-line--hover {
   background: var(--cb-hover-line) !important;
 }
@@ -808,7 +879,7 @@ body {
   background: var(--bg-hover);
 }
 
-/* ?�?�?� THEME TOGGLE ?�?�?� */
+/* -- THEME TOGGLE -- */
 .theme-toggle {
   display: flex;
   align-items: center;
@@ -851,7 +922,7 @@ body {
   white-space: nowrap;
 }
 
-/* ?�?�?� LANG SWITCHER ?�?�?� */
+/* -- LANGUAGE SWITCHER -- */
 .lang-switcher {
   display: none;
   align-items: center;
@@ -966,12 +1037,12 @@ body {
   display: none;
 }
 
-/* ?�?�?� Mobile Top Bar ?�?�?� */
+/* -- Mobile Top Bar -- */
 .mobile-topbar {
   display: none;
 }
 
-/* ?�?�?� Responsive ?�?�?� */
+/* -- Responsive -- */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
@@ -1063,7 +1134,7 @@ body {
   }
 }
 
-/* ?�?�?� TOC (Table of Contents) ?�?�?� */
+/* -- TOC (Table of Contents) -- */
 .toc-nav {
   max-height: 0;
   overflow: hidden;

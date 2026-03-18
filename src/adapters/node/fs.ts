@@ -1,6 +1,6 @@
-﻿// ============================================================
-// src/adapters/node/fs.ts ??Node.js 瑼?蝟餌絞??
-// ???I/O ?葉?潭迨嚗ore 撅支?? I/O
+// ============================================================
+// src/adapters/node/fs.ts
+// Node filesystem adapter used by CLI/runtime orchestration.
 // ============================================================
 
 import fs from "node:fs/promises";
@@ -26,23 +26,23 @@ function parseShikiSettings(raw: unknown): { dark?: string; light?: string; auto
   return { dark, light, auto_detect: autoDetect };
 }
 
-/** 霈??UTF-8 ??瑼??芸??駁 BOM嚗?*/
+/** Read UTF-8 text and strip BOM if present. */
 export async function readTextFile(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath, "utf-8");
   return content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content;
 }
 
-/** 撖怠 UTF-8 ??瑼?*/
+/** Write UTF-8 text. */
 export async function writeTextFile(filePath: string, content: string): Promise<void> {
   await fs.writeFile(filePath, content, "utf-8");
 }
 
-/** ?艘蝣箔??桅?摮 */
+/** Ensure directory exists (recursive). */
 export async function ensureDir(dirPath: string): Promise<void> {
   await fs.mkdir(dirPath, { recursive: true });
 }
 
-/** 蝣箄??桅??臬摮嚗?甇伐? */
+/** Return true if path exists and is a directory. */
 export function dirExists(dirPath: string): boolean {
   try {
     return fsSync.statSync(dirPath).isDirectory();
@@ -51,7 +51,7 @@ export function dirExists(dirPath: string): boolean {
   }
 }
 
-/** 蝣箄?瑼??臬摮嚗?甇伐? */
+/** Return true if path exists and is a file. */
 export function fileExists(filePath: string): boolean {
   try {
     return fsSync.statSync(filePath).isFile();
@@ -60,16 +60,13 @@ export function fileExists(filePath: string): boolean {
   }
 }
 
-/** 蝣箄??臬??Markdown 瑼?嚗??.md ??.markdown嚗?*/
+/** Return true for .md or .markdown files. */
 export function isMdFile(filePath: string): boolean {
   const lower = filePath.toLowerCase();
-  return lower.endsWith('.md') || lower.endsWith('.markdown');
+  return lower.endsWith(".md") || lower.endsWith(".markdown");
 }
 
-/**
- * ?曉?桅?銝剜???.md 瑼?嚗??迂????
- * ? [{filename, filepath}, ...]
- */
+/** List markdown files in one directory, sorted by filename. */
 export async function scanMarkdownFiles(
   dir: string,
 ): Promise<Array<{ filename: string; filepath: string }>> {
@@ -85,10 +82,7 @@ export async function scanMarkdownFiles(
     .map((e) => ({ filename: e, filepath: path.join(dir, e) }));
 }
 
-/**
- * ?? [locale] 摮??? { locale_code: absolute_path }??
- * 撠? Python get_locale_dirs()??
- */
+/** Scan [locale] subdirectories and return { locale: absolute_path }. */
 export async function scanLocaleSubDirs(
   sourceDir: string,
 ): Promise<Record<string, string>> {
@@ -109,10 +103,7 @@ export async function scanLocaleSubDirs(
   return result;
 }
 
-/**
- * ?曉????template ?迂嚗??????style.css + template.html嚗?
- * 撠? Python get_available_templates()??
- */
+/** Scan template directories containing both style.css and template.html. */
 export async function scanTemplates(templatesDir: string): Promise<string[]> {
   let entries: fsSync.Dirent[];
   try {
@@ -131,10 +122,7 @@ export async function scanTemplates(templatesDir: string): Promise<string[]> {
   return names.sort();
 }
 
-/**
- * 頛?桐? locale JSON 瑼?嚗銝??fallback ??en.json??
- * 撠? Python I18n.load()??
- */
+/** Load locale JSON file with fallback to en.json. */
 export async function loadLocaleFile(
   localesDir: string,
   locale: string,
@@ -149,8 +137,8 @@ export async function loadLocaleFile(
 }
 
 /**
- * 載入全域語言代碼顯示名稱對照表（locales/config.json）。
- * 找不到或格式錯誤時回傳空物件，並保持系統可運作。
+ * Load global locale display-name mapping from locales/config.json.
+ * If file is missing or invalid, return an empty map.
  */
 export async function loadLocaleNamesConfig(
   localesDir: string,
@@ -177,9 +165,8 @@ export async function loadLocaleNamesConfig(
 }
 
 /**
- * 頛璅⊥撠惇??locale 瑼?嚗???template ?憛???
- * ?曆??唳?? null嚗?怎垢?舀捱摰?fallback 蝑??
- * ?交??嚗?locale>.json ??en.json ??null??
+ * Load template-localized strings from templates/<name>/locales/<locale>.json.
+ * Fallback order: locale file -> en.json -> null.
  */
 export async function loadTemplateLocaleFile(
   templatesDir: string,
@@ -196,10 +183,7 @@ export async function loadTemplateLocaleFile(
   return JSON.parse(raw) as Partial<I18nFile>;
 }
 
-/**
- * 頛?? template ????獢?? TemplateData嚗 inline 鞈??批捆嚗?
- * 撠? Python load_template()??
- */
+/** Load template files and normalized config payload. */
 export async function loadTemplateFiles(
   templatesDir: string,
   templateName: string,
@@ -209,7 +193,7 @@ export async function loadTemplateFiles(
   const css = await readTextFile(path.join(templateDir, "style.css"));
   const template = await readTextFile(path.join(templateDir, "template.html"));
 
-  // ?身??
+  // Defaults
   let metadata = {};
   let version = "1.0.0";
   let schema_version = "v1";
@@ -253,7 +237,7 @@ export async function loadTemplateFiles(
     }
   }
 
-  // ?? assets/ 鞈?憭橘??芸??園? CSS / JS 瑼?銝虫??詨??韌??敺?inline 瘜典
+  // Load and sort assets files from template assets/
   const assetsDir = path.join(templateDir, "assets");
   const assets_css: Array<{ filename: string; content: string }> = [];
   const assets_js: Array<{ filename: string; content: string }> = [];
@@ -261,19 +245,25 @@ export async function loadTemplateFiles(
   if (fsSync.existsSync(assetsDir)) {
     const entries = fsSync.readdirSync(assetsDir);
     const cssFiles = entries.filter(f => f.endsWith(".css")).sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
     );
     const jsFiles = entries.filter(f => f.endsWith(".js")).sort((a, b) =>
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
     );
 
     for (const f of cssFiles) {
-      try { assets_css.push({ filename: f, content: await readTextFile(path.join(assetsDir, f)) }); }
-      catch (e) { console.warn(`[WARN] Failed to read assets CSS '${f}': ${e}`); }
+      try {
+        assets_css.push({ filename: f, content: await readTextFile(path.join(assetsDir, f)) });
+      } catch (e) {
+        console.warn(`[WARN] Failed to read assets CSS '${f}': ${e}`);
+      }
     }
     for (const f of jsFiles) {
-      try { assets_js.push({ filename: f, content: await readTextFile(path.join(assetsDir, f)) }); }
-      catch (e) { console.warn(`[WARN] Failed to read assets JS '${f}': ${e}`); }
+      try {
+        assets_js.push({ filename: f, content: await readTextFile(path.join(assetsDir, f)) });
+      } catch (e) {
+        console.warn(`[WARN] Failed to read assets JS '${f}': ${e}`);
+      }
     }
   }
 
