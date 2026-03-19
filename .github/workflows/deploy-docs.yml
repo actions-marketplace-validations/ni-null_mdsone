@@ -44,12 +44,13 @@ jobs:
 
       - name: Build multi-language documentation
         run: |
-          npx mdsone \
+          node ./dist/cli.js \
             ./docs \
             --i18n-mode=zh-TW \
             --template normal \
-            --site-title "MDSone Documentation" \
-            -o ./_site/index.html
+            --site-title "MDSone" \
+            -o ./_site/index.html \
+            --force
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
