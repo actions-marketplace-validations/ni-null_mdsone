@@ -1,7 +1,8 @@
-﻿# mdsone — Markdown to Self-Contained HTML
+<p align="center">
+  <img width="160" height="160" alt="mdsone" src="https://github.com/user-attachments/assets/bfa9fe31-4bd2-4568-aa45-f40d16564b97" />
+</p>
 
-<img width="256" height="256" alt="mdsone" src="https://github.com/user-attachments/assets/bfa9fe31-4bd2-4568-aa45-f40d16564b97" />
-
+<h1 align="center">mdsone — Markdown to Self-Contained HTML</h1>
 
 mdsone is a Markdown conversion tool that transforms Markdown documents into fully functional, self-contained HTML files.
 
