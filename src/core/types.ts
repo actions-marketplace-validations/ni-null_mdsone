@@ -71,12 +71,6 @@ export interface DocItem {
   html: string;
 }
 
-/** Table-of-contents configuration. */
-export interface TocConfig {
-  enabled: boolean;
-  levels: number[];
-}
-
 /** Metadata section in template.config.json. */
 export interface TemplateMetadata {
   name?: string;
@@ -121,7 +115,6 @@ export interface TemplateData {
   version: string;
   schema_version: string;
   metadata: TemplateMetadata;
-  toc_config: TocConfig;
   config: TemplateRuntimeConfig;
 }
 
@@ -178,7 +171,6 @@ export interface mdsoneConfigPayload {
   site_title: string;
   theme_mode: string;
   build_date: string;
-  toc: TocConfig;
   template_variant?: string;
   palette?: string;
   types?: Record<string, { palette?: string }>;

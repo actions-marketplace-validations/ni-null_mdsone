@@ -16,6 +16,7 @@ npx mdsone --template minimal
 
 Use `--template <theme-or-path>@<variant>` to select a variant defined by the template.
 If the variant does not exist, mdsone falls back to `default`.
+If `config.types.<variant>.palette` is omitted, mdsone uses the variant key as the palette name (`default` falls back to `config.palette`).
 
 ```bash
 npx mdsone ./docs -m --template normal@default

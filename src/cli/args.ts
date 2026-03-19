@@ -106,7 +106,7 @@ export function parseArgs(argv?: string[]): CliArgs {
     // Output
     .option("-m, --merge", "Merge all inputs into a single HTML output")
     .option("-o, --output <PATH>", "Output HTML file path")
-    .option("-f, --force <boolean>", "Overwrite existing output file (default: true)", "true")
+    .option("-f, --force <boolean>", "Overwrite existing output file (default: true)")
     // Templates & Styling
     .option("-t, --template <NAME|PATH[@VARIANT]>", "Template name/path with optional variant (e.g. normal@warm-cream)")
     .option("--site-title <TEXT>", "Documentation site title (default: Documentation)")

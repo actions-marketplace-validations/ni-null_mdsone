@@ -1,14 +1,37 @@
 // ============================================================
-// plugins/shiki/index.ts — Shiki syntax highlight plugin
+// plugins/shiki/index.ts - Shiki syntax highlight plugin
 //
 // Core renders plain fenced blocks first; this plugin rewrites
 // <pre><code class="language-...">...</code></pre> using Shiki.
 // ============================================================
 import { load } from "cheerio";
-import { codeToHtml } from "shiki";
+import { createHighlighter } from "shiki";
 import hljs from "highlight.js";
 import type { Config, Plugin, PluginAssets, TemplateData } from "../../src/core/types.js";
 import { DEFAULT_CONFIG } from "../../src/core/config.js";
+
+// [OPT-6] 靜態 CSS 提升為模組常數，避免每次 getAssets() 呼叫時重建字串
+const SHIKI_THEME_ADAPTER_CSS =
+  `<style id="shiki-theme-adapter">` +
+  `html:not([data-theme="light"]) pre.shiki,` +
+  `html:not([data-theme="light"]) pre.shiki code,` +
+  `html:not([data-theme="light"]) pre.shiki span {` +
+  `  color: var(--shiki-dark) !important;` +
+  `  background-color: var(--shiki-dark-bg) !important;` +
+  `  font-style: var(--shiki-dark-font-style) !important;` +
+  `  font-weight: var(--shiki-dark-font-weight) !important;` +
+  `  text-decoration: var(--shiki-dark-text-decoration) !important;` +
+  `}` +
+  `</style>`;
+
+// [OPT-3] hljs auto-detect 白名單：只嘗試最常見語言，避免全語言掃描
+const HLJS_AUTO_DETECT_LANGUAGES = [
+  "javascript", "typescript", "python", "bash", "json",
+  "css", "html", "sql", "yaml", "java", "go", "rust", "cpp",
+];
+
+// [OPT-3] 超過此長度的程式碼不做 auto-detect，避免大檔案拖慢速度
+const HLJS_AUTO_DETECT_MAX_CHARS = 500;
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -48,6 +71,41 @@ function normalizeShikiTheme(theme: string): string {
   return aliases[v] ?? v;
 }
 
+type ShikiHighlighter = Awaited<ReturnType<typeof createHighlighter>>;
+type HighlighterBundle = {
+  highlighter: ShikiHighlighter;
+  dark: string;
+  light: string;
+  loadedLangs: Set<string>;
+};
+
+const highlighterCache = new Map<string, Promise<HighlighterBundle>>();
+
+function highlighterKey(dark: string, light: string): string {
+  return `${light}::${dark}`;
+}
+
+async function getHighlighterBundle(themeDark: string, themeLight: string): Promise<HighlighterBundle> {
+  const dark = normalizeShikiTheme((themeDark || "github-dark").trim()) || "github-dark";
+  const light = normalizeShikiTheme((themeLight || "github-light").trim()) || "github-light";
+  const key = highlighterKey(dark, light);
+  const cached = highlighterCache.get(key);
+  if (cached) return await cached;
+
+  const created = (async (): Promise<HighlighterBundle> => {
+    try {
+      const highlighter = await createHighlighter({ themes: [light, dark] });
+      return { highlighter, dark, light, loadedLangs: new Set<string>() };
+    } catch {
+      const highlighter = await createHighlighter({ themes: ["github-light", "github-dark"] });
+      return { highlighter, dark: "github-dark", light: "github-light", loadedLangs: new Set<string>() };
+    }
+  })();
+
+  highlighterCache.set(key, created);
+  return await created;
+}
+
 function trimFenceTerminalEol(content: string): string {
   if (content.endsWith("\r\n")) return content.slice(0, -2);
   if (content.endsWith("\n")) return content.slice(0, -1);
@@ -68,32 +126,23 @@ function patchShikiFenceHtml(html: string, lang: string): string {
   );
 }
 
-async function renderShikiFence(
+// [OPT-5] 移除不必要的 Promise.resolve() 包裝，codeToHtml 本身為同步呼叫
+function renderShikiFenceSync(
+  bundle: HighlighterBundle,
   code: string,
   lang: string,
-  themeDark: string,
-  themeLight: string,
-): Promise<string | null> {
+): string | null {
   const normalizedLang = normalizeShikiLang(lang);
-  const dark = normalizeShikiTheme(themeDark);
-  const light = normalizeShikiTheme(themeLight);
   const normalizedCode = trimFenceTerminalEol(code);
   try {
-    const shikiHtml = await codeToHtml(normalizedCode, {
-      lang: normalizedLang,
-      themes: { dark, light },
-    });
+    const shikiHtml = (bundle.highlighter as unknown as { codeToHtml: (...args: any[]) => string })
+      .codeToHtml(normalizedCode, {
+        lang: normalizedLang,
+        themes: { dark: bundle.dark, light: bundle.light },
+      });
     return patchShikiFenceHtml(shikiHtml, lang);
   } catch {
-    try {
-      const shikiHtml = await codeToHtml(normalizedCode, {
-        lang: normalizedLang,
-        themes: { dark: "github-dark", light: "github-light" },
-      });
-      return patchShikiFenceHtml(shikiHtml, lang);
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 
@@ -130,12 +179,27 @@ export const shikiPlugin: Plugin = {
     const $ = load(html, {}, false);
     const codeNodes = $("pre > code").toArray();
     const typeName = config.template_variant || "default";
-    const typeCfg = context.templateData?.config?.types?.[typeName]
-      ?? context.templateData?.config?.types?.default;
-    const shikiCfg = typeCfg?.code?.Shiki;
-    const themeDark = shikiCfg?.dark || "github-dark";
-    const themeLight = shikiCfg?.light || "github-light";
-    const autoDetect = shikiCfg?.auto_detect ?? true;
+    const defaultTypeCfg = context.templateData?.config?.types?.default;
+    const typeCfg = context.templateData?.config?.types?.[typeName];
+    const shikiCfgDefault = defaultTypeCfg?.code?.Shiki ?? context.templateData?.config?.code?.Shiki;
+    const shikiCfgVariant = typeCfg?.code?.Shiki;
+
+    const themeDark = shikiCfgVariant?.dark ?? shikiCfgDefault?.dark ?? "github-dark";
+    const themeLight = shikiCfgVariant?.light ?? shikiCfgDefault?.light ?? "github-light";
+    const autoDetect = shikiCfgVariant?.auto_detect ?? shikiCfgDefault?.auto_detect ?? true;
+
+    const bundle = await getHighlighterBundle(themeDark, themeLight);
+
+    type FenceEntry = {
+      preEl: ReturnType<typeof $>;
+      codeText: string;
+      lang: string;
+      normalizedLang: string;
+      oldAttrs: Record<string, string | undefined>;
+    };
+
+    const fences: FenceEntry[] = [];
+    const neededLangs = new Set<string>();
 
     for (const node of codeNodes) {
       const codeEl = $(node);
@@ -145,49 +209,77 @@ export const shikiPlugin: Plugin = {
 
       let lang = extractLanguage(codeEl.attr("class"));
       const codeText = codeEl.text();
-      if (!lang && autoDetect) {
+
+      // [OPT-3] 限制 auto-detect 範圍：白名單語言 + 字元數上限
+      if (!lang && autoDetect && codeText.length <= HLJS_AUTO_DETECT_MAX_CHARS) {
         try {
-          lang = hljs.highlightAuto(codeText).language ?? null;
+          lang = hljs.highlightAuto(codeText, HLJS_AUTO_DETECT_LANGUAGES).language ?? null;
         } catch {
           lang = null;
         }
       }
-      if (!lang) continue;
 
-      const rendered = await renderShikiFence(codeText, lang, themeDark, themeLight);
+      if (!lang) lang = "text";
+
+      const normalizedLang = normalizeShikiLang(lang);
+      neededLangs.add(normalizedLang);
+
+      fences.push({
+        preEl,
+        codeText,
+        lang,
+        normalizedLang,
+        oldAttrs: (preEl.attr() ?? {}) as Record<string, string | undefined>,
+      });
+    }
+
+    // [OPT-1] 語言載入改為並行，原本為逐一 await 的串行迴圈
+    const loader = (bundle.highlighter as unknown as { loadLanguage?: (lang: string) => Promise<void> }).loadLanguage;
+    if (typeof loader === "function") {
+      const langsToLoad = [...neededLangs].filter((l) => !bundle.loadedLangs.has(l));
+
+      // 先全部標記為已載入，防止並行請求間重複觸發
+      for (const l of langsToLoad) bundle.loadedLangs.add(l);
+
+      await Promise.allSettled(
+        langsToLoad.map((l) => loader.call(bundle.highlighter, l)),
+      );
+    }
+
+    // [OPT-2] fence 渲染改為並行，原本為逐一 await 的串行迴圈
+    // renderShikiFenceSync 已改為同步，Promise.all 用於並行收集結果
+    const renderResults = await Promise.all(
+      fences.map(async (fence): Promise<{ fence: FenceEntry; rendered: string | null }> => {
+        // [OPT-5] 直接呼叫同步版本，不再包裹 Promise.resolve()
+        let rendered = renderShikiFenceSync(bundle, fence.codeText, fence.lang);
+        if (!rendered && fence.lang !== "text") {
+          rendered = renderShikiFenceSync(bundle, fence.codeText, "text");
+        }
+        return { fence, rendered };
+      }),
+    );
+
+    // [OPT-4] Cheerio fragment 解析集中於此迴圈；DOM 替換保持原始順序
+    for (const { fence, rendered } of renderResults) {
       if (!rendered) continue;
 
       const $frag = load(rendered, {}, false);
       const newPre = $frag("pre").first();
       if (!newPre.length) continue;
 
-      // Keep existing pre attributes unless Shiki already set them.
-      const oldAttrs = preEl.attr() ?? {};
-      for (const [k, v] of Object.entries(oldAttrs)) {
+      for (const [k, v] of Object.entries(fence.oldAttrs)) {
         if (newPre.attr(k) === undefined) newPre.attr(k, v);
       }
 
-      preEl.replaceWith(newPre);
+      fence.preEl.replaceWith(newPre);
     }
 
     return $.html() || html;
   },
 
+  // [OPT-6] 直接回傳模組常數，不再每次建構字串
   getAssets(): PluginAssets {
-    return {
-      css:
-        `<style id="shiki-theme-adapter">` +
-        `html:not([data-theme="light"]) pre.shiki,` +
-        `html:not([data-theme="light"]) pre.shiki code,` +
-        `html:not([data-theme="light"]) pre.shiki span {` +
-        `  color: var(--shiki-dark) !important;` +
-        `  background-color: var(--shiki-dark-bg) !important;` +
-        `  font-style: var(--shiki-dark-font-style) !important;` +
-        `  font-weight: var(--shiki-dark-font-weight) !important;` +
-        `  text-decoration: var(--shiki-dark-text-decoration) !important;` +
-        `}` +
-        `</style>`,
-    };
+    return { css: SHIKI_THEME_ADAPTER_CSS };
   },
 };
 

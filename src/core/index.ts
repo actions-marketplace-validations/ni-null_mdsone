@@ -8,7 +8,6 @@ export type {
   CliArgs,
   I18nFile,
   DocItem,
-  TocConfig,
   TemplateMetadata,
   TemplateData,
   BuildParams,
@@ -24,7 +23,6 @@ export { DEFAULT_CONFIG, mergeConfigs, cliArgsToConfig } from "./config.js";
 
 // Markdown
 export {
-  slugify,
   escapeCodeBlocks,
   sanitizeTableCells,
   markdownToHtml,
@@ -33,8 +31,6 @@ export {
 
 // i18n
 export {
-  getCliString,
-  getTemplateString,
   getAllTemplateStrings,
   getAllLocalesTemplateStrings,
 } from "./i18n.js";

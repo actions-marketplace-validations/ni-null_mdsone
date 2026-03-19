@@ -16,20 +16,6 @@ export const LOCALE_DIR_PATTERN = /^\[(.+)\]$/;
 // ── 工具函式 ──────────────────────────────────────────────
 
 /**
- * 將標題文字轉換為 URL-friendly slug（對應 Python slugify()）。
- * 規則：小寫、移除 HTML 標籤、空白/底線→連字號、移除非 ASCII 英數、去重複連字號
- */
-export function slugify(text: string): string {
-  let slug = text.toLowerCase();
-  slug = slug.replace(/<[^>]+>/g, "");          // 移除 HTML 標籤
-  slug = slug.replace(/[\s_]+/g, "-");           // 空白/底線 → -
-  slug = slug.replace(/[^a-z0-9\-]/g, "");      // 移除非英數字符
-  slug = slug.replace(/-+/g, "-");               // 去重複連字號
-  slug = slug.replace(/^-+|-+$/g, "");           // 去頭尾連字號
-  return slug || "heading";
-}
-
-/**
  * markdown-it-anchor 使用的 slugify：保留非 ASCII（中文），
  * 加上 `f{fileIndex}-` 前綴確保跨檔案合併時 id 唯一。
  */
@@ -100,13 +86,11 @@ function createMarkdownIt(extensions: string[], fileIndex: number): MarkdownIt {
  * 將 Markdown 文字轉換為 HTML（對應 Python markdown_to_html()）。
  * 包含：heading id 注入（via markdown-it-anchor）、code block brace 轉義、
  * code fence 語言屬性、table cell XSS 過濾。
- * @param codeHighlight - true 時保留 code fence 的語言 class/data-lang（高亮由 plugin 接手）。
  * @param fileIndex     - 合併多檔時的檔案順序索引（0-based），用於確保 heading id 跨檔唯一。
  */
 export function markdownToHtml(
   markdownText: string,
   extensions: string[],
-  codeHighlight?: boolean,
   fileIndex = 0,
 ): string {
   const md = createMarkdownIt(extensions, fileIndex);

@@ -7,35 +7,6 @@
 import type { I18nFile } from "./types.js";
 
 /**
- * 簡單字串格式化：將 `{key}` 替換為 vars[key]（對應 Python str.format(**kwargs)）。
- * 安全：未找到的 key 保留原佔位符，不拋例外。
- */
-function formatString(text: string, vars?: Record<string, string>): string {
-  if (!vars || Object.keys(vars).length === 0) return text;
-  return text.replace(/\{(\w+)\}/g, (match, key: string) => vars[key] ?? match);
-}
-
-/** 取得 CLI 訊息字串（對應 Python i18n.get_cli()） */
-export function getCliString(
-  file: I18nFile,
-  key: string,
-  vars?: Record<string, string>,
-): string {
-  const text = file.cli?.[key] ?? key;
-  return formatString(text, vars);
-}
-
-/** 取得 template UI 字串（對應 Python i18n.get_template()） */
-export function getTemplateString(
-  file: I18nFile,
-  key: string,
-  vars?: Record<string, string>,
-): string {
-  const text = file.template?.[key] ?? key;
-  return formatString(text, vars);
-}
-
-/**
  * 取得所有 template 字串並替換 BUILD_DATE（對應 Python i18n.get_all_template()）。
  * `_` 開頭的 key（_comment、_locale 等）會被過濾。
  */

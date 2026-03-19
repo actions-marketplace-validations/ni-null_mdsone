@@ -37,14 +37,9 @@ templates/
     "schema_version": "v1"
   },
   "config": {
-    "toc": {
-      "enabled": true,
-      "levels": [2, 3]
-    },
     "palette": "fog-gray",
     "types": {
       "default": {
-        "palette": "fog-gray",
         "code": {
           "Shiki": {
             "dark": "github-dark",
@@ -62,12 +57,12 @@ templates/
 |------|------|
 | `_metadata.version` | 模板版本 |
 | `_metadata.schema_version` | 模板配置格式版本 |
-| `config.toc.enabled` | 是否顯示目錄 |
-| `config.toc.levels` | 目錄抓取的標題層級 |
 | `config.palette` | 預設配色名稱 |
 | `config.types` | 模板變體定義 |
-| `config.types.<name>.palette` | 該變體使用的配色 |
+| `config.types.<name>.palette` | 可選。未設定時會使用變體鍵名作為配色（`default` 仍回退到 `config.palette`） |
 | `config.types.<name>.code.Shiki.*` | 該變體的程式碼高亮主題設定 |
+
+TOC 目前由模板腳本控制，不透過 `template.config.json` 動態配置。
 
 ## 新增自訂模板
 

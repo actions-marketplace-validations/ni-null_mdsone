@@ -7,14 +7,9 @@
     "author": "mdsone"
   },
   "config": {
-    "toc": {
-      "enabled": true,
-      "levels": [2, 3]
-    },
     "palette": "fog-gray",
     "types": {
       "default": {
-        "palette": "fog-gray",
         "code": {
           "Shiki": {
             "dark": "github-dark",
@@ -24,8 +19,6 @@
         }
       },
       "fog-gray": {
-        "_description": "Cool neutral gray ??clean and minimal. Default palette.",
-        "palette": "fog-gray",
         "code": {
           "Shiki": {
             "dark": "github-dark",
@@ -35,8 +28,6 @@
         }
       },
       "fog-gray-code-dark": {
-        "_description": "Fog-gray light UI with dark code blocks in both theme modes.",
-        "palette": "fog-gray-code-dark",
         "code": {
           "Shiki": {
             "dark": "github-dark",
@@ -46,8 +37,6 @@
         }
       },
       "warm-cream": {
-        "_description": "Warm off-white with amber-brown tones ??easy on the eyes for long reading sessions.",
-        "palette": "warm-cream",
         "code": {
           "Shiki": {
             "dark": "min-dark",
@@ -57,8 +46,6 @@
         }
       },
       "sage-mist": {
-        "_description": "Cool green-gray tones ??natural and calm.",
-        "palette": "sage-mist",
         "code": {
           "Shiki": {
             "dark": "vitesse-dark",
@@ -68,8 +55,6 @@
         }
       },
       "soft-dusk": {
-        "_description": "Lavender-purple tones ??distinctive and easy on the eyes.",
-        "palette": "soft-dusk",
         "code": {
           "Shiki": {
             "dark": "vitesse-dark",

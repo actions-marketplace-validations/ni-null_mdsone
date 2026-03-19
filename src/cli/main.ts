@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "./args.js";
 import { cliArgsToConfig } from "../core/config.js";
 import { validateConfig } from "../core/validator.js";
+import { resolveBuildDate } from "../core/build-date.js";
 import { markdownToHtml } from "../core/markdown.js";
 import { getAllTemplateStrings, getAllLocalesTemplateStrings } from "../core/i18n.js";
 import { buildHtml } from "../core/builder.js";
@@ -84,6 +85,17 @@ async function main(): Promise<void> {
   // ① 解析 CLI 引數
   const args = parseArgs();
   const cliOverride = cliArgsToConfig(args);
+  const runAsync = async <T>(
+    labelOrFn: string | (() => Promise<T>),
+    maybeFn?: () => Promise<T>,
+  ): Promise<T> => {
+    const fn = typeof labelOrFn === "function" ? labelOrFn : maybeFn;
+    if (!fn) {
+      throw new TypeError("runAsync requires a function callback.");
+    }
+    return await fn();
+  };
+  const runSync = <T>(fn: () => T): T => fn();
 
   // ② 載入（可選）config.toml，合併設定（CLI > env > toml > default）
   let toml = {};
@@ -285,7 +297,7 @@ async function main(): Promise<void> {
   }
 
   // ⑩-b 確認 template 存在
-  const availableTemplates = await scanTemplates(templateRootDir);
+  const availableTemplates = await runAsync(() => scanTemplates(templateRootDir));
   if (availableTemplates.length === 0) {
     console.error(`[ERROR] No templates found in: ${templateRootDir}`);
     process.exit(1);
@@ -299,10 +311,10 @@ async function main(): Promise<void> {
   // ⑪ 載入 template 檔案（I/O）
   let templateData;
   try {
-    templateData = await loadTemplateFiles(
+    templateData = await runAsync(() => loadTemplateFiles(
       templateRootDir,
       templateName,
-    );
+    ));
   } catch (e) {
     console.error(`[ERROR] Failed to load template: ${e}`);
     process.exit(1);
@@ -316,35 +328,41 @@ async function main(): Promise<void> {
 
   // ⑪-b 透過 PluginManager 收集 plugin 靜態資源
   const pluginManager = new PluginManager();
-  const { css: libCss, js: libJs } = await pluginManager.getAssets(config);
-  const localeNames = await loadLocaleNamesConfig(config.locales_dir);
+  const { css: libCss, js: libJs } = await runAsync(() => pluginManager.getAssets(config));
+  const localeNames = await runAsync(() => loadLocaleNamesConfig(config.locales_dir));
 
   // ⑫ 讀取 Markdown 並轉換，準備 buildHtml 所需參數
   if (isSingleFile) {
     // ── 單個文件模式（批次或合併，行為相同）──
     const srcFile = inputFiles[0];
     try {
-      const fileContent = await readTextFile(srcFile);
+      const fileContent = await runAsync(() => readTextFile(srcFile));
       if (!fileContent.trim()) {
         console.error("[ERROR] Markdown file is empty.");
         process.exit(1);
       }
 
       const documents: Record<string, string> = {};
-      let html = await markdownToHtml(fileContent, config.markdown_extensions, config.code_highlight, 0);
-      html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(srcFile), templateData });
+      let html = runSync(() => markdownToHtml(fileContent, config.markdown_extensions, 0));
+      html = await runAsync(
+        () => pluginManager.processHtml(
+          html,
+          config,
+          { sourceDir: path.dirname(srcFile), templateData }
+        ),
+      );
       documents["index"] = html;
 
-      const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
-      const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en");
+      const globalLocale = await runAsync(() => loadLocaleFile(config.locales_dir, config.locale || "en"));
+      const tplLocale = await runAsync(() => loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en"));
       const localeFile = tplLocale?.template
         ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
         : globalLocale;
       const buildDate = resolveBuildDate(config);
-      const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
+      const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
-      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs });
-      await writeOutput(outputFile, htmlContent);
+      const htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      await runAsync(() => writeOutput(outputFile, htmlContent));
     } catch (e) {
       console.error(`[ERROR] Failed to read markdown file: ${e}`);
       process.exit(1);
@@ -357,10 +375,16 @@ async function main(): Promise<void> {
       for (const [i, filepath] of inputFiles.entries()) {
         const tabName = path.basename(filepath, path.extname(filepath));
         try {
-          const content = await readTextFile(filepath);
+          const content = await runAsync(() => readTextFile(filepath));
           if (content.trim()) {
-            let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, i);
-            html = await pluginManager.processHtml(html, config, { sourceDir: path.dirname(filepath), templateData });
+            let html = runSync(() => markdownToHtml(content, config.markdown_extensions, i));
+            html = await runAsync(
+              () => pluginManager.processHtml(
+                html,
+                config,
+                { sourceDir: path.dirname(filepath), templateData }
+              ),
+            );
             documents[tabName] = html;
           }
         } catch (e) {
@@ -373,20 +397,20 @@ async function main(): Promise<void> {
         process.exit(1);
       }
 
-      const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
-      const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en");
+      const globalLocale = await runAsync(() => loadLocaleFile(config.locales_dir, config.locale || "en"));
+      const tplLocale = await runAsync(() => loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en"));
       const localeFile = tplLocale?.template
         ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
         : globalLocale;
       const buildDate = resolveBuildDate(config);
-      const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
+      const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
-      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs });
-      await writeOutput(outputFile, htmlContent);
+      const htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      await runAsync(() => writeOutput(outputFile, htmlContent));
     } else if (config.i18n_mode) {
       // 多語模式（資料夾，含 [locale] 子資料夾）
       const folderPath = inputDirs[0];
-      const localeDirs = await scanLocaleSubDirs(folderPath);
+      const localeDirs = await runAsync(() => scanLocaleSubDirs(folderPath));
       if (Object.keys(localeDirs).length === 0) {
         console.error(`[ERROR] No [locale] subdirectories found in: ${folderPath}`);
         process.exit(1);
@@ -394,15 +418,21 @@ async function main(): Promise<void> {
 
       const multiDocuments: Record<string, Record<string, string>> = {};
       for (const [locale, dir] of Object.entries(localeDirs)) {
-        const mdFiles = await scanMarkdownFiles(dir);
+        const mdFiles = await runAsync(() => scanMarkdownFiles(dir));
         const localeDocs: Record<string, string> = {};
         for (const [idx, { filename, filepath }] of mdFiles.entries()) {
           const tabName = filename.replace(/\.(md|markdown)$/i, "");
           try {
-            const content = await readTextFile(filepath);
+            const content = await runAsync(() => readTextFile(filepath));
             if (content.trim()) {
-              let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, idx);
-              html = await pluginManager.processHtml(html, config, { sourceDir: dir, templateData });
+              let html = runSync(() => markdownToHtml(content, config.markdown_extensions, idx));
+              html = await runAsync(
+                () => pluginManager.processHtml(
+                  html,
+                  config,
+                  { sourceDir: dir, templateData }
+                ),
+              );
               localeDocs[tabName] = html;
             }
           } catch (e) {
@@ -422,21 +452,21 @@ async function main(): Promise<void> {
       const locales = Object.keys(multiDocuments);
       const localeFileMap: Record<string, Awaited<ReturnType<typeof loadLocaleFile>>> = {};
       for (const locale of locales) {
-        const globalLocale = await loadLocaleFile(config.locales_dir, locale);
-        const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, locale);
+        const globalLocale = await runAsync(() => loadLocaleFile(config.locales_dir, locale));
+        const tplLocale = await runAsync(() => loadTemplateLocaleFile(templateRootDir, templateName, locale));
         localeFileMap[locale] = tplLocale?.template
           ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
           : globalLocale;
       }
       const buildDate = resolveBuildDate(config);
-      const multiI18nStrings = getAllLocalesTemplateStrings(localeFileMap, buildDate);
+      const multiI18nStrings = runSync(() => getAllLocalesTemplateStrings(localeFileMap, buildDate));
 
-      const htmlContent = buildHtml({ config, templateData, multiDocuments, multiI18nStrings, localeNames, libCss, libJs });
-      await writeOutput(outputFile, htmlContent);
+      const htmlContent = runSync(() => buildHtml({ config, templateData, multiDocuments, multiI18nStrings, localeNames, libCss, libJs }));
+      await runAsync(() => writeOutput(outputFile, htmlContent));
     } else {
       // 單語資料夾合併
       const folderPath = inputDirs[0];
-      const mdFiles = await scanMarkdownFiles(folderPath);
+      const mdFiles = await runAsync(() => scanMarkdownFiles(folderPath));
       if (mdFiles.length === 0) {
         console.error(`[ERROR] No .md files found in: ${folderPath}`);
         process.exit(1);
@@ -446,10 +476,16 @@ async function main(): Promise<void> {
       for (const [idx, { filename, filepath }] of mdFiles.entries()) {
         const tabName = filename.replace(/\.(md|markdown)$/i, "");
         try {
-          const content = await readTextFile(filepath);
+          const content = await runAsync(() => readTextFile(filepath));
           if (content.trim()) {
-            let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, idx);
-            html = await pluginManager.processHtml(html, config, { sourceDir: folderPath, templateData });
+            let html = runSync(() => markdownToHtml(content, config.markdown_extensions, idx));
+            html = await runAsync(
+              () => pluginManager.processHtml(
+                html,
+                config,
+                { sourceDir: folderPath, templateData }
+              ),
+            );
             documents[tabName] = html;
           }
         } catch (e) {
@@ -462,16 +498,16 @@ async function main(): Promise<void> {
         process.exit(1);
       }
 
-      const globalLocale = await loadLocaleFile(config.locales_dir, config.locale);
-      const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale);
+      const globalLocale = await runAsync(() => loadLocaleFile(config.locales_dir, config.locale));
+      const tplLocale = await runAsync(() => loadTemplateLocaleFile(templateRootDir, templateName, config.locale));
       const localeFile = tplLocale?.template
         ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
         : globalLocale;
       const buildDate = resolveBuildDate(config);
-      const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
+      const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
-      const htmlContent = buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs });
-      await writeOutput(outputFile, htmlContent);
+      const htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      await runAsync(() => writeOutput(outputFile, htmlContent));
     }
   } else {
     // ── 批次多檔 / 批次資料夾模式：每個 .md 獨立產生一個 HTML ──
@@ -484,7 +520,7 @@ async function main(): Promise<void> {
       }
     } else {
       // isFolder
-      const mdFiles = await scanMarkdownFiles(inputDirs[0]);
+      const mdFiles = await runAsync(() => scanMarkdownFiles(inputDirs[0]));
       for (const { filename, filepath } of mdFiles) {
         batchFiles.push({
           filepath,
@@ -499,16 +535,16 @@ async function main(): Promise<void> {
       process.exit(1);
     }
 
-    await ensureDir(outputDir);
+    await runAsync(() => ensureDir(outputDir));
 
     // 載入共用 locale（批次中所有檔案共用同一組 i18n 字串）
-    const globalLocale = await loadLocaleFile(config.locales_dir, config.locale || "en");
-    const tplLocale = await loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en");
+    const globalLocale = await runAsync(() => loadLocaleFile(config.locales_dir, config.locale || "en"));
+    const tplLocale = await runAsync(() => loadTemplateLocaleFile(templateRootDir, templateName, config.locale || "en"));
     const localeFile = tplLocale?.template
       ? { ...globalLocale, template: { ...(globalLocale.template ?? {}), ...tplLocale.template } }
       : globalLocale;
     const buildDate = resolveBuildDate(config);
-    const i18nStrings = getAllTemplateStrings(localeFile, buildDate);
+    const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
     let successCount = 0;
     for (const { filepath, baseName, baseDir } of batchFiles) {
@@ -521,18 +557,24 @@ async function main(): Promise<void> {
       }
 
       try {
-        const content = await readTextFile(filepath);
+        const content = await runAsync(() => readTextFile(filepath));
         if (!content.trim()) {
           console.warn(`[WARN] Skipping '${path.basename(filepath)}' — file is empty.`);
           continue;
         }
-        let html = await markdownToHtml(content, config.markdown_extensions, config.code_highlight, 0);
-        html = await pluginManager.processHtml(html, config, { sourceDir: baseDir, templateData });
+        let html = runSync(() => markdownToHtml(content, config.markdown_extensions, 0));
+        html = await runAsync(
+          () => pluginManager.processHtml(
+            html,
+            config,
+            { sourceDir: baseDir, templateData }
+          ),
+        );
         const documents: Record<string, string> = { index: html };
         // 每個批次檔案有自己的 config.output_file（供 template 使用）
         const batchConfig = { ...config, output_file: targetFile };
-        const htmlContent = buildHtml({ config: batchConfig, templateData, documents, i18nStrings, localeNames, libCss, libJs });
-        await writeOutput(targetFile, htmlContent);
+        const htmlContent = runSync(() => buildHtml({ config: batchConfig, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+        await runAsync(() => writeOutput(targetFile, htmlContent));
         successCount++;
       } catch (e) {
         console.warn(`[WARN] Failed to process '${path.basename(filepath)}': ${e}`);
@@ -547,35 +589,9 @@ async function main(): Promise<void> {
     console.info(`[INFO] Batch complete: ${successCount}/${batchFiles.length} file(s) → ${outputDir}`);
   }
 
-  // ⑬ 印出等效指令
-  const tpl = config.default_template;
-  const tplVariant = config.template_variant || "default";
-  const tplSpec = tplVariant !== "default" ? `${tpl}@${tplVariant}` : tpl;
-  const inputsStr = inputs.map((p) => `"${p}"`).join(" ");
-  const parts = [`npx mdsone ${inputsStr}`];
-  if (tplSpec !== "normal") parts.push(`--template ${tplSpec}`);
-  if (config.i18n_mode) {
-    if (config.default_locale) {
-      parts.push(`--i18n-mode=${config.default_locale}`);
-    } else {
-      parts.push(`--i18n-mode`);
-    }
-  }
-  if (args.merge) parts.push(`-m`);
-  if (args.output) {
-    const outDisplay = mergeMode ? outputFile : outputDir;
-    parts.push(`-o "${outDisplay}"`);
-  }
-  console.info(`[INFO] ${parts.join(" ")}`);
   if (mergeMode || isSingleFile) {
     console.info(`[INFO] Output: ${outputFile}`);
   }
-}
-
-function resolveBuildDate(config: Config): string {
-  if (config.build_date) return config.build_date;
-  const d = new Date();
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 }
 
 async function writeOutput(outputFile: string, content: string): Promise<void> {

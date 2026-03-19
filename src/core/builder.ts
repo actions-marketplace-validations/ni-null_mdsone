@@ -11,9 +11,9 @@ import type {
   mdsoneData,
   mdsoneDataMulti,
   mdsoneDataSingle,
-  TocConfig,
 } from "./types.js";
 import { assembleTemplate, buildExtraTags } from "./template.js";
+import { resolveBuildDate } from "./build-date.js";
 
 // ── Minify ────────────────────────────────────────────────
 
@@ -58,34 +58,27 @@ function buildDocItems(docs: Record<string, string>): DocItem[] {
 function buildConfigPayload(
   config: Config,
   buildDate: string,
-  toc: TocConfig,
   templatePalette?: string,
   templateTypes?: Record<string, { palette?: string }>,
 ): mdsoneData["config"] {
   const templateVariant = config.template_variant || "default";
-  const typePalette = templateTypes?.[templateVariant]?.palette ?? templateTypes?.default?.palette;
+  const hasVariantType = !!templateTypes?.[templateVariant];
+  const variantKeyPalette =
+    templateVariant !== "default" && hasVariantType ? templateVariant : undefined;
+  const typePalette =
+    templateTypes?.[templateVariant]?.palette
+    ?? variantKeyPalette
+    ?? templateTypes?.default?.palette;
   const resolvedPalette = typePalette ?? templatePalette;
 
   return {
     site_title: config.site_title,
     theme_mode: config.theme_mode,
     build_date: buildDate,
-    toc,
     template_variant: templateVariant,
     ...(resolvedPalette ? { palette: resolvedPalette } : {}),
     ...(templateTypes ? { types: templateTypes } : {}),
   };
-}
-
-// ── 產生 BUILD_DATE ───────────────────────────────────────
-
-function resolveBuildDate(config: Config): string {
-  if (config.build_date) return config.build_date;
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}.${m}.${d}`;
 }
 
 // ── mdsone_DATA script 產生 ────────────────────────────────
@@ -98,7 +91,6 @@ function resolveBuildDate(config: Config): string {
 export function generateDataScript(params: BuildParams): string {
   const { config, templateData } = params;
   const buildDate = resolveBuildDate(config);
-  const toc = templateData.toc_config;
   const paletteTypes = templateData.config.types
     ? Object.fromEntries(
         Object.entries(templateData.config.types).map(([name, v]) => [name, { palette: v.palette }]),
@@ -107,7 +99,6 @@ export function generateDataScript(params: BuildParams): string {
   const configPayload = buildConfigPayload(
     config,
     buildDate,
-    toc,
     templateData.config.palette,
     paletteTypes,
   );

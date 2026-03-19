@@ -197,7 +197,6 @@ export async function loadTemplateFiles(
   let metadata = {};
   let version = "1.0.0";
   let schema_version = "v1";
-  let toc_config = { enabled: false, levels: [2, 3] };
   let template_config: TemplateData["config"] = {};
 
   const configPath = path.join(templateDir, "template.config.json");
@@ -208,7 +207,6 @@ export async function loadTemplateFiles(
       version = (metadata as Record<string, string>)["version"] ?? "1.0.0";
       schema_version = (metadata as Record<string, string>)["schema_version"] ?? "v1";
       const cfgRaw = asObject(raw["config"]);
-      if (cfgRaw["toc"]) toc_config = cfgRaw["toc"] as typeof toc_config;
       const rootPalette = typeof cfgRaw["palette"] === "string" ? cfgRaw["palette"] : undefined;
       if (rootPalette) {
         template_config = { ...template_config, palette: rootPalette };
@@ -275,7 +273,6 @@ export async function loadTemplateFiles(
     version,
     schema_version,
     metadata,
-    toc_config,
     config: template_config,
   };
 }

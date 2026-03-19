@@ -60,9 +60,18 @@
         const contentArea = document.getElementById("content-area")
         const htmlEl = document.documentElement
         const config = data.config
+        const TOC_ENABLED = true
+        const TOC_LEVELS = [2, 3]
 
+        const variantName = config.template_variant || "default"
+        const variantKeyPalette = (
+          variantName !== "default" &&
+          config.types &&
+          config.types[variantName]
+        ) ? variantName : null
         const resolvedPalette = (
           config.palette ||
+          variantKeyPalette ||
           (config.types && config.types.default && config.types.default.palette) ||
           "fog-gray"
         )
@@ -130,15 +139,14 @@
         }
 
         function buildTOC(tabName) {
-          if (!config.toc || !config.toc.enabled) return
+          if (!TOC_ENABLED) return
           const nav = document.querySelector(`.toc-nav[data-tab="${tabName}"]`)
           if (!nav || nav.children.length > 0) return
 
-          const levels = config.toc.levels || [2, 3]
           const content = document.querySelector(`.tab-content[data-tab="${tabName}"]`)
           if (!content) return
 
-          const selector = levels.map((l) => `h${l}`).join(",")
+          const selector = TOC_LEVELS.map((l) => `h${l}`).join(",")
           const headings = content.querySelectorAll(selector)
           if (headings.length === 0) return
 
@@ -339,8 +347,15 @@
             themeIcon.textContent = "\u2600"
             themeLabel.textContent = activeI18n.theme_dark_label || "Dark"
           }
+          const variantName = config.template_variant || "default"
+          const variantKeyPalette = (
+            variantName !== "default" &&
+            config.types &&
+            config.types[variantName]
+          ) ? variantName : null
           const currentPalette = (
             config.palette ||
+            variantKeyPalette ||
             (config.types && config.types.default && config.types.default.palette) ||
             "fog-gray"
           )
