@@ -12,7 +12,6 @@ export interface Config {
   locales_dir: string;
   // build
   default_template: string;
-  minify_html: boolean;
   markdown_extensions: string[];
   build_date: string;
   // site
@@ -36,6 +35,9 @@ export interface Config {
   // plugin settings (optional)
   plugins?: {
     order?: string[];
+    minify?: {
+      enable?: boolean;
+    };
   };
 }
 
@@ -48,7 +50,6 @@ export interface CliArgs {
   force?: string;
   siteTitle?: string;
   i18nMode?: boolean | string;
-  minifyHtml?: string;
   configPath?: string;
   pluginOverrides?: Partial<Config>;
   version?: boolean;
@@ -218,6 +219,12 @@ export interface Plugin {
     html: string,
     config: Config,
     context: PluginContext,
+  ) => string | Promise<string>;
+
+  /** Post-process final output HTML (after buildHtml, before write). */
+  processOutputHtml?: (
+    html: string,
+    config: Config,
   ) => string | Promise<string>;
 
   /** Return CSS/JS assets to be injected into final output. */

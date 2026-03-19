@@ -33,6 +33,27 @@ const HLJS_AUTO_DETECT_LANGUAGES = [
 // [OPT-3] 超過此長度的程式碼不做 auto-detect，避免大檔案拖慢速度
 const HLJS_AUTO_DETECT_MAX_CHARS = 500;
 
+// 統一管理 Markdown/hljs 常見語言別名到 Shiki 官方語言代號
+const SHIKI_LANGUAGE_ALIASES: Record<string, string> = {
+  "c#": "csharp",
+  "cs": "csharp",
+  "sh": "bash",
+  "shell": "bash",
+  "shellscript": "bash",
+  "yml": "yaml",
+  "md": "markdown",
+  "py": "python",
+  "rb": "ruby",
+  "ps1": "powershell",
+  "bat": "batch",
+  "js": "javascript",
+  "ts": "typescript",
+  "env": "dotenv",
+  "plaintext": "text",
+  "plain": "text",
+  "txt": "text",
+};
+
 function escapeHtmlAttr(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -43,21 +64,7 @@ function escapeHtmlAttr(value: string): string {
 
 function normalizeShikiLang(lang: string): string {
   const v = lang.toLowerCase();
-  const aliases: Record<string, string> = {
-    "c#": "csharp",
-    "cs": "csharp",
-    "sh": "bash",
-    "shell": "bash",
-    "yml": "yaml",
-    "md": "markdown",
-    "py": "python",
-    "rb": "ruby",
-    "ps1": "powershell",
-    "bat": "batch",
-    "js": "javascript",
-    "ts": "typescript",
-  };
-  return aliases[v] ?? v;
+  return SHIKI_LANGUAGE_ALIASES[v] ?? v;
 }
 
 function normalizeShikiTheme(theme: string): string {
@@ -77,6 +84,7 @@ type HighlighterBundle = {
   dark: string;
   light: string;
   loadedLangs: Set<string>;
+  failedLangs: Set<string>;
 };
 
 const highlighterCache = new Map<string, Promise<HighlighterBundle>>();
@@ -95,10 +103,22 @@ async function getHighlighterBundle(themeDark: string, themeLight: string): Prom
   const created = (async (): Promise<HighlighterBundle> => {
     try {
       const highlighter = await createHighlighter({ themes: [light, dark] });
-      return { highlighter, dark, light, loadedLangs: new Set<string>() };
+      return {
+        highlighter,
+        dark,
+        light,
+        loadedLangs: new Set<string>(),
+        failedLangs: new Set<string>(),
+      };
     } catch {
       const highlighter = await createHighlighter({ themes: ["github-light", "github-dark"] });
-      return { highlighter, dark: "github-dark", light: "github-light", loadedLangs: new Set<string>() };
+      return {
+        highlighter,
+        dark: "github-dark",
+        light: "github-light",
+        loadedLangs: new Set<string>(),
+        failedLangs: new Set<string>(),
+      };
     }
   })();
 
@@ -150,6 +170,20 @@ function extractLanguage(codeClass: string | undefined): string | null {
   if (!codeClass) return null;
   const match = codeClass.match(/\blanguage-([^\s]+)/);
   return match?.[1] ?? null;
+}
+
+async function loadLanguageSafe(
+  bundle: HighlighterBundle,
+  loader: (lang: string) => Promise<void>,
+  lang: string,
+): Promise<void> {
+  try {
+    await loader(lang);
+    bundle.loadedLangs.add(lang);
+  } catch {
+    bundle.failedLangs.add(lang);
+    console.warn(`[WARN] Shiki language load failed: "${lang}". Fallback to text for affected blocks.`);
+  }
 }
 
 export const shikiPlugin: Plugin = {
@@ -236,13 +270,12 @@ export const shikiPlugin: Plugin = {
     // [OPT-1] 語言載入改為並行，原本為逐一 await 的串行迴圈
     const loader = (bundle.highlighter as unknown as { loadLanguage?: (lang: string) => Promise<void> }).loadLanguage;
     if (typeof loader === "function") {
-      const langsToLoad = [...neededLangs].filter((l) => !bundle.loadedLangs.has(l));
-
-      // 先全部標記為已載入，防止並行請求間重複觸發
-      for (const l of langsToLoad) bundle.loadedLangs.add(l);
+      const langsToLoad = [...neededLangs].filter(
+        (l) => !bundle.loadedLangs.has(l) && !bundle.failedLangs.has(l),
+      );
 
       await Promise.allSettled(
-        langsToLoad.map((l) => loader.call(bundle.highlighter, l)),
+        langsToLoad.map((l) => loadLanguageSafe(bundle, (x) => loader.call(bundle.highlighter, x), l)),
       );
     }
 

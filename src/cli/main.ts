@@ -361,7 +361,8 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
-      const htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      let htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      htmlContent = await runAsync(() => pluginManager.processOutputHtml(htmlContent, config));
       await runAsync(() => writeOutput(outputFile, htmlContent));
     } catch (e) {
       console.error(`[ERROR] Failed to read markdown file: ${e}`);
@@ -405,7 +406,8 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
-      const htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      let htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      htmlContent = await runAsync(() => pluginManager.processOutputHtml(htmlContent, config));
       await runAsync(() => writeOutput(outputFile, htmlContent));
     } else if (config.i18n_mode) {
       // 多語模式（資料夾，含 [locale] 子資料夾）
@@ -461,7 +463,8 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const multiI18nStrings = runSync(() => getAllLocalesTemplateStrings(localeFileMap, buildDate));
 
-      const htmlContent = runSync(() => buildHtml({ config, templateData, multiDocuments, multiI18nStrings, localeNames, libCss, libJs }));
+      let htmlContent = runSync(() => buildHtml({ config, templateData, multiDocuments, multiI18nStrings, localeNames, libCss, libJs }));
+      htmlContent = await runAsync(() => pluginManager.processOutputHtml(htmlContent, config));
       await runAsync(() => writeOutput(outputFile, htmlContent));
     } else {
       // 單語資料夾合併
@@ -506,7 +509,8 @@ async function main(): Promise<void> {
       const buildDate = resolveBuildDate(config);
       const i18nStrings = runSync(() => getAllTemplateStrings(localeFile, buildDate));
 
-      const htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      let htmlContent = runSync(() => buildHtml({ config, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+      htmlContent = await runAsync(() => pluginManager.processOutputHtml(htmlContent, config));
       await runAsync(() => writeOutput(outputFile, htmlContent));
     }
   } else {
@@ -573,7 +577,8 @@ async function main(): Promise<void> {
         const documents: Record<string, string> = { index: html };
         // 每個批次檔案有自己的 config.output_file（供 template 使用）
         const batchConfig = { ...config, output_file: targetFile };
-        const htmlContent = runSync(() => buildHtml({ config: batchConfig, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+        let htmlContent = runSync(() => buildHtml({ config: batchConfig, templateData, documents, i18nStrings, localeNames, libCss, libJs }));
+        htmlContent = await runAsync(() => pluginManager.processOutputHtml(htmlContent, batchConfig));
         await runAsync(() => writeOutput(targetFile, htmlContent));
         successCount++;
       } catch (e) {

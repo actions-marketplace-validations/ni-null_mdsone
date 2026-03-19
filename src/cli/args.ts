@@ -110,7 +110,6 @@ export function parseArgs(argv?: string[]): CliArgs {
     // Templates & Styling
     .option("-t, --template <NAME|PATH[@VARIANT]>", "Template name/path with optional variant (e.g. normal@warm-cream)")
     .option("--site-title <TEXT>", "Documentation site title (default: Documentation)")
-    .option("--minify-html <true|false>", "Minify HTML output (default: true)")
     // Internationalization
     .option("--i18n-mode [CODE]", "Enable multi-language mode; optional CODE via --i18n-mode=CODE (e.g. --i18n-mode=zh-TW)")
     // Config
@@ -168,7 +167,6 @@ export function parseArgs(argv?: string[]): CliArgs {
     template?: string;
     siteTitle?: string;
     i18nMode?: boolean | string;
-    minifyHtml?: string;
     config?: string;
     configPath?: string;
     version?: boolean;
@@ -188,7 +186,6 @@ export function parseArgs(argv?: string[]): CliArgs {
     template: typed.template,
     siteTitle: typed.siteTitle,
     i18nMode: typed.i18nMode,
-    minifyHtml: typed.minifyHtml,
     configPath: typed.config,
     pluginOverrides,
     version: typed.version,

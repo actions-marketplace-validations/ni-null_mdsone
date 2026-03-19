@@ -1,5 +1,5 @@
 // ============================================================
-// src/core/builder.ts — HTML 組裝、minify 與 mdsone_DATA 產生
+// src/core/builder.ts — HTML 組裝與 mdsone_DATA 產生
 // 對應 Python src/html_builder.py
 // 核心層：零 I/O 依賴
 // ============================================================
@@ -14,35 +14,6 @@ import type {
 } from "./types.js";
 import { assembleTemplate, buildExtraTags } from "./template.js";
 import { resolveBuildDate } from "./build-date.js";
-
-// ── Minify ────────────────────────────────────────────────
-
-/**
- * 最小化 HTML，保留 <script> / <style> 內容不壓縮（對應 Python minify_html()）。
- * 步驟：儲存 script/style → 移除 HTML 注解 → 折疊空白 → 還原
- */
-export function minifyHtml(html: string): string {
-  const scripts: string[] = [];
-  const styles: string[] = [];
-
-  let result = html.replace(/<script[\s\S]*?<\/script>/gi, (match) => {
-    scripts.push(match);
-    return `__SCRIPT_PLACEHOLDER_${scripts.length - 1}__`;
-  });
-
-  result = result.replace(/<style[\s\S]*?<\/style>/gi, (match) => {
-    styles.push(match);
-    return `__STYLE_PLACEHOLDER_${styles.length - 1}__`;
-  });
-
-  result = result.replace(/<!--[\s\S]*?-->/g, "");   // 移除 HTML 注解
-  result = result.replace(/>\s+</g, "><");            // 折疊標籤間空白
-
-  scripts.forEach((s, i) => { result = result.replace(`__SCRIPT_PLACEHOLDER_${i}__`, () => s); });
-  styles.forEach((s, i) => { result = result.replace(`__STYLE_PLACEHOLDER_${i}__`, () => s); });
-
-  return result;
-}
 
 // ── DocItem 組裝 ──────────────────────────────────────────
 
@@ -147,7 +118,7 @@ export function generateDataScript(params: BuildParams): string {
 /**
  * 主入口：組裝完整 HTML（對應 Python generate_html()）。
  * 傳入 BuildParams（已包含轉換好的 documents + i18n 字串），
- * 此函式只負責組裝 + 選擇性 minify，不做任何 I/O。
+ * 此函式只負責組裝，不做任何 I/O。
  */
 export function buildHtml(params: BuildParams): string {
   const { config, templateData } = params;
@@ -177,11 +148,5 @@ export function buildHtml(params: BuildParams): string {
     MDSONE_DATA_SCRIPT: dataScript,
   };
 
-  let html = assembleTemplate(templateData.template, replacements);
-
-  if (config.minify_html) {
-    html = minifyHtml(html);
-  }
-
-  return html;
+  return assembleTemplate(templateData.template, replacements);
 }

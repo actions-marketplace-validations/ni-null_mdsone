@@ -15,7 +15,6 @@ templates_dir = "templates"
 
 [build]
 default_template = "normal@warm-cream" # 格式：<theme-or-path>[@variant]
-minify_html = true
 markdown_extensions = ["tables", "fenced_code", "nl2br", "sane_lists", "attr_list"]
 build_date = ""
 
@@ -29,11 +28,12 @@ mode = false
 default_locale = ""
 
 [plugins]
-order = ["image", "shiki", "copy", "line_number"]
+order = ["image", "shiki", "copy", "line_number", "minify"]
 copy = { enable = true, mode = "off" }
 shiki = { enable = true }
 line_number = { enable = false }
 image = { embed = "off", max_width = 0, compress = 0 }
+minify = { enable = false } # 可搭配 CLI: --minify / --minify=off 覆蓋
 ```
 
 ## 補充

@@ -17,6 +17,7 @@ export default defineConfig([
     external: [
       "@iarna/toml",
       "commander",
+      "html-minifier-terser",
       "markdown-it",
       "markdown-it-attrs",
     ],
@@ -33,6 +34,7 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     external: [
+      "html-minifier-terser",
       "markdown-it",
       "markdown-it-attrs",
     ],
@@ -51,6 +53,7 @@ export default defineConfig([
     external: [
       "@iarna/toml",
       "commander",
+      "html-minifier-terser",
       "markdown-it",
       "markdown-it-attrs",
     ],
@@ -62,6 +65,7 @@ export default defineConfig([
       "plugins/copy": "plugins/copy/index.ts",
       "plugins/image": "plugins/image/index.ts",
       "plugins/line-number": "plugins/line-number/index.ts",
+      "plugins/minify": "plugins/minify/index.ts",
     },
     format: ["esm"],
     outDir: "dist",
@@ -76,6 +80,7 @@ export default defineConfig([
       "highlight.js",
       "shiki",
       "sharp",
+      "html-minifier-terser",
       "markdown-it",
       "markdown-it-attrs",
     ],

@@ -45,7 +45,6 @@ export {
 
 // Builder
 export {
-  minifyHtml,
   generateDataScript,
   buildHtml,
 } from "./builder.js";

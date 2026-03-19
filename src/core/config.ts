@@ -14,7 +14,6 @@ export const DEFAULT_CONFIG: Config = {
   locales_dir: "locales",
   // build
   default_template: "normal",
-  minify_html: true,
   markdown_extensions: ["tables", "fenced_code", "nl2br", "sane_lists", "attr_list"],
   build_date: "",
   // site
@@ -49,7 +48,23 @@ export function mergeConfigs(
   env: Partial<Config>,
   cli: Partial<Config>,
 ): Config {
-  return { ...defaults, ...filterDefined(toml), ...filterDefined(env), ...filterDefined(cli) };
+  const merged = {
+    ...defaults,
+    ...filterDefined(toml),
+    ...filterDefined(env),
+    ...filterDefined(cli),
+  } as Config;
+
+  const plugins = mergePluginSettings(
+    defaults.plugins,
+    toml.plugins,
+    env.plugins,
+    cli.plugins,
+  );
+  if (plugins) merged.plugins = plugins;
+  else delete merged.plugins;
+
+  return merged;
 }
 
 /** 將 undefined 值的 key 濾除，避免覆蓋較低優先序的值 */
@@ -57,6 +72,22 @@ function filterDefined<T extends object>(obj: Partial<T>): Partial<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== ""),
   ) as Partial<T>;
+}
+
+function mergePluginSettings(
+  ...layers: Array<Config["plugins"] | undefined>
+): Config["plugins"] | undefined {
+  const merged: NonNullable<Config["plugins"]> = {};
+  let hasAny = false;
+  for (const layer of layers) {
+    if (!layer) continue;
+    hasAny = true;
+    if (layer.order) merged.order = [...layer.order];
+    if (layer.minify) {
+      merged.minify = { ...(merged.minify ?? {}), ...layer.minify };
+    }
+  }
+  return hasAny ? merged : undefined;
 }
 
 /**
@@ -68,11 +99,6 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   // Templates & Styling
   if (args.template) out.default_template = args.template;
   if (args.siteTitle) out.site_title = args.siteTitle;
-  if (args.minifyHtml !== undefined) {
-    const v = args.minifyHtml!.toLowerCase();
-    if (v === "true") out.minify_html = true;
-    if (v === "false") out.minify_html = false;
-  }
   // Internationalization
   if (typeof args.i18nMode === "string") {
     const modeValue = args.i18nMode.trim();

@@ -16,7 +16,7 @@ mdsone <inputs...> [-m] [-o output_path] [-f <boolean>] [options]
 | `-f, --force <boolean>` | 是否覆蓋既有輸出（預設 `true`） | `-f false` |
 | `-t, --template <theme-or-path>[@variant]` | 模板名稱或路徑（可附加變體） | `-t normal@warm-cream` |
 | `--site-title <TEXT>` | 文件標題 | `--site-title "My Docs"` |
-| `--minify-html <true\|false>` | 是否壓縮 HTML（預設 `true`） | `--minify-html false` |
+| `--minify [off]` | 壓縮輸出 HTML（預設關閉） | `--minify`、`--minify=off` |
 | `--i18n-mode [CODE]` | 啟用多國語言模式（可選 CODE 指定預設語系；指定時僅支援 `--i18n-mode=CODE`） | `--i18n-mode=zh-TW` |
 | `--config <PATH>` | 指定 `config.toml` 路徑 | `--config ./config.toml` |
 | `--img-embed=<off\|base64>` | 圖片嵌入模式（預設 `off`） | `--img-embed=base64` |
@@ -88,7 +88,7 @@ CLI 參數 > 環境變數 > config.toml > 預設值
 | 輸出路徑 | `-o, --output` | `OUTPUT_FILE` | `[paths] output_file` |
 | 模板 | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template`（可用 `name@variant`） |
 | 文件標題 | `--site-title` | `SITE_TITLE` | `[site] title` |
-| 壓縮 HTML | `--minify-html` | `MINIFY_HTML` | `[build] minify_html` |
+| 壓縮 HTML | `--minify` / `--minify=off` | — | `[plugins.minify] enable` |
 | 建置日期 | — | `BUILD_DATE` | `[build] build_date` |
 | Markdown 擴充 | — | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
 | 多語模式 | `--i18n-mode` | `I18N_MODE` | `[i18n] mode` |
@@ -114,6 +114,9 @@ npx mdsone ./docs --i18n-mode=zh-TW -o dist/index.html
 
 # 圖片嵌入 + 壓縮
 npx mdsone ./docs -m --img-embed=base64 --img-max-width 600 --img-compress 90
+
+# 啟用 HTML 壓縮（由 minify 外掛處理）
+npx mdsone ./docs -m --minify
 
 # 關閉高亮與複製
 npx mdsone ./docs -m --code-highlight=off --code-copy=off

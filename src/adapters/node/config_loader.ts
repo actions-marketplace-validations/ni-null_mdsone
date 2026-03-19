@@ -48,7 +48,6 @@ export function envToConfig(): Partial<Config> {
   if (e["THEME_MODE"]) out.theme_mode = e["THEME_MODE"] as Config["theme_mode"];
   if (e["LOCALE"]) out.locale = e["LOCALE"];
   if (e["DEFAULT_LOCALE"]) out.default_locale = e["DEFAULT_LOCALE"];
-  if (e["MINIFY_HTML"] !== undefined) out.minify_html = parseBool(e["MINIFY_HTML"], true);
   if (e["I18N_MODE"] !== undefined) out.i18n_mode = parseBool(e["I18N_MODE"], false);
   if (e["IMG_EMBED"] !== undefined) {
     const mode = String(e["IMG_EMBED"]).trim().toLowerCase();
@@ -106,7 +105,6 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   if (s(paths["templates_dir"])) out.templates_dir = s(paths["templates_dir"]);
 
   if (s(build["default_template"])) out.default_template = s(build["default_template"]);
-  if (b(build["minify_html"]) !== undefined) out.minify_html = b(build["minify_html"]);
   if (l(build["markdown_extensions"])) out.markdown_extensions = l(build["markdown_extensions"]);
   if (s(build["build_date"])) out.build_date = s(build["build_date"]);
 
@@ -121,9 +119,19 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   const shiki = (plugins["shiki"] ?? {}) as Record<string, unknown>;
   const image = (plugins["image"] ?? {}) as Record<string, unknown>;
   const lineNumber = (plugins["line_number"] ?? {}) as Record<string, unknown>;
+  const minify = (plugins["minify"] ?? {}) as Record<string, unknown>;
   const order = (plugins["order"] ?? undefined) as unknown;
   if (Array.isArray(order)) {
     out.plugins = { ...(out.plugins ?? {}), order: order.filter((x) => typeof x === "string") as string[] };
+  }
+  if (b(minify["enable"]) !== undefined) {
+    out.plugins = {
+      ...(out.plugins ?? {}),
+      minify: {
+        ...((out.plugins?.minify as { enable?: boolean } | undefined) ?? {}),
+        enable: b(minify["enable"])!,
+      },
+    };
   }
   if (b(copy["enable"]) !== undefined) out.code_copy = b(copy["enable"])!;
   const copyMode = s(copy["mode"]);

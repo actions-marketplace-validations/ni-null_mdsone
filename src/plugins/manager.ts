@@ -21,6 +21,12 @@ function sortPlugins(plugins: Plugin[], order: string[] | undefined): Plugin[] {
   });
 }
 
+function sortOutputPlugins(plugins: Plugin[]): Plugin[] {
+  const normal = plugins.filter((p) => p.name !== "minify");
+  const tail = plugins.filter((p) => p.name === "minify");
+  return [...normal, ...tail];
+}
+
 export class PluginManager {
   private readonly plugins: readonly Plugin[];
 
@@ -49,6 +55,36 @@ export class PluginManager {
         } catch (e) {
           console.warn(
             `[WARN] Plugin "${plugin.name}" processHtml failed: ${e instanceof Error ? e.message : e}`,
+          );
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Run enabled plugins' `processOutputHtml()` in order.
+   * This hook is applied to full-page HTML after buildHtml().
+   * `minify` plugin is always forced to run last.
+   */
+  async processOutputHtml(
+    html: string,
+    config: Config,
+  ): Promise<string> {
+    let result = html;
+    const ordered = sortOutputPlugins(
+      sortPlugins(
+        [...this.plugins],
+        (config as unknown as { plugins?: { order?: string[] } }).plugins?.order,
+      ),
+    );
+    for (const plugin of ordered) {
+      if (plugin.isEnabled(config) && plugin.processOutputHtml) {
+        try {
+          result = await plugin.processOutputHtml(result, config);
+        } catch (e) {
+          console.warn(
+            `[WARN] Plugin "${plugin.name}" processOutputHtml failed: ${e instanceof Error ? e.message : e}`,
           );
         }
       }
@@ -97,4 +133,3 @@ export class PluginManager {
       .flatMap((p) => p.validateConfig!(config));
   }
 }
-
