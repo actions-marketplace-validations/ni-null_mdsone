@@ -111,7 +111,10 @@ async function getHighlighterBundle(themeDark: string, themeLight: string): Prom
 
   const created = (async (): Promise<HighlighterBundle> => {
     try {
-      const highlighter = await createHighlighter({ themes: [light, dark] });
+      const highlighter = await createHighlighter({
+        themes: [light, dark],
+        langs: ["text"],
+      });
       return {
         highlighter,
         dark,
@@ -120,7 +123,10 @@ async function getHighlighterBundle(themeDark: string, themeLight: string): Prom
         failedLangs: new Set<string>(),
       };
     } catch {
-      const highlighter = await createHighlighter({ themes: ["github-light", "github-dark"] });
+      const highlighter = await createHighlighter({
+        themes: ["github-light", "github-dark"],
+        langs: ["text"],
+      });
       return {
         highlighter,
         dark: "github-dark",
