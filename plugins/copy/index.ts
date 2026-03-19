@@ -134,7 +134,7 @@ export const copyPlugin: Plugin = {
 
     isEnabled: (config) => {
         const runtime = resolveCopyRuntime(config);
-        return runtime.enable && runtime.mode !== "off" && runtime.mode !== "none";
+        return runtime.enable && runtime.mode !== "off";
     },
 
     processHtml(html, config) {
@@ -210,7 +210,7 @@ export const copyPlugin: Plugin = {
         const script   = getCopyButtonScript();
         const runtime  = resolveCopyRuntime(config);
         const mode     = runtime.mode;
-        const blockOn  = runtime.enable && mode !== "off" && mode !== "none";
+        const blockOn  = runtime.enable && mode !== "off";
 
         // initCall
         const calls: string[] = [];
@@ -268,7 +268,7 @@ export interface CopyOptions {
 }
 
 function resolveCopyConfig(options: CopyOptions = {}): Config {
-    const mode = options.mode ?? "line";
+    const mode = options.mode ?? "none";
     const enable = options.enable ?? true;
     const plugins = options.config?.plugins ?? {};
     const pluginConfig = plugins.config ?? {};
