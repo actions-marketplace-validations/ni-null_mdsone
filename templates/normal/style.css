@@ -17,6 +17,9 @@
   --fs-h1: calc(2.55rem * var(--font-scale));
   --fs-toc: calc(12px * var(--font-scale));
   --lh-body: 1.95;
+  --scrollbar-track: var(--bg-deep);
+  --scrollbar-thumb: color-mix(in srgb, var(--accent-primary, #6f86b8) 36%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--accent-primary, #6f86b8) 58%, transparent);
   /* cb-dot colors are universal (macOS traffic lights) */
   --cb-dot-red:    #d98b84;
   --cb-dot-yellow: #d8bb73;
@@ -100,7 +103,7 @@ html[data-font-size="lg"] {
   --accent-warm:   #9a6700;
   --text-primary:  #141820;
   --text-secondary:#505860;
-  --text-muted:    #8090a0;
+  --text-muted:    #44494e;
   --border-dim:    #d8dadc;
   --border-glow:   #c8cacc;
   --code-block-bg: #eceef0;
@@ -452,14 +455,14 @@ html[data-font-size="lg"] {
   height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-deep);
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(68,147,248,0.2);
+  background: var(--scrollbar-thumb);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(68,147,248,0.4);
+  background: var(--scrollbar-thumb-hover);
 }
 
 body {

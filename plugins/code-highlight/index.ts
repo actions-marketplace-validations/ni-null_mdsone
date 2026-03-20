@@ -29,6 +29,7 @@ const AUTO_DETECT_LANGUAGES = [
 
 const PRELOAD_LANGUAGES = [
   "text",
+  "toml",
   "javascript", "typescript", "python", "bash", "json",
   "css", "html", "sql", "yaml", "java", "go", "rust", "cpp",
   "markdown", "powershell", "batch", "dotenv",
@@ -187,7 +188,7 @@ async function getHighlighterBundle(themeDark: string, themeLight: string): Prom
     } catch {
       const highlighter = await createHighlighter({
         themes: ["github-light", "github-dark"],
-        langs: ["text"],
+        langs: preload as any,
       });
       return { highlighter, dark: "github-dark", light: "github-light" };
     }
@@ -294,6 +295,51 @@ function installFenceLanguageRule(md: MarkdownIt, autoDetect: boolean): void {
   });
 }
 
+function collectExplicitFenceLanguages(markdownText: string | undefined): string[] {
+  if (!markdownText) return [];
+  const langs = new Set<string>();
+  const fencePattern = /(^|\n)[ \t]*(```+|~~~+)[ \t]*([^\n]*)/g;
+  let match: RegExpExecArray | null = null;
+
+  while ((match = fencePattern.exec(markdownText)) !== null) {
+    const info = String(match[3] ?? "").trim();
+    if (!info) continue;
+    const [rawLang] = info.split(/\s+/);
+    const lang = normalizeShikiLang(rawLang);
+    if (!lang || lang === "text") continue;
+    langs.add(lang);
+  }
+
+  return [...langs];
+}
+
+async function preloadFenceLanguages(
+  highlighter: Awaited<ReturnType<typeof createHighlighter>>,
+  langs: string[],
+): Promise<void> {
+  if (langs.length === 0) return;
+
+  const loaded = new Set(
+    highlighter.getLoadedLanguages().map((x) => normalizeShikiLang(String(x))),
+  );
+  const toLoad = [...new Set(langs.map((x) => normalizeShikiLang(x)).filter((x) => !loaded.has(x)))];
+  if (toLoad.length === 0) return;
+
+  try {
+    await (highlighter as unknown as { loadLanguage: (...l: string[]) => Promise<void> }).loadLanguage(...toLoad);
+  } catch {
+    // Fallback: best-effort per language.
+    const loader = highlighter as unknown as { loadLanguage: (...l: string[]) => Promise<void> };
+    for (const lang of toLoad) {
+      try {
+        await loader.loadLanguage(lang);
+      } catch {
+        // Ignore unsupported/failed languages.
+      }
+    }
+  }
+}
+
 export const codeHighlightPlugin: Plugin = {
   name: "code-highlight",
 
@@ -346,6 +392,12 @@ export const codeHighlightPlugin: Plugin = {
     const autoDetect = shikiCfgVariant?.auto_detect ?? shikiCfgDefault?.auto_detect ?? true;
 
     installFenceLanguageRule(md, autoDetect);
+
+    const bundle = await getHighlighterBundle(themeDark, themeLight);
+    const explicitFenceLangs = collectExplicitFenceLanguages(context.markdownText);
+    if (explicitFenceLangs.length > 0) {
+      await preloadFenceLanguages(bundle.highlighter, explicitFenceLangs);
+    }
 
     const shikiPluginForMarkdown = await getMarkdownShikiPlugin(themeDark, themeLight);
     if (!shikiPluginForMarkdown) return;

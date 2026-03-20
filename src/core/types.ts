@@ -179,6 +179,8 @@ export interface PluginAssets {
 export interface PluginContext {
   /** Source markdown directory used for relative path resolution. */
   sourceDir: string;
+  /** Raw markdown text of current document (available in extendMarkdown stage). */
+  markdownText?: string;
   /** Loaded template metadata/config for plugin decisions. */
   templateData?: TemplateData;
 }

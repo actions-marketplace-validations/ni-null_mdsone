@@ -362,7 +362,7 @@ async function main(): Promise<void> {
       markdownText,
       config.markdown_extensions,
       fileIndex,
-      async (md) => await pluginManager.extendMarkdown(md, config, { sourceDir, templateData }),
+      async (md) => await pluginManager.extendMarkdown(md, config, { sourceDir, markdownText, templateData }),
     );
   };
   const { css: libCss, js: libJs } = await runAsync(() => pluginManager.getAssets(config));
