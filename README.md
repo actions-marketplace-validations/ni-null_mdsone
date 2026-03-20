@@ -2,7 +2,7 @@
   <img width="160" height="160" alt="mdsone" src="https://github.com/user-attachments/assets/bfa9fe31-4bd2-4568-aa45-f40d16564b97" />
 </p>
 
-<h1 align="center">mdsone ??markdown, all in one html</h1>
+<h1 align="center">mdsone - markdown, all in one html</h1>
 <p align="center">
   <a href="https://www.npmjs.com/package/mdsone"><img alt="npm version" src="https://img.shields.io/npm/v/mdsone?logo=npm" /></a>
   <a href="https://www.npmjs.com/package/mdsone"><img alt="node" src="https://img.shields.io/node/v/mdsone?logo=node.js" /></a>
@@ -10,20 +10,20 @@
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/github/license/ni-null/mdsone" /></a>
 </p>
 
-Language: English | [Traditional Chinese](./README/zh-TW.md)
+Language: English | [繁體中文](./README/zh-TW.md) | [简体中文](./README/zh-CN.md) | [日本語](./README/ja.md) | [한국어](./README/ko.md)
 
 mdsone is a Markdown conversion tool that transforms Markdown documents into fully functional, self-contained HTML files.
 
 ## Features
 
-- ?? **Zero-dependency delivery**: No server or internet required ??a single HTML file that opens directly in any browser on any device
-- ?? **Markdown Support**: Full support for CommonMark standard syntax
-- ? **Built-in Templates**: Multiple responsive HTML templates included
-- ?? **Internationalization**: Multi-language document support (i18n)
-- ? **Self-Contained**: Generated HTML includes all necessary CSS and assets
-- ?儭?**Image Management**: Embed local and remote images as base64 (with optional resize/compress)
-- ?? **Flexible Configuration**: Supports TOML config files and CLI options
-- ?妍 **CLI-first workflow**: Focused on direct command-line usage for docs delivery
+- 🚀 **Zero-dependency delivery**: No server or internet required - a single HTML file opens in any browser on any device.
+- 📝 **Markdown support**: CommonMark + markdown-it ecosystem.
+- 🎨 **Built-in templates**: Responsive HTML templates included.
+- 🌍 **Internationalization**: Multi-language document support (i18n).
+- 📦 **Self-contained**: Generated HTML includes all necessary CSS and assets.
+- 🖼️ **Image management**: Embed local and remote images as base64 (optional resize/compress).
+- ⚙️ **Flexible configuration**: Supports TOML config files and CLI options.
+- 🧰 **CLI-first workflow**: Focused on direct command-line docs delivery.
 
 <img width="800" height="487" alt="Snipaste_2026-03-19_17-34-40" src="https://github.com/user-attachments/assets/6b551f2a-6ddc-4578-b81a-1d132154dbfc" />
 
