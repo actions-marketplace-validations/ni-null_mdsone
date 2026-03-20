@@ -44,12 +44,7 @@ jobs:
 
       - name: Build multi-language documentation
         run: |
-          npx --no-install mdsone \
-            ./docs \
-            -i \ 
-            --title "mdsone" \
-            -o ./_site/index.html \
-            -f
+          npx --no-install mdsone ./docs --i18n-mode=zh-TW --title "mdsone" -o ./_site/index.html -f
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
