@@ -1,5 +1,5 @@
-﻿// ============================================================
-// plugins/copy/index.ts — 複製按鈕 Plugin
+// ============================================================
+// plugins/code-copy/index.ts — Copy button plugin
 // ============================================================
 
 import type { Config, Plugin, PluginAssets } from "../../src/core/types.js";
@@ -35,7 +35,7 @@ function parseCommands(rawLines: string[]): Array<{ lines: number[]; text: strin
 
 type Section = { commentLine: number; comment: string; codeLines: number[]; text: string };
 type CopyMode = "off" | "line" | "cmd" | "none";
-type CopyPluginConfig = { enable?: boolean; mode?: string };
+type CodeCopyPluginConfig = { enable?: boolean; mode?: string };
 
 function parseSections(rawLines: string[]): Section[] {
     const sections: Section[] = [];
@@ -64,9 +64,9 @@ function parseSections(rawLines: string[]): Section[] {
     return sections;
 }
 
-function readCopyPluginConfig(config: Config): CopyPluginConfig {
-    const raw = config.plugins?.config?.["copy"];
-    return (raw && typeof raw === "object" ? raw : {}) as CopyPluginConfig;
+function readCodeCopyPluginConfig(config: Config): CodeCopyPluginConfig {
+    const raw = config.plugins?.config?.["code-copy"];
+    return (raw && typeof raw === "object" ? raw : {}) as CodeCopyPluginConfig;
 }
 
 function normalizeCopyMode(mode: string | undefined): CopyMode {
@@ -75,15 +75,15 @@ function normalizeCopyMode(mode: string | undefined): CopyMode {
 }
 
 function resolveCopyRuntime(config: Config): { enable: boolean; mode: CopyMode } {
-    const raw = readCopyPluginConfig(config);
+    const raw = readCodeCopyPluginConfig(config);
     return {
         enable: raw.enable ?? true,
         mode: normalizeCopyMode(raw.mode),
     };
 }
 
-export const copyPlugin: Plugin = {
-    name: "copy",
+export const codeCopyPlugin: Plugin = {
+    name: "code-copy",
 
     registerCli(program) {
         const parseMode = (raw: string): "off" | "line" | "cmd" => {
@@ -103,14 +103,14 @@ export const copyPlugin: Plugin = {
         if (raw === undefined) return;
         const previous = out.plugins ?? {};
         const prevConfig = previous.config ?? {};
-        const prevCopy = (prevConfig["copy"] ?? {}) as Record<string, unknown>;
+        const prevCopy = (prevConfig["code-copy"] ?? {}) as Record<string, unknown>;
         const v = String(raw).toLowerCase();
         if (v === "off") {
             out.plugins = {
                 ...previous,
                 config: {
                     ...prevConfig,
-                    copy: { ...prevCopy, enable: false, mode: "off" },
+                    "code-copy": { ...prevCopy, enable: false, mode: "off" },
                 },
             };
         } else if (v === "line") {
@@ -118,7 +118,7 @@ export const copyPlugin: Plugin = {
                 ...previous,
                 config: {
                     ...prevConfig,
-                    copy: { ...prevCopy, enable: true, mode: "line" },
+                    "code-copy": { ...prevCopy, enable: true, mode: "line" },
                 },
             };
         } else if (v === "cmd") {
@@ -126,7 +126,7 @@ export const copyPlugin: Plugin = {
                 ...previous,
                 config: {
                     ...prevConfig,
-                    copy: { ...prevCopy, enable: true, mode: "cmd" },
+                    "code-copy": { ...prevCopy, enable: true, mode: "cmd" },
                 },
             };
         }
@@ -252,7 +252,7 @@ export const copyPlugin: Plugin = {
     },
 };
 
-export interface CopyOptions {
+export interface CodeCopyOptions {
     /**
      * off: disable
      * line: per-command line copy
@@ -265,12 +265,12 @@ export interface CopyOptions {
     config?: Partial<Config>;
 }
 
-function resolveCopyConfig(options: CopyOptions = {}): Config {
+function resolveCopyConfig(options: CodeCopyOptions = {}): Config {
     const mode = options.mode ?? "none";
     const enable = options.enable ?? true;
     const plugins = options.config?.plugins ?? {};
     const pluginConfig = plugins.config ?? {};
-    const copy = (pluginConfig["copy"] ?? {}) as Record<string, unknown>;
+    const copy = (pluginConfig["code-copy"] ?? {}) as Record<string, unknown>;
     return {
         ...DEFAULT_CONFIG,
         ...options.config,
@@ -278,24 +278,24 @@ function resolveCopyConfig(options: CopyOptions = {}): Config {
             ...plugins,
             config: {
                 ...pluginConfig,
-                copy: { ...copy, enable, mode },
+                "code-copy": { ...copy, enable, mode },
             },
         },
     };
 }
 
-/** Convenience transformer: `result = await copy(result)` */
-export async function copy(html: string, options: CopyOptions = {}): Promise<string> {
+/** Convenience transformer: `result = await codeCopy(result)` */
+export async function codeCopy(html: string, options: CodeCopyOptions = {}): Promise<string> {
     const config = resolveCopyConfig(options);
-    if (!copyPlugin.isEnabled(config) || !copyPlugin.processDom) return html;
+    if (!codeCopyPlugin.isEnabled(config) || !codeCopyPlugin.processDom) return html;
     const $ = load(html, {}, false);
-    await copyPlugin.processDom($ as unknown, config, { sourceDir: "" });
+    await codeCopyPlugin.processDom($ as unknown, config, { sourceDir: "" });
     return $.html() || html;
 }
 
 /** Plugin CSS/JS assets for host template injection. */
-export async function copyAssets(options: CopyOptions = {}): Promise<PluginAssets> {
+export async function codeCopyAssets(options: CodeCopyOptions = {}): Promise<PluginAssets> {
     const config = resolveCopyConfig(options);
-    if (!copyPlugin.isEnabled(config) || !copyPlugin.getAssets) return {};
-    return await copyPlugin.getAssets(config);
+    if (!codeCopyPlugin.isEnabled(config) || !codeCopyPlugin.getAssets) return {};
+    return await codeCopyPlugin.getAssets(config);
 }

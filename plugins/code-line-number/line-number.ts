@@ -1,5 +1,5 @@
 // ============================================================
-// plugins/line-number/line-number.ts
+// plugins/code-line-number/line-number.ts
 // ============================================================
 
 // [OPT] Client-side runtime script — plain template literal,

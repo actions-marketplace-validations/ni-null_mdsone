@@ -67,11 +67,11 @@ export default defineConfig([
   // Plugin entries (each plugin owns its own public API)
   {
     entry: {
-      "plugins/shiki": "plugins/shiki/index.ts",
+      "plugins/code-highlight": "plugins/code-highlight/index.ts",
       "plugins/katex": "plugins/katex/index.ts",
-      "plugins/copy": "plugins/copy/index.ts",
+      "plugins/code-copy": "plugins/code-copy/index.ts",
       "plugins/image": "plugins/image/index.ts",
-      "plugins/line-number": "plugins/line-number/index.ts",
+      "plugins/code-line-number": "plugins/code-line-number/index.ts",
       "plugins/minify": "plugins/minify/index.ts",
     },
     format: ["esm"],
@@ -83,6 +83,8 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     external: [
+      "@shikijs/markdown-exit",
+      "@shikijs/markdown-exit/core",
       "cheerio",
       "highlight.js",
       "shiki",

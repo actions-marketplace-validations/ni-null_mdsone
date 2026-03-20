@@ -13,34 +13,34 @@ npm install mdsone
 - Core API：`mdsone/core`
 - Node I/O API：`mdsone/node`
 - Plugin API（各自獨立導出）：
-  - `mdsone/plugins/shiki`
-  - `mdsone/plugins/copy`
-  - `mdsone/plugins/line-number`
+  - `mdsone/plugins/code-highlight`
+  - `mdsone/plugins/code-copy`
+  - `mdsone/plugins/code-line-number`
   - `mdsone/plugins/image`（Node-only）
 
 ## Plugin 單獨調用（鏈式）
 
 ```ts
-import { shiki } from "mdsone/plugins/shiki";
-import { copy } from "mdsone/plugins/copy";
-import { lineNumber } from "mdsone/plugins/line-number";
+import { codeHighlight } from "mdsone/plugins/code-highlight";
+import { codeCopy } from "mdsone/plugins/code-copy";
+import { codeLineNumber } from "mdsone/plugins/code-line-number";
 
 let result = "<pre><code class=\"language-bash\">npx mdsone</code></pre>";
-result = await shiki(result);
-result = await copy(result, { mode: "line" });
-result = await lineNumber(result);
+result = await codeHighlight(result);
+result = await codeCopy(result, { mode: "line" });
+result = await codeLineNumber(result);
 ```
 
 如需樣式或腳本，請同時注入 plugin 的 assets：
 
 ```ts
-import { copyAssets } from "mdsone/plugins/copy";
-import { lineNumberAssets } from "mdsone/plugins/line-number";
+import { codeCopyAssets } from "mdsone/plugins/code-copy";
+import { codeLineNumberAssets } from "mdsone/plugins/code-line-number";
 
-const copyLib = await copyAssets({ mode: "line" });
-const lnLib = await lineNumberAssets();
-const libCss = `${copyLib.css ?? ""}\n${lnLib.css ?? ""}`;
-const libJs = `${copyLib.js ?? ""}\n${lnLib.js ?? ""}`;
+const codeCopyLib = await codeCopyAssets({ mode: "line" });
+const codeLineNumberLib = await codeLineNumberAssets();
+const libCss = `${codeCopyLib.css ?? ""}\n${codeLineNumberLib.css ?? ""}`;
+const libJs = `${codeCopyLib.js ?? ""}\n${codeLineNumberLib.js ?? ""}`;
 ```
 
 ## 單一 Markdown 轉 HTML（Node）
@@ -113,9 +113,9 @@ document.querySelector("#preview")!.innerHTML = html;
 
 ```ts
 import { markdownToHtml, DEFAULT_CONFIG } from "mdsone/core";
-import { shiki, shikiAssets } from "mdsone/plugins/shiki";
-import { copy, copyAssets } from "mdsone/plugins/copy";
-import { lineNumber, lineNumberAssets } from "mdsone/plugins/line-number";
+import { codeHighlight, codeHighlightAssets } from "mdsone/plugins/code-highlight";
+import { codeCopy, codeCopyAssets } from "mdsone/plugins/code-copy";
+import { codeLineNumber, codeLineNumberAssets } from "mdsone/plugins/code-line-number";
 
 function injectAssets(css?: string, js?: string) {
   if (css) document.head.insertAdjacentHTML("beforeend", css);
@@ -137,17 +137,17 @@ npx mdsone ./docs -m --code-copy=cmd
 `;
 
 let result = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, true, 0);
-result = await shiki(result);
-result = await copy(result, { mode: "line" });
-result = await lineNumber(result);
+result = await codeHighlight(result);
+result = await codeCopy(result, { mode: "line" });
+result = await codeLineNumber(result);
 
-const shikiLib = await shikiAssets();
-const copyLib = await copyAssets({ mode: "line" });
-const lnLib = await lineNumberAssets();
+const codeHighlightLib = await codeHighlightAssets();
+const codeCopyLib = await codeCopyAssets({ mode: "line" });
+const codeLineNumberLib = await codeLineNumberAssets();
 
 injectAssets(
-  `${shikiLib.css ?? ""}\n${copyLib.css ?? ""}\n${lnLib.css ?? ""}`,
-  `${copyLib.js ?? ""}\n${lnLib.js ?? ""}`,
+  `${codeHighlightLib.css ?? ""}\n${codeCopyLib.css ?? ""}\n${codeLineNumberLib.css ?? ""}`,
+  `${codeCopyLib.js ?? ""}\n${codeLineNumberLib.js ?? ""}`,
 );
 
 document.querySelector("#preview")!.innerHTML = result;
@@ -156,5 +156,6 @@ document.querySelector("#preview")!.innerHTML = result;
 ## 注意
 
 - `mdsone/core` 只負責核心轉換與組裝，不會自動執行 plugins。
-- Web 可手動串接 `shiki`、`copy`、`line-number`，並自行注入 assets。
+- Web 可手動串接 `code-highlight`、`code-copy`、`code-line-number`，並自行注入 assets。
 - `image` plugin 依賴 Node.js（`fs/path` 與處理流程），屬於 Node-only。
+

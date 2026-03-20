@@ -3,9 +3,9 @@
 目前內建 plugin：
 
 - `image`
-- `shiki`
-- `copy`
-- `line_number`
+- `code-highlight`
+- `code-copy`
+- `code-line-number`
 
 所有 plugin 都在核心 Markdown 轉 HTML 後才介入，流程如下：
 
@@ -35,7 +35,7 @@ TOML：
 - `[plugins.image].max_width`
 - `[plugins.image].compress`
 
-## shiki
+## code-highlight
 
 用途：
 
@@ -50,7 +50,7 @@ npx mdsone README.md -o index.html --code-highlight=off
 
 TOML：
 
-- `[plugins.shiki].enable`
+- `[plugins."code-highlight"].enable`
 
 模板設定（`template.config.json`）：
 
@@ -63,7 +63,7 @@ TOML：
 - fenced code 有指定語言時直接使用該語言
 - 未指定語言時，若 `auto_detect=true`，會用 `highlight.js` 自動判斷語言再交給 Shiki
 
-## copy
+## code-copy
 
 用途：
 
@@ -85,10 +85,10 @@ npx mdsone README.md -o index.html --code-copy=cmd
 
 TOML：
 
-- `[plugins.copy].enable`
-- `[plugins.copy].mode`（`off` / `line` / `cmd`）
+- `[plugins."code-copy"].enable`
+- `[plugins."code-copy"].mode`（`off` / `line` / `cmd`）
 
-## line_number
+## code-line-number
 
 用途：
 
@@ -104,16 +104,16 @@ npx mdsone README.md -o index.html --code-line-number=off
 
 TOML：
 
-- `[plugins.line_number].enable`
+- `[plugins."code-line-number"].enable`
 
 ## config.toml 範例
 
 ```toml
 [plugins]
-order = ["image", "shiki", "copy", "line_number"]
-copy = { enable = true, mode = "off" }
-shiki = { enable = true }
-line_number = { enable = false }
+order = ["image", "code-highlight", "code-copy", "code-line-number"]
+"code-copy" = { enable = true, mode = "off" }
+"code-highlight" = { enable = true }
+"code-line-number" = { enable = false }
 image = { embed = "off", max_width = 0, compress = 0 }
 ```
 
@@ -122,9 +122,9 @@ image = { embed = "off", max_width = 0, compress = 0 }
 預設順序：
 
 1. `image`
-2. `shiki`
-3. `copy`
-4. `line_number`
+2. `code-highlight`
+3. `code-copy`
+4. `code-line-number`
 
 可用 `[plugins].order` 自訂順序；未列出的 plugin 會排在後面。
 
@@ -157,3 +157,4 @@ mode = "woff2" # 可改為 "full"
 - 預設為自動啟用（除非 `enable = false` 或使用 `--katex=off`）。
 - `mode = "full"` 會內嵌完整字體，輸出檔案較大。
 - 即使啟用，沒有公式時也不會注入 KaTeX CSS/字體。
+

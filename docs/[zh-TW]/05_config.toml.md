@@ -28,11 +28,11 @@ mode = false
 default_locale = ""
 
 [plugins]
-order = ["image", "katex", "shiki", "copy", "line_number", "minify"]
-copy = { enable = true, mode = "off" }
-shiki = { enable = true }
+order = ["image", "katex", "code-highlight", "code-copy", "code-line-number", "minify"]
+"code-copy" = { enable = true, mode = "off" }
+"code-highlight" = { enable = true }
 katex = { enable = true, mode = "woff2" }
-line_number = { enable = false }
+"code-line-number" = { enable = false }
 image = { embed = "off", max_width = 0, compress = 0 }
 minify = { enable = false } # 可搭配 CLI: --minify / --minify=off 覆蓋
 ```
@@ -45,3 +45,4 @@ minify = { enable = false } # 可搭配 CLI: --minify / --minify=off 覆蓋
 
 - KaTeX 預設自動啟用；可用 [plugins.katex].enable = false 或 --katex=off 關閉。
 - 啟用時僅在有公式渲染結果時注入 KaTeX CSS/字體。
+

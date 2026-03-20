@@ -10,7 +10,7 @@ import { createCliRenderer } from "./renderer.js";
 import { cliArgsToConfig } from "../core/config.js";
 import { validateConfig } from "../core/validator.js";
 import { resolveBuildDate } from "../core/build-date.js";
-import { markdownToHtml } from "../core/markdown.js";
+import { markdownToHtmlAsync } from "../core/markdown.js";
 import { getAllTemplateStrings, getAllLocalesTemplateStrings } from "../core/i18n.js";
 import { buildHtml } from "../core/builder.js";
 import {
@@ -353,16 +353,16 @@ async function main(): Promise<void> {
 
   // ⑪-b 透過 PluginManager 收集 plugin 靜態資源
   const pluginManager = new PluginManager();
-  const renderMarkdownWithPlugins = (
+  const renderMarkdownWithPlugins = async (
     markdownText: string,
     fileIndex: number,
     sourceDir: string,
-  ): string => {
-    return markdownToHtml(
+  ): Promise<string> => {
+    return await markdownToHtmlAsync(
       markdownText,
       config.markdown_extensions,
       fileIndex,
-      (md) => pluginManager.extendMarkdown(md, config, { sourceDir, templateData }),
+      async (md) => await pluginManager.extendMarkdown(md, config, { sourceDir, templateData }),
     );
   };
   const { css: libCss, js: libJs } = await runAsync(() => pluginManager.getAssets(config));
@@ -380,7 +380,7 @@ async function main(): Promise<void> {
       }
 
       const documents: Record<string, string> = {};
-      let html = runSync(() => renderMarkdownWithPlugins(fileContent, 0, path.dirname(srcFile)));
+      let html = await runAsync(() => renderMarkdownWithPlugins(fileContent, 0, path.dirname(srcFile)));
       html = await runAsync(
         () => pluginManager.processHtml(
           html,
@@ -415,7 +415,7 @@ async function main(): Promise<void> {
         try {
           const content = await runAsync(() => readTextFile(filepath));
           if (content.trim()) {
-            let html = runSync(() => renderMarkdownWithPlugins(content, i, path.dirname(filepath)));
+            let html = await runAsync(() => renderMarkdownWithPlugins(content, i, path.dirname(filepath)));
             html = await runAsync(
               () => pluginManager.processHtml(
                 html,
@@ -464,7 +464,7 @@ async function main(): Promise<void> {
           try {
             const content = await runAsync(() => readTextFile(filepath));
             if (content.trim()) {
-              let html = runSync(() => renderMarkdownWithPlugins(content, idx, dir));
+              let html = await runAsync(() => renderMarkdownWithPlugins(content, idx, dir));
               html = await runAsync(
                 () => pluginManager.processHtml(
                   html,
@@ -518,7 +518,7 @@ async function main(): Promise<void> {
         try {
           const content = await runAsync(() => readTextFile(filepath));
           if (content.trim()) {
-            let html = runSync(() => renderMarkdownWithPlugins(content, idx, folderPath));
+            let html = await runAsync(() => renderMarkdownWithPlugins(content, idx, folderPath));
             html = await runAsync(
               () => pluginManager.processHtml(
                 html,
@@ -603,7 +603,7 @@ async function main(): Promise<void> {
           logWarn(`[WARN] Skipping '${path.basename(filepath)}' — file is empty.`);
           continue;
         }
-        let html = runSync(() => renderMarkdownWithPlugins(content, 0, baseDir));
+        let html = await runAsync(() => renderMarkdownWithPlugins(content, 0, baseDir));
         html = await runAsync(
           () => pluginManager.processHtml(
             html,

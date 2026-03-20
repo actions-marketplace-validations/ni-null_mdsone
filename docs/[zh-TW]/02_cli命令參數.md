@@ -96,9 +96,9 @@ CLI 參數 > 環境變數 > config.toml > 預設值
 | 圖片嵌入模式 | `--img-embed=<off\|base64>` | `IMG_EMBED` | `[plugins.image] embed` |
 | 圖片最大寬度 | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | 圖片壓縮品質 | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| 語法高亮 | `--code-highlight=<off>` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
-| 程式碼複製模式 | `--code-copy=<off\|line\|cmd>` | `CODE_COPY` | `[plugins.copy] mode` |
-| 程式碼行號 | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins.line_number] enable` |
+| 語法高亮 | `--code-highlight=<off>` | `CODE_HIGHLIGHT` | `[plugins."code-highlight"] enable` |
+| 程式碼複製模式 | `--code-copy=<off\|line\|cmd>` | `CODE_COPY` | `[plugins."code-copy"] mode` |
+| 程式碼行號 | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins."code-line-number"] enable` |
 
 ## 使用範例
 
@@ -143,3 +143,4 @@ npx mdsone README.md -o index.html --katex=off
 - `--katex`：維持自動模式（`woff2`）
 - `--katex=full`：使用完整字體（檔案較大）
 - `--katex=off`：完全關閉（不解析、不注入）
+

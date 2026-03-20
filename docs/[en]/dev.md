@@ -29,9 +29,9 @@ This page summarizes the current architecture used by `mdsone`.
 
 - `image` -> base64 embedding and optional resize/compress
 - `katex` -> markdown formula support + conditional CSS/font injection
-- `shiki` -> syntax highlighting
-- `copy` -> copy button behavior
-- `line_number` -> line number rendering
+- `code-highlight` -> syntax highlighting
+- `code-copy` -> copy button behavior
+- `code-line-number` -> line number rendering
 - `minify` -> final HTML minification
 
 ## Template Contract
@@ -65,3 +65,4 @@ templates/<name>/
 - Add new plugin CLI flags via `plugin.registerCli()` and `plugin.cliToConfig()`.
 - Prefer updating docs whenever CLI/plugin behavior changes.
 - Keep output-stage assets conditional when possible (for example, KaTeX injects CSS only when formulas are rendered).
+

@@ -205,12 +205,13 @@ export interface Plugin {
   /**
    * Markdown-it extension hook.
    * Runs before markdown rendering for each document.
+   * Can be async for plugins that need async setup.
    */
   extendMarkdown?: (
     md: unknown,
     config: Config,
     context: PluginContext,
-  ) => void;
+  ) => void | Promise<void>;
 
   /**
    * DOM-based post-processing.

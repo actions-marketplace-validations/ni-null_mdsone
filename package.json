@@ -15,25 +15,25 @@
       "import": "./dist/node.js",
       "types": "./dist/node.d.ts"
     },
-    "./plugins/shiki": {
-      "import": "./dist/plugins/shiki.js",
-      "types": "./dist/plugins/shiki.d.ts"
+    "./plugins/code-highlight": {
+      "import": "./dist/plugins/code-highlight.js",
+      "types": "./dist/plugins/code-highlight.d.ts"
     },
     "./plugins/katex": {
       "import": "./dist/plugins/katex.js",
       "types": "./dist/plugins/katex.d.ts"
     },
-    "./plugins/copy": {
-      "import": "./dist/plugins/copy.js",
-      "types": "./dist/plugins/copy.d.ts"
+    "./plugins/code-copy": {
+      "import": "./dist/plugins/code-copy.js",
+      "types": "./dist/plugins/code-copy.d.ts"
     },
     "./plugins/image": {
       "import": "./dist/plugins/image.js",
       "types": "./dist/plugins/image.d.ts"
     },
-    "./plugins/line-number": {
-      "import": "./dist/plugins/line-number.js",
-      "types": "./dist/plugins/line-number.d.ts"
+    "./plugins/code-line-number": {
+      "import": "./dist/plugins/code-line-number.js",
+      "types": "./dist/plugins/code-line-number.d.ts"
     },
     "./plugins/minify": {
       "import": "./dist/plugins/minify.js",
@@ -71,6 +71,7 @@
   "license": "MIT",
   "dependencies": {
     "@iarna/toml": "^3.0.0",
+    "@shikijs/markdown-exit": "^4.0.2",
     "cheerio": "^1.1.2",
     "commander": "^12.0.0",
     "highlight.js": "^11.11.1",
@@ -80,8 +81,8 @@
     "markdown-it-anchor": "^9.2.0",
     "markdown-it-attrs": "^4.1.6",
     "markdown-it-katex": "^2.0.3",
-    "shiki": "^3.14.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "shiki": "^3.14.0"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.0.0",

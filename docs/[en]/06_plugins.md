@@ -4,9 +4,9 @@ Built-in plugins:
 
 - `image`
 - `katex`
-- `shiki`
-- `copy`
-- `line_number`
+- `code-highlight`
+- `code-copy`
+- `code-line-number`
 - `minify`
 
 Pipeline summary:
@@ -67,7 +67,7 @@ Notes:
 - `mode = "full"` inlines all KaTeX fonts.
 - `enable = false` (or `--katex=off`) disables KaTeX completely.
 
-## shiki
+## code-highlight
 
 Purpose:
 
@@ -82,7 +82,7 @@ npx mdsone README.md --code-highlight=off
 
 TOML:
 
-- `[plugins.shiki].enable`
+- `[plugins."code-highlight"].enable`
 
 Template-controlled options (`template.config.json`):
 
@@ -90,7 +90,7 @@ Template-controlled options (`template.config.json`):
 - `config.types.<name>.code.Shiki.light`
 - `config.types.<name>.code.Shiki.auto_detect`
 
-## copy
+## code-copy
 
 Purpose:
 
@@ -107,10 +107,10 @@ npx mdsone README.md --code-copy=cmd
 
 TOML:
 
-- `[plugins.copy].enable`
-- `[plugins.copy].mode` (`off`, `line`, `cmd`)
+- `[plugins."code-copy"].enable`
+- `[plugins."code-copy"].mode` (`off`, `line`, `cmd`)
 
-## line_number
+## code-line-number
 
 Purpose:
 
@@ -126,7 +126,7 @@ npx mdsone README.md --code-line-number=off
 
 TOML:
 
-- `[plugins.line_number].enable`
+- `[plugins."code-line-number"].enable`
 
 ## minify
 
@@ -151,9 +151,10 @@ Default order:
 
 1. `image`
 2. `katex`
-3. `shiki`
-4. `copy`
-5. `line_number`
+3. `code-highlight`
+4. `code-copy`
+5. `code-line-number`
 6. `minify` (output stage; always last)
 
 You can override order with `[plugins].order`.
+

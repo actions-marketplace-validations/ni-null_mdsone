@@ -82,6 +82,32 @@ function createMarkdownIt(extensions: string[], fileIndex: number): MarkdownIt {
   return md;
 }
 
+function shouldWrapFenceByDefault(md: MarkdownIt): boolean {
+  const internal = md as unknown as { __mdsoneSkipFenceWrapper?: boolean };
+  return internal.__mdsoneSkipFenceWrapper !== true;
+}
+
+function applyDefaultFenceWrapper(md: MarkdownIt): void {
+  const defaultFence = md.renderer.rules.fence;
+  md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+    const lang = token.info ? token.info.trim().split(/\s+/)[0] : "";
+    if (lang) {
+      token.info = "";
+      const rendered = defaultFence
+        ? defaultFence(tokens, idx, options, env, self)
+        : self.renderToken(tokens, idx, options);
+      return rendered.replace(
+        /^<pre><code[^>]*>/,
+        `<pre data-lang="${lang}"><code class="language-${lang}">`,
+      );
+    }
+    return defaultFence
+      ? defaultFence(tokens, idx, options, env, self)
+      : self.renderToken(tokens, idx, options);
+  };
+}
+
 /**
  * 將 Markdown 文字轉換為 HTML（對應 Python markdown_to_html()）。
  * 包含：heading id 注入（via markdown-it-anchor）、code block brace 轉義、
@@ -99,26 +125,32 @@ export function markdownToHtml(
     extendMarkdown(md);
   }
 
-  // 覆寫 fence renderer
-  const defaultFence = md.renderer.rules.fence;
-  md.renderer.rules.fence = (tokens, idx, options, env, self) => {
-    const token = tokens[idx];
-    const lang = token.info ? token.info.trim().split(/\s+/)[0] : "";
-    if (lang) {
-      // ── 前端高亮模式：保留原有邏輯 ──
-      token.info = "";  // 清除語言以使用預設渲染
-      const rendered = defaultFence
-        ? defaultFence(tokens, idx, options, env, self)
-        : self.renderToken(tokens, idx, options);
-      return rendered.replace(
-        /^<pre><code[^>]*>/,
-        `<pre data-lang="${lang}"><code class="language-${lang}">`,
-      );
-    }
-    return defaultFence
-      ? defaultFence(tokens, idx, options, env, self)
-      : self.renderToken(tokens, idx, options);
-  };
+  if (shouldWrapFenceByDefault(md)) {
+    applyDefaultFenceWrapper(md);
+  }
+
+  const html = md.render(markdownText);
+  return sanitizeTableCells(escapeCodeBlocks(html));
+}
+
+/**
+ * Async markdown renderer.
+ * Use this variant when plugins need async markdown-it setup.
+ */
+export async function markdownToHtmlAsync(
+  markdownText: string,
+  extensions: string[],
+  fileIndex = 0,
+  extendMarkdown?: (md: MarkdownIt) => void | Promise<void>,
+): Promise<string> {
+  const md = createMarkdownIt(extensions, fileIndex);
+  if (extendMarkdown) {
+    await extendMarkdown(md);
+  }
+
+  if (shouldWrapFenceByDefault(md)) {
+    applyDefaultFenceWrapper(md);
+  }
 
   const html = md.render(markdownText);
   return sanitizeTableCells(escapeCodeBlocks(html));

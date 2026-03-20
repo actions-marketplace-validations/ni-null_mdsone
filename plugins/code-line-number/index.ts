@@ -1,5 +1,5 @@
 // ============================================================
-// plugins/line-number/index.ts - Line number plugin
+// plugins/code-line-number/index.ts - Line number plugin
 // ============================================================
 
 import { load, type CheerioAPI } from "cheerio";
@@ -12,7 +12,7 @@ const LINE_NUMBER_CSS = `<style id="mdsone-line-number">\n${getLineNumberStyle()
 type LineNumberPluginConfig = { enable?: boolean };
 
 function readLineNumberPluginConfig(config: Config): LineNumberPluginConfig {
-  const raw = config.plugins?.config?.["line_number"];
+  const raw = config.plugins?.config?.["code-line-number"];
   return (raw && typeof raw === "object" ? raw : {}) as LineNumberPluginConfig;
 }
 
@@ -49,8 +49,8 @@ function injectIntoPlain(innerHtml: string): string {
     .join("");
 }
 
-export const lineNumberPlugin: Plugin = {
-  name: "line_number",
+export const codeLineNumberPlugin: Plugin = {
+  name: "code-line-number",
 
   registerCli(program) {
     const parseMode = (raw: string): "off" => {
@@ -69,13 +69,13 @@ export const lineNumberPlugin: Plugin = {
     const raw = opts["codeLineNumber"];
     const previous = out.plugins ?? {};
     const prevConfig = previous.config ?? {};
-    const prevLineNumber = (prevConfig["line_number"] ?? {}) as Record<string, unknown>;
+    const prevLineNumber = (prevConfig["code-line-number"] ?? {}) as Record<string, unknown>;
     if (raw === true) {
       out.plugins = {
         ...previous,
         config: {
           ...prevConfig,
-          line_number: { ...prevLineNumber, enable: true },
+          "code-line-number": { ...prevLineNumber, enable: true },
         },
       };
     } else if (typeof raw === "string") {
@@ -85,7 +85,7 @@ export const lineNumberPlugin: Plugin = {
           ...previous,
           config: {
             ...prevConfig,
-            line_number: { ...prevLineNumber, enable: false },
+            "code-line-number": { ...prevLineNumber, enable: false },
           },
         };
       }
@@ -120,16 +120,16 @@ export const lineNumberPlugin: Plugin = {
   },
 };
 
-export interface LineNumberOptions {
+export interface CodeLineNumberOptions {
   enable?: boolean;
   config?: Partial<Config>;
 }
 
-function resolveLineNumberConfig(options: LineNumberOptions = {}): Config {
+function resolveLineNumberConfig(options: CodeLineNumberOptions = {}): Config {
   const enable = options.enable ?? true;
   const plugins = options.config?.plugins ?? {};
   const pluginConfig = plugins.config ?? {};
-  const lineNumber = (pluginConfig["line_number"] ?? {}) as Record<string, unknown>;
+  const lineNumber = (pluginConfig["code-line-number"] ?? {}) as Record<string, unknown>;
   return {
     ...DEFAULT_CONFIG,
     ...options.config,
@@ -137,22 +137,22 @@ function resolveLineNumberConfig(options: LineNumberOptions = {}): Config {
       ...plugins,
       config: {
         ...pluginConfig,
-        line_number: { ...lineNumber, enable },
+        "code-line-number": { ...lineNumber, enable },
       },
     },
   };
 }
 
-export async function lineNumber(html: string, options: LineNumberOptions = {}): Promise<string> {
+export async function codeLineNumber(html: string, options: CodeLineNumberOptions = {}): Promise<string> {
   const config = resolveLineNumberConfig(options);
-  if (!lineNumberPlugin.isEnabled(config) || !lineNumberPlugin.processDom) return html;
+  if (!codeLineNumberPlugin.isEnabled(config) || !codeLineNumberPlugin.processDom) return html;
   const $ = load(html, {}, false);
-  await lineNumberPlugin.processDom($ as unknown, config, { sourceDir: "" });
+  await codeLineNumberPlugin.processDom($ as unknown, config, { sourceDir: "" });
   return $.html() || html;
 }
 
-export async function lineNumberAssets(options: LineNumberOptions = {}): Promise<PluginAssets> {
+export async function codeLineNumberAssets(options: CodeLineNumberOptions = {}): Promise<PluginAssets> {
   const config = resolveLineNumberConfig(options);
-  if (!lineNumberPlugin.isEnabled(config) || !lineNumberPlugin.getAssets) return {};
-  return await lineNumberPlugin.getAssets(config);
+  if (!codeLineNumberPlugin.isEnabled(config) || !codeLineNumberPlugin.getAssets) return {};
+  return await codeLineNumberPlugin.getAssets(config);
 }

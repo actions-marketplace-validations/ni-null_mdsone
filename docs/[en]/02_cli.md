@@ -79,9 +79,9 @@ i18n mode requires a single folder input with `[locale]` subfolders and uses mer
 | Image embed | `--img-embed=...` | `IMG_EMBED` | `[plugins.image] embed` |
 | Image width | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | Image compression | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |
-| Highlight | `--code-highlight=off` | `CODE_HIGHLIGHT` | `[plugins.shiki] enable` |
-| Code copy | `--code-copy=...` | `CODE_COPY` | `[plugins.copy] mode` |
-| Line numbers | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins.line_number] enable` |
+| Highlight | `--code-highlight=off` | `CODE_HIGHLIGHT` | `[plugins."code-highlight"] enable` |
+| Code copy | `--code-copy=...` | `CODE_COPY` | `[plugins."code-copy"] mode` |
+| Line numbers | `--code-line-number` | `CODE_LINE_NUMBER` | `[plugins."code-line-number"] enable` |
 | Minify | `--minify` | - | `[plugins.minify] enable` |
 
 ## Examples
@@ -96,3 +96,4 @@ npx mdsone ./docs --i18n-mode=zh-TW -o dist/index.html
 # Disable highlight and copy buttons
 npx mdsone ./docs -m --code-highlight=off --code-copy=off
 ```
+

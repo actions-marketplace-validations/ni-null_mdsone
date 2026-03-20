@@ -29,11 +29,11 @@ mode = false
 default_locale = ""
 
 [plugins]
-order = ["image", "katex", "shiki", "copy", "line_number", "minify"]
-copy = { enable = true, mode = "off" }
-shiki = { enable = true }
+order = ["image", "katex", "code-highlight", "code-copy", "code-line-number", "minify"]
+"code-copy" = { enable = true, mode = "off" }
+"code-highlight" = { enable = true }
 katex = { enable = true, mode = "woff2" }
-line_number = { enable = false }
+"code-line-number" = { enable = false }
 image = { embed = "off", max_width = 0, compress = 0 }
 minify = { enable = false }
 ```
@@ -46,3 +46,4 @@ minify = { enable = false }
 - Shiki theme selection is controlled by template variant (`template.config.json`), not by `config.toml`.
 - `plugins.order` controls plugin execution order. `minify` is still forced to run last for output-stage processing.
 - `--template` supports `name@variant` and direct template folder path.
+

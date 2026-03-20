@@ -26,6 +26,7 @@ export {
   escapeCodeBlocks,
   sanitizeTableCells,
   markdownToHtml,
+  markdownToHtmlAsync,
   LOCALE_DIR_PATTERN,
 } from "./markdown.js";
 

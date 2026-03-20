@@ -39,11 +39,11 @@ export class PluginManager {
    * Run enabled plugins' `extendMarkdown()` in order.
    * Failures are logged and do not stop remaining plugins.
    */
-  extendMarkdown(
+  async extendMarkdown(
     markdownIt: unknown,
     config: Config,
     context: PluginContext,
-  ): void {
+  ): Promise<void> {
     const ordered = sortPlugins(
       [...this.plugins],
       (config as unknown as { plugins?: { order?: string[] } }).plugins?.order,
@@ -51,7 +51,7 @@ export class PluginManager {
     for (const plugin of ordered) {
       if (!plugin.isEnabled(config) || !plugin.extendMarkdown) continue;
       try {
-        plugin.extendMarkdown(markdownIt, config, context);
+        await plugin.extendMarkdown(markdownIt, config, context);
       } catch (e) {
         console.warn(
           `[WARN] Plugin "${plugin.name}" extendMarkdown failed: ${e instanceof Error ? e.message : e}`,
