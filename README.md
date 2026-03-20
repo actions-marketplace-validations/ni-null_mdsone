@@ -62,6 +62,39 @@ With image embedding:
 npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400
 ```
 
+## GitHub Action
+
+```yaml
+name: Build Docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Convert Markdown to HTML
+        uses: ni-null/mdsone@v1
+        with:
+          source: ./docs
+          output: ./docs.html
+          merge: true
+          i18n_mode: zh-TW
+          template: normal@warm-cream
+          code_line_number: true
+          code_copy: cmd
+          minify: true
+
+      - name: Upload output
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: ./docs.html
+```
+
 
 ## CLI Parameters
 

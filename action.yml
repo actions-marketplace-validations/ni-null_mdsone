@@ -1,0 +1,85 @@
+name: "MDSone Markdown to HTML"
+author: "ni-null"
+description: "Convert Markdown files/folders into self-contained HTML outputs."
+
+inputs:
+  source:
+    description: "Input markdown source. Supports one path per line."
+    required: false
+    default: "README.md"
+  output:
+    description: "Output path for -o."
+    required: false
+    default: ""
+  merge:
+    description: "Enable merge mode (-m)."
+    required: false
+    default: "false"
+  force:
+    description: "Overwrite existing output (-f)."
+    required: false
+    default: "true"
+  template:
+    description: "Template name/path with optional variant (e.g. normal@warm-cream)."
+    required: false
+    default: ""
+  title:
+    description: "Site title (--title)."
+    required: false
+    default: ""
+  i18n_mode:
+    description: "i18n mode: true/false or locale code (e.g. zh-TW)."
+    required: false
+    default: "false"
+  config:
+    description: "Path to config.toml (-c)."
+    required: false
+    default: ""
+  img_embed:
+    description: "Image embedding mode: off|base64."
+    required: false
+    default: ""
+  img_max_width:
+    description: "Max image width in pixels."
+    required: false
+    default: ""
+  img_compress:
+    description: "Image compression quality 1-100."
+    required: false
+    default: ""
+  katex:
+    description: "KaTeX mode: off|full|true."
+    required: false
+    default: ""
+  code_highlight:
+    description: "Code highlight mode: off|true."
+    required: false
+    default: ""
+  code_copy:
+    description: "Code copy mode: off|line|cmd."
+    required: false
+    default: ""
+  code_line_number:
+    description: "Code line number mode: off|true."
+    required: false
+    default: ""
+  minify:
+    description: "Minify mode: off|true."
+    required: false
+    default: ""
+  cli_version:
+    description: "mdsone package version from npm."
+    required: false
+    default: "latest"
+
+outputs:
+  output_path:
+    description: "Forwarded from input 'output' when provided."
+
+runs:
+  using: "node20"
+  main: "github-action.js"
+
+branding:
+  icon: "file-text"
+  color: "blue"
