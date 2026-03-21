@@ -46,7 +46,9 @@ export function envToConfig(): Partial<Config> {
   if (e["BUILD_DATE"]) out.build_date = e["BUILD_DATE"];
   if (e["SITE_TITLE"]) out.site_title = e["SITE_TITLE"];
   if (e["THEME_MODE"]) out.theme_mode = e["THEME_MODE"] as Config["theme_mode"];
-  if (e["LOCALE"]) out.locale = e["LOCALE"];
+  if (e["LOCALE"]) {
+    throw new Error("Environment variable LOCALE is removed. Use DEFAULT_LOCALE instead.");
+  }
   if (e["DEFAULT_LOCALE"]) out.default_locale = e["DEFAULT_LOCALE"];
   if (e["I18N_MODE"] !== undefined) out.i18n_mode = parseBool(e["I18N_MODE"], false);
   if (e["MARKDOWN_EXTENSIONS"]) {
@@ -83,7 +85,9 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   if (s(site["title"])) out.site_title = s(site["title"]);
   if (s(site["theme_mode"])) out.theme_mode = s(site["theme_mode"]) as Config["theme_mode"];
 
-  if (s(i18n["locale"])) out.locale = s(i18n["locale"]);
+  if (s(i18n["locale"])) {
+    throw new Error("[i18n].locale is removed. Use [i18n].default_locale instead.");
+  }
   if (b(i18n["mode"]) !== undefined) out.i18n_mode = b(i18n["mode"]);
   if (s(i18n["default_locale"])) out.default_locale = s(i18n["default_locale"]);
 
@@ -123,6 +127,10 @@ export async function loadConfigFile(configPath?: string): Promise<Partial<Confi
     const parsed = await parseTOML(raw);
     return tomlToConfig(parsed);
   } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("[i18n].locale is removed")) {
+      throw e;
+    }
     console.warn(`[WARN] Could not load config.toml: ${e}. Using defaults.`);
     return {};
   }

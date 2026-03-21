@@ -18,7 +18,6 @@ export interface Config {
   site_title: string;
   theme_mode: "light" | "dark" | string;
   // i18n
-  locale: string;
   i18n_mode: boolean;
   default_locale: string;
   template_variant: string;
@@ -133,6 +132,15 @@ export interface ValidationResult {
   errors: string[];
 }
 
+/** Structured validation issue for core/plugin preflight. */
+export interface ValidationIssue {
+  level: "error" | "warn";
+  message: string;
+  code?: string;
+  plugin?: string;
+  hint?: string;
+}
+
 // mdsone_DATA payloads embedded into output HTML.
 
 /** Single-language mdsone_DATA shape. */
@@ -235,6 +243,13 @@ export interface Plugin {
   /** Return CSS/JS assets to be injected into final output. */
   getAssets?: (config: Config) => PluginAssets | Promise<PluginAssets>;
 
-  /** Validate plugin-specific config and return warning/error messages. */
-  validateConfig?: (config: Config) => string[];
+  /**
+   * Validate plugin-specific config and return warning/error messages.
+   * Backward compatible:
+   * - string[] -> treated as error-level messages
+   * - ValidationIssue[] -> preserves level/code/hint metadata
+   */
+  validateConfig?: (
+    config: Config,
+  ) => Array<string | ValidationIssue>;
 }

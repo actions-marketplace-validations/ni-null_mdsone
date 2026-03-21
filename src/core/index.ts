@@ -51,4 +51,4 @@ export {
 } from "./builder.js";
 
 // Validator
-export { validateConfig } from "./validator.js";
+export { validateConfig, collectConfigValidationIssues } from "./validator.js";

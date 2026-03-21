@@ -4,7 +4,7 @@
 // ============================================================
 
 import { load } from "cheerio";
-import type { Config, Plugin, PluginContext } from "../core/types.js";
+import type { Config, Plugin, PluginContext, ValidationIssue } from "../core/types.js";
 import { builtInPlugins } from "./index.js";
 
 /**
@@ -155,9 +155,41 @@ export class PluginManager {
   /**
    * Collect validation messages from enabled plugins.
    */
-  validateConfig(config: Config): string[] {
-    return this.plugins
-      .filter((p) => p.isEnabled(config) && p.validateConfig)
-      .flatMap((p) => p.validateConfig!(config));
+  validateConfig(config: Config): ValidationIssue[] {
+    const issues: ValidationIssue[] = [];
+    for (const plugin of this.plugins) {
+      if (!plugin.isEnabled(config) || !plugin.validateConfig) continue;
+      let rawIssues: Array<string | ValidationIssue>;
+      try {
+        rawIssues = plugin.validateConfig(config);
+      } catch (e) {
+        issues.push({
+          level: "error",
+          code: "plugin.validate.crash",
+          plugin: plugin.name,
+          message: `Plugin "${plugin.name}" validateConfig crashed: ${e instanceof Error ? e.message : String(e)}`,
+        });
+        continue;
+      }
+
+      for (const issue of rawIssues) {
+        if (typeof issue === "string") {
+          issues.push({
+            level: "error",
+            plugin: plugin.name,
+            message: issue,
+          });
+          continue;
+        }
+        issues.push({
+          level: issue.level ?? "error",
+          plugin: issue.plugin ?? plugin.name,
+          code: issue.code,
+          hint: issue.hint,
+          message: issue.message,
+        });
+      }
+    }
+    return issues;
   }
 }

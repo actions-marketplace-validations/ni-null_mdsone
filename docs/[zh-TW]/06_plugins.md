@@ -3,15 +3,18 @@
 目前內建 plugin：
 
 - `image`
+- `katex`
 - `code-highlight`
 - `code-copy`
 - `code-line-number`
+- `minify`
 
-所有 plugin 都在核心 Markdown 轉 HTML 後才介入，流程如下：
+Plugin 生命週期分成四個可介入階段，流程如下：
 
-1. 核心先輸出一般 `<pre><code class="language-xxx">...</code></pre>`
-2. `PluginManager.processHtml()` 依序處理 HTML
-3. `PluginManager.getAssets()` 收集各 plugin 的 CSS / JS 注入最終頁面
+1. `PluginManager.extendMarkdown()`：在 Markdown render 前擴充 markdown-it
+2. `PluginManager.processHtml()`：在文件片段 HTML 上做 DOM 後處理
+3. `PluginManager.getAssets()`：收集 plugin 的 CSS / JS 資源
+4. `PluginManager.processOutputHtml()`：在 `buildHtml()` 後處理完整頁面（`minify` 固定最後執行）
 
 ## image
 
@@ -39,8 +42,8 @@ TOML：
 
 用途：
 
-- 將 `<pre><code>` 區塊改寫為 Shiki 高亮結果
-- 高亮在 plugin 層處理，核心不直接耦合 Shiki
+- 在 Markdown 前置階段接管 fenced code 渲染，輸出 Shiki 高亮結果
+- 高亮能力由 plugin 注入，核心不直接耦合 Shiki
 
 CLI：
 
@@ -110,11 +113,13 @@ TOML：
 
 ```toml
 [plugins]
-order = ["image", "code-highlight", "code-copy", "code-line-number"]
+order = ["image", "katex", "code-highlight", "code-copy", "code-line-number", "minify"]
 "code-copy" = { enable = true, mode = "off" }
 "code-highlight" = { enable = true }
+katex = { enable = true, mode = "woff2" }
 "code-line-number" = { enable = false }
 image = { embed = "off", max_width = 0, compress = 0 }
+minify = { enable = false }
 ```
 
 ## 執行順序
@@ -122,11 +127,14 @@ image = { embed = "off", max_width = 0, compress = 0 }
 預設順序：
 
 1. `image`
-2. `code-highlight`
-3. `code-copy`
-4. `code-line-number`
+2. `katex`
+3. `code-highlight`
+4. `code-copy`
+5. `code-line-number`
+6. `minify`
 
-可用 `[plugins].order` 自訂順序；未列出的 plugin 會排在後面。
+可用 `[plugins].order` 自訂順序；未列出的 plugin 會排在後面。  
+`minify` 即使被排在前面，仍會在完整頁面後處理階段固定最後執行。
 
 ## katex
 
@@ -157,4 +165,25 @@ mode = "woff2" # 可改為 "full"
 - 預設為自動啟用（除非 `enable = false` 或使用 `--katex=off`）。
 - `mode = "full"` 會內嵌完整字體，輸出檔案較大。
 - 即使啟用，沒有公式時也不會注入 KaTeX CSS/字體。
+
+## minify
+
+用途：
+
+- 在完整頁面 HTML 輸出前做壓縮（包含 HTML、inline CSS、inline JS）
+- 僅作用於 `processOutputHtml()` 階段，不影響單一片段 HTML
+
+CLI：
+
+```bash
+npx mdsone README.md -o index.html --minify
+npx mdsone README.md -o index.html --minify=off
+```
+
+TOML：
+
+```toml
+[plugins.minify]
+enable = false
+```
 

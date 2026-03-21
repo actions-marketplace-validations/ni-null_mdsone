@@ -13,10 +13,12 @@ npm install mdsone
 - Core API：`mdsone/core`
 - Node I/O API：`mdsone/node`
 - Plugin API（各自獨立導出）：
+  - `mdsone/plugins/katex`
   - `mdsone/plugins/code-highlight`
   - `mdsone/plugins/code-copy`
   - `mdsone/plugins/code-line-number`
   - `mdsone/plugins/image`（Node-only）
+  - `mdsone/plugins/minify`
 
 ## Plugin 單獨調用（鏈式）
 
@@ -69,7 +71,6 @@ const localeFile = await loadLocaleFile(localeRoot, "zh-TW");
 const bodyHtml = markdownToHtml(
   mdText,
   DEFAULT_CONFIG.markdown_extensions,
-  true,
   0,
 );
 
@@ -105,7 +106,7 @@ const md = `# Hello mdsone
 - item 2
 `;
 
-const html = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, true, 0);
+const html = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, 0);
 document.querySelector("#preview")!.innerHTML = html;
 ```
 
@@ -136,7 +137,7 @@ npx mdsone ./docs -m --code-copy=cmd
 \`\`\`
 `;
 
-let result = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, true, 0);
+let result = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, 0);
 result = await codeHighlight(result);
 result = await codeCopy(result, { mode: "line" });
 result = await codeLineNumber(result);
@@ -158,4 +159,5 @@ document.querySelector("#preview")!.innerHTML = result;
 - `mdsone/core` 只負責核心轉換與組裝，不會自動執行 plugins。
 - Web 可手動串接 `code-highlight`、`code-copy`、`code-line-number`，並自行注入 assets。
 - `image` plugin 依賴 Node.js（`fs/path` 與處理流程），屬於 Node-only。
+- `minify` plugin 作用在「完整頁面 HTML」（`buildHtml()` 之後），不適用純片段 HTML。
 

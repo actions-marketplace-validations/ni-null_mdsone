@@ -58,6 +58,8 @@ templates/<name>/
 - `{EXTRA_JS}`
 - `{MDSONE_DATA_SCRIPT}`
 
+`{MDSONE_DATA_SCRIPT}` now emits `<script id="mdsone-data" type="application/json">...</script>`.
+
 ## Guidance
 
 - Keep plugin features inside plugin modules.

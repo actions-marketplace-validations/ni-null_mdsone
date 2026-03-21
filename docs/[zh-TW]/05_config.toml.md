@@ -23,9 +23,8 @@ title = "Documentation"
 theme_mode = "light"
 
 [i18n]
-locale = "en"
 mode = false
-default_locale = ""
+default_locale = "en"
 
 [plugins]
 order = ["image", "katex", "code-highlight", "code-copy", "code-line-number", "minify"]
@@ -39,7 +38,6 @@ minify = { enable = false } # 可搭配 CLI: --minify / --minify=off 覆蓋
 
 ## 補充
 
-- `highlight` 已移除，不再使用 `[plugins.highlight]`
 - Shiki 主題名稱不再由 `config.toml` 控制，而是由模板自己的 `template.config.json` 定義
 - `plugins.order` 只決定 plugin 執行順序，不會改變核心 Markdown 轉換流程
 

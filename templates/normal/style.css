@@ -716,6 +716,66 @@ body {
   position: relative;
 }
 
+/* -- markdown-it-task-lists integration -- */
+.tab-content ul.contains-task-list,
+.tab-content ol.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.tab-content li.task-list-item {
+  list-style: none;
+  padding-left: 0;
+}
+
+.tab-content li.task-list-item .task-list-item-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  position: static;
+  width: calc(var(--fs-body) * 1.04);
+  height: calc(var(--fs-body) * 1.04);
+  margin: 0 0.68em 0 0;
+  vertical-align: -0.14em;
+  border: 0;
+  border-radius: 0.28em;
+  background: var(--tab-active-bg);
+  box-shadow: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+.tab-content li.task-list-item .task-list-item-checkbox::after {
+  content: "";
+  width: 0.3em;
+  height: 0.58em;
+  border: solid color-mix(in srgb, var(--accent-primary) 28%, #0f1115 72%);
+  border-width: 0 0.14em 0.14em 0;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.12s ease;
+}
+
+.tab-content li.task-list-item .task-list-item-checkbox:checked {
+  background: color-mix(in srgb, var(--tab-active-bg) 44%, #bcd3ff 56%);
+}
+
+.tab-content li.task-list-item .task-list-item-checkbox:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.tab-content li.task-list-item .task-list-item-checkbox:disabled {
+  opacity: 1;
+}
+
+.tab-content li.task-list-item > ul.contains-task-list,
+.tab-content li.task-list-item > ol.contains-task-list {
+  margin-top: 8px;
+  padding-left: 1.8em;
+}
+
 .tab-content ol {
   padding-left: 20px;
   margin-bottom: 20px;

@@ -88,7 +88,7 @@ npx mdsone ./docs -m --template my-template
 | `{EXTRA_CSS}` | `assets/` 內額外 CSS |
 | `{LIB_JS}` | plugin 提供的 JS |
 | `{EXTRA_JS}` | `assets/` 內額外 JS |
-| `{MDSONE_DATA_SCRIPT}` | `window.mdsone_DATA` 資料腳本 |
+| `{MDSONE_DATA_SCRIPT}` | JSON 資料腳本（`<script id="mdsone-data" type="application/json">`） |
 
 ## 語系設計
 
@@ -96,21 +96,21 @@ npx mdsone ./docs -m --template my-template
 - 全域 CLI / 共用字串：`locales/*.json`
 - 模板專屬字串：`templates/<name>/locales/*.json`
 
-模板 locale 不需要再維護 `locale_name_*`。
-
 ## Plugin 架構
 
-目前 plugin 全部在核心 Markdown 轉換完成後介入。
+目前 plugin 採分階段介入，不是全部都在 Markdown 轉換後才執行。
 
 流程大致如下：
 
-1. 核心先把 Markdown 轉成一般 HTML
-2. `PluginManager.processHtml()` 依順序讓 plugin 改寫 HTML
-3. `PluginManager.getAssets()` 收集 plugin 需要的 CSS / JS
-4. 模板再把 `{LIB_CSS}`、`{LIB_JS}` 注入最終輸出
+1. `PluginManager.extendMarkdown()`：在 markdown-it render 前擴充語法（例如 KaTeX / 高亮前置）
+2. 核心將 Markdown 轉成文件片段 HTML
+3. `PluginManager.processHtml()`：依順序做 DOM 後處理（例如圖片嵌入、copy/行號）
+4. `PluginManager.getAssets()`：收集 plugin 所需 CSS / JS
+5. 模板注入 `{LIB_CSS}`、`{LIB_JS}` 並組裝完整頁面
+6. `PluginManager.processOutputHtml()`：對完整頁面做最後後處理（例如 minify）
 
 這種架構的好處是：
 
-- 核心不需要知道 Shiki、圖片嵌入、copy button 的內部細節
-- plugin 可以獨立調整順序與行為
-- 模板只關心呈現，不直接耦合 plugin 實作
+- 核心不需要知道 Shiki、KaTeX、圖片嵌入、copy button 的內部細節
+- plugin 可依階段拆分責任（markdown 擴充 / DOM 改寫 / 最終輸出後處理）
+- 模板只關心呈現與佔位符注入，不直接耦合 plugin 實作

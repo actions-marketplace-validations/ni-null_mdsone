@@ -11,6 +11,8 @@ import markdownItAttrs from "markdown-it-attrs";
 import markdownItAnchor from "markdown-it-anchor";
 // @ts-ignore — markdown-it-footnote 無官方型別宣告
 import markdownItFootnote from "markdown-it-footnote";
+// @ts-ignore — markdown-it-task-lists 無官方型別宣告
+import markdownItTaskLists from "markdown-it-task-lists";
 
 /** `[locale]` 目錄名稱的正則（例如 [en]、[zh-TW]） */
 export const LOCALE_DIR_PATTERN = /^\[(.+)\]$/;
@@ -77,6 +79,7 @@ export function sanitizeTableCells(html: string): string {
  *   attr_list     → markdown-it-attrs 插件
  *   sane_lists    → markdown-it 內建（行為差異小，以 lists: true 模擬）
  *   footnote      → 核心固定啟用 markdown-it-footnote（不由 extensions 切換）
+ *   task list     → 核心固定啟用 markdown-it-task-lists（不由 extensions 切換）
  *
  * @param fileIndex - 用於產生跨檔案唯一的 heading id（預設 0）
  */
@@ -100,6 +103,8 @@ function createMarkdownIt(extensions: string[], fileIndex: number): MarkdownIt {
   });
   // 註腳功能為核心固定啟用。
   md.use(markdownItFootnote);
+  // Task list（- [ ] / - [x]）功能為核心固定啟用。
+  md.use(markdownItTaskLists);
   applyFootnoteAnchorPrefix(md, fileIndex);
   return md;
 }

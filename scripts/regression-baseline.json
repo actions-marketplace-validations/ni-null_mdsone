@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "build_date": "2026.01.01",
+    "generated_at_utc": "2026-03-21T06:04:33.156Z"
+  },
+  "scenarios": {
+    "single-file": {
+      "single.html": "56a20e65d4f3e2eec315a2bb9f3a10afe61dcab59a9706443933cc3c9085fe35"
+    },
+    "merge-files": {
+      "merge-files.html": "0d2db4f87d851bfaa8637de168666e78b8ba6f6de58025fe81b4e5d61d3e04e0"
+    },
+    "merge-folder": {
+      "merge-folder.html": "120585ec934e433b2b658a7d5265741291178314cfd3122370d8e2e62c78b545"
+    },
+    "i18n-merge": {
+      "i18n.html": "3e4880e2a5c7d46c8a75e92060138fca981b98f4903b6efc43d14edab978e0c6"
+    },
+    "batch-folder": {
+      "a.html": "0b9c3ba1ef1d4fb4ac2c72c0f2b03ff138608b617865f19ab1106e807d736734",
+      "b.html": "ecb2e26b7426a5bf5ea3a00e591ae7fba8345de9e0a94f3833649f7207a0a54a"
+    }
+  }
+}

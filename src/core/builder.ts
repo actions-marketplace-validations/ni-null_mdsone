@@ -92,7 +92,7 @@ export function generateDataScript(params: BuildParams): string {
   if (config.i18n_mode && params.multiDocuments && params.multiI18nStrings) {
     // ── 多語模式 ──
     const locales = Object.keys(params.multiDocuments);
-    let defaultLocale = config.default_locale || config.locale || locales[0] || "en";
+    let defaultLocale = config.default_locale || locales[0] || "en";
     if (defaultLocale && !locales.includes(defaultLocale) && locales.length > 0) {
       defaultLocale = locales[0];
     }
@@ -141,7 +141,7 @@ export function buildHtml(params: BuildParams): string {
   let htmlLang = "en";
   if (config.i18n_mode && params.multiI18nStrings) {
     const locales = Object.keys(params.multiDocuments ?? {});
-    const defLocale = config.default_locale || config.locale || locales[0] || "en";
+    const defLocale = config.default_locale || locales[0] || "en";
     const localeKey = locales.includes(defLocale) ? defLocale : locales[0] ?? "en";
     htmlLang = params.multiI18nStrings[localeKey]?.["html_lang"] ?? "en";
   } else if (params.i18nStrings) {

@@ -97,7 +97,7 @@ Files in `assets/` are inlined automatically:
 | `{EXTRA_CSS}` | Inlined extra CSS from `assets/` |
 | `{LIB_JS}` | Plugin JS bundle |
 | `{EXTRA_JS}` | Inlined extra JS from `assets/` |
-| `{MDSONE_DATA_SCRIPT}` | `window.mdsone_DATA` payload |
+| `{MDSONE_DATA_SCRIPT}` | JSON payload script (`<script id="mdsone-data" type="application/json">`) |
 
 ## Custom Template Quick Start
 

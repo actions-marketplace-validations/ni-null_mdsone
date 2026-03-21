@@ -20,9 +20,8 @@ export const DEFAULT_CONFIG: Config = {
   site_title: "Documentation",
   theme_mode: "light",
   // i18n
-  locale: "en",
   i18n_mode: false,
-  default_locale: "",
+  default_locale: "en",
   template_variant: "default",
 };
 
