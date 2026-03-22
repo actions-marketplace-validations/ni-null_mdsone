@@ -705,9 +705,9 @@ async function runBatchMode(
   logger.info(`Batch complete: ${successCount}/${batchFiles.length} file(s) → ${outputPlan.outputDir}`);
 }
 
-export async function runCli(logger: CliPipelineLogger): Promise<void> {
+export async function runCli(logger: CliPipelineLogger, argv?: string[]): Promise<void> {
   const packageRoot = resolvePackageRoot();
-  const args = parseArgs();
+  const args = parseArgs(argv);
   const cliOverride = cliArgsToConfig(args);
   const toml = args.configPath
     ? await loadConfigFile(path.resolve(process.cwd(), args.configPath))

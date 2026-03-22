@@ -157,7 +157,7 @@ export function parseArgs(argv?: string[]): CliArgs {
 
   program
     .name("mdsone")
-    .description("mdsone — Convert Markdown to self-contained HTML")
+    .description("mdsone — Convert Markdown to self-contained HTML (MCP: use `mdsone mcp`)")
     .version(VERSION, "-v, --version", "Display version")
     .argument("[inputs...]", "Input: single file, multiple files, or single folder path")
     // Output

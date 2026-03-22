@@ -15,6 +15,7 @@ export default defineConfig([
     sourcemap: true,
     // Keep runtime deps external.
     external: [
+      "@modelcontextprotocol/sdk",
       "@iarna/toml",
       "commander",
       "html-minifier-terser",
@@ -22,6 +23,7 @@ export default defineConfig([
       "markdown-it",
       "markdown-it-attrs",
       "markdown-it-katex",
+      "zod",
     ],
   },
   // Core library entry (pure functions, zero I/O)
@@ -36,11 +38,13 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     external: [
+      "@modelcontextprotocol/sdk",
       "html-minifier-terser",
       "katex",
       "markdown-it",
       "markdown-it-attrs",
       "markdown-it-katex",
+      "zod",
     ],
   },
   // Node adapter entry (I/O layer)
@@ -55,6 +59,7 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     external: [
+      "@modelcontextprotocol/sdk",
       "@iarna/toml",
       "commander",
       "html-minifier-terser",
@@ -62,6 +67,7 @@ export default defineConfig([
       "markdown-it",
       "markdown-it-attrs",
       "markdown-it-katex",
+      "zod",
     ],
   },
   // Plugin entries (each plugin owns its own public API)
@@ -83,6 +89,7 @@ export default defineConfig([
     dts: true,
     sourcemap: true,
     external: [
+      "@modelcontextprotocol/sdk",
       "@shikijs/markdown-exit",
       "@shikijs/markdown-exit/core",
       "cheerio",
@@ -94,6 +101,7 @@ export default defineConfig([
       "markdown-it",
       "markdown-it-attrs",
       "markdown-it-katex",
+      "zod",
     ],
   },
 ]);
