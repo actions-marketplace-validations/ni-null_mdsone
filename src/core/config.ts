@@ -53,6 +53,15 @@ export function mergeConfigs(
   if (plugins) merged.plugins = plugins;
   else delete merged.plugins;
 
+  const markdown = mergeMarkdownSettings(
+    defaults.markdown,
+    toml.markdown,
+    env.markdown,
+    cli.markdown,
+  );
+  if (markdown) merged.markdown = markdown;
+  else delete merged.markdown;
+
   return merged;
 }
 
@@ -85,6 +94,22 @@ function mergePluginSettings(
   return hasAny ? merged : undefined;
 }
 
+function mergeMarkdownSettings(
+  ...layers: Array<Config["markdown"] | undefined>
+): Config["markdown"] | undefined {
+  const merged: NonNullable<Config["markdown"]> = {};
+  let hasAny = false;
+  for (const layer of layers) {
+    if (!layer) continue;
+    hasAny = true;
+    if (layer.linkify !== undefined) merged.linkify = layer.linkify;
+    if (layer.typographer !== undefined) merged.typographer = layer.typographer;
+    if (layer.breaks !== undefined) merged.breaks = layer.breaks;
+    if (layer.xhtml_out !== undefined) merged.xhtml_out = layer.xhtml_out;
+  }
+  return hasAny ? merged : undefined;
+}
+
 /**
  * 將 CLI args（CliArgs 格式）對映至 Partial<Config>。
  * 純函數，僅轉換型別，不讀環境或檔案。
@@ -107,6 +132,7 @@ export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   } else if (args.i18nMode) {
     out.i18n_mode = true;
   }
+  if (args.markdown) out.markdown = args.markdown;
   // Plugin CLI overrides
   if (args.pluginOverrides) Object.assign(out, args.pluginOverrides);
   return out;

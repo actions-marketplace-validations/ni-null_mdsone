@@ -11,9 +11,16 @@
     {EXTRA_CSS}
   </head>
   <body>
+    {SVG_SPRITE}
     <div class="container">
       <div class="mobile-topbar" id="mobile-topbar">
-        <button class="mobile-menu-btn" id="mobile-menu-btn">&#9776;</button>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">
+          <span class="icon-svg" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <use href="#icon-menu" xlink:href="#icon-menu"></use>
+            </svg>
+          </span>
+        </button>
         <span class="mobile-topbar-title">{TITLE}</span>
       </div>
 
@@ -26,13 +33,19 @@
         </div>
 
         <div class="sidebar-controls">
-          <button class="menu-btn" id="menu-btn" title="">&#9776;</button>
+          <button class="menu-btn" id="menu-btn" title="" aria-label="Toggle menu">
+            <span class="icon-svg" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <use href="#icon-menu" xlink:href="#icon-menu"></use>
+              </svg>
+            </span>
+          </button>
           <div class="lang-switcher" id="lang-switcher"></div>
           <button class="font-size-toggle" id="font-size-toggle" title="">
             <span class="font-size-label" id="font-size-label"></span>
           </button>
           <button class="theme-toggle" id="theme-toggle" title="">
-            <span class="theme-icon" id="theme-icon">&#9789;</span>
+            <span class="theme-icon" id="theme-icon"></span>
           </button>
         </div>
 
@@ -64,6 +77,9 @@
         const config = data.config
         const TOC_ENABLED = true
         const TOC_LEVELS = [2, 3]
+        const SUN_ICON_SVG = '<svg viewBox="0 0 24 24" focusable="false"><use href="#icon-sun" xlink:href="#icon-sun"></use></svg>'
+        const MOON_ICON_SVG = '<svg viewBox="0 0 24 24" focusable="false"><use href="#icon-moon" xlink:href="#icon-moon"></use></svg>'
+        const GLOBE_ICON_SVG = '<svg viewBox="0 0 24 24" focusable="false"><use href="#icon-globe" xlink:href="#icon-globe"></use></svg>'
 
         const variantName = config.template_variant || "default"
         const variantKeyPalette = (
@@ -123,7 +139,9 @@
         function refreshLocaleSwitcherLabels() {
           if (langTrigger && activeLocale) {
             const currentLocaleName = getLocaleDisplayName(activeLocale)
-            langTrigger.textContent = currentLocaleName
+            const textEl = langTrigger.querySelector(".lang-trigger-text")
+            if (textEl) textEl.textContent = currentLocaleName
+            else langTrigger.textContent = currentLocaleName
             langTrigger.setAttribute("aria-label", currentLocaleName)
             langTrigger.title = currentLocaleName
           }
@@ -138,8 +156,6 @@
         function closeSidebarOnMobile() {
           if (window.innerWidth <= 768 && sidebar.classList.contains("active")) {
             sidebar.classList.remove("active")
-            if (menuBtn) menuBtn.textContent = MENU_ICON
-            if (mobileMenuBtn) mobileMenuBtn.textContent = MENU_ICON
           }
         }
 
@@ -191,6 +207,39 @@
           if (activeNav && activeNav.children.length > 0) activeNav.classList.add("open")
         }
 
+        function enhanceTables(root) {
+          if (!root) return
+          const tables = root.querySelectorAll("table")
+          tables.forEach((table) => {
+            if (!(table instanceof HTMLTableElement)) return
+
+            const parent = table.parentElement
+            if (!parent || !parent.classList.contains("table-scroll-wrapper")) {
+              const wrapper = document.createElement("div")
+              wrapper.className = "table-scroll-wrapper"
+              table.parentNode.insertBefore(wrapper, table)
+              wrapper.appendChild(table)
+            }
+
+            const headerRow = table.tHead?.rows?.[0] || table.querySelector("tr")
+            const headers = headerRow
+              ? Array.from(headerRow.cells).map((cell) => (cell.textContent || "").trim())
+              : []
+
+            const bodyRows = table.tBodies.length > 0
+              ? Array.from(table.tBodies).flatMap((tbody) => Array.from(tbody.rows))
+              : Array.from(table.rows).slice(headerRow ? 1 : 0)
+
+            bodyRows.forEach((row) => {
+              Array.from(row.cells).forEach((cell, idx) => {
+                if (cell.tagName !== "TD") return
+                const label = headers[idx] || `Column ${idx + 1}`
+                cell.setAttribute("data-label", label)
+              })
+            })
+          })
+        }
+
         function renderDocs(docs, i18n) {
           tabList.innerHTML = ""
           contentArea.innerHTML = ""
@@ -219,6 +268,7 @@
             content.className = "tab-content" + (idx === 0 ? " active" : "")
             content.setAttribute("data-tab", doc.id)
             content.innerHTML = doc.html
+            enhanceTables(content)
             contentArea.appendChild(content)
           })
 
@@ -278,6 +328,7 @@
             langTrigger.type = "button"
             langTrigger.className = "lang-trigger"
             langTrigger.id = "lang-trigger"
+            langTrigger.innerHTML = `<span class="lang-trigger-icon" aria-hidden="true">${GLOBE_ICON_SVG}</span><span class="lang-trigger-text"></span>`
 
             langMenu = document.createElement("div")
             langMenu.className = "lang-menu"
@@ -297,7 +348,8 @@
             })
 
             const initialLocaleName = getLocaleDisplayName(activeLocale)
-            langTrigger.textContent = initialLocaleName
+            const triggerText = langTrigger.querySelector(".lang-trigger-text")
+            if (triggerText) triggerText.textContent = initialLocaleName
             langTrigger.setAttribute("aria-label", initialLocaleName)
             langTrigger.title = initialLocaleName
             langTrigger.addEventListener("click", (e) => {
@@ -317,21 +369,15 @@
           }
         }
 
-        const MENU_ICON = "\u2630"
-
         if (menuBtn) {
           menuBtn.addEventListener("click", () => {
             sidebar.classList.toggle("active")
-            menuBtn.textContent = MENU_ICON
-            if (mobileMenuBtn) mobileMenuBtn.textContent = MENU_ICON
           })
         }
 
         if (mobileMenuBtn) {
           mobileMenuBtn.addEventListener("click", () => {
             sidebar.classList.toggle("active")
-            mobileMenuBtn.textContent = MENU_ICON
-            if (menuBtn) menuBtn.textContent = MENU_ICON
           })
         }
 
@@ -376,10 +422,10 @@
         function updateThemeUI() {
           if (isDark) {
             htmlEl.setAttribute("data-theme", "dark")
-            themeIcon.textContent = "\u263E"
+            if (themeIcon) themeIcon.innerHTML = MOON_ICON_SVG
           } else {
             htmlEl.setAttribute("data-theme", "light")
-            themeIcon.textContent = "\u2600"
+            if (themeIcon) themeIcon.innerHTML = SUN_ICON_SVG
           }
           const variantName = config.template_variant || "default"
           const variantKeyPalette = (

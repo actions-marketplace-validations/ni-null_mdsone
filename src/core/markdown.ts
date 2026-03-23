@@ -13,6 +13,7 @@ import markdownItAnchor from "markdown-it-anchor";
 import markdownItFootnote from "markdown-it-footnote";
 // @ts-ignore — markdown-it-task-lists 無官方型別宣告
 import markdownItTaskLists from "markdown-it-task-lists";
+import type { Config } from "./types.js";
 
 /** `[locale]` 目錄名稱的正則（例如 [en]、[zh-TW]） */
 export const LOCALE_DIR_PATTERN = /^\[(.+)\]$/;
@@ -83,13 +84,17 @@ export function sanitizeTableCells(html: string): string {
  *
  * @param fileIndex - 用於產生跨檔案唯一的 heading id（預設 0）
  */
-function createMarkdownIt(extensions: string[], fileIndex: number): MarkdownIt {
+function createMarkdownIt(
+  extensions: string[],
+  fileIndex: number,
+  markdownOptions?: Config["markdown"],
+): MarkdownIt {
   const opts: MarkdownItOptions = {
     html: true,
-    xhtmlOut: false,
-    breaks: extensions.includes("nl2br"),
-    linkify: false,
-    typographer: false,
+    xhtmlOut: markdownOptions?.xhtml_out ?? false,
+    breaks: markdownOptions?.breaks ?? extensions.includes("nl2br"),
+    linkify: markdownOptions?.linkify ?? false,
+    typographer: markdownOptions?.typographer ?? false,
   };
   const md = new MarkdownIt(opts);
   if (extensions.includes("attr_list")) {
@@ -146,8 +151,9 @@ export function markdownToHtml(
   extensions: string[],
   fileIndex = 0,
   extendMarkdown?: (md: MarkdownIt) => void,
+  markdownOptions?: Config["markdown"],
 ): string {
-  const md = createMarkdownIt(extensions, fileIndex);
+  const md = createMarkdownIt(extensions, fileIndex, markdownOptions);
   if (extendMarkdown) {
     extendMarkdown(md);
   }
@@ -169,8 +175,9 @@ export async function markdownToHtmlAsync(
   extensions: string[],
   fileIndex = 0,
   extendMarkdown?: (md: MarkdownIt) => void | Promise<void>,
+  markdownOptions?: Config["markdown"],
 ): Promise<string> {
-  const md = createMarkdownIt(extensions, fileIndex);
+  const md = createMarkdownIt(extensions, fileIndex, markdownOptions);
   if (extendMarkdown) {
     await extendMarkdown(md);
   }

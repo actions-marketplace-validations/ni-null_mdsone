@@ -17,6 +17,10 @@ mdsone <inputs...> [options]
 | `-t, --template <NAME|PATH[@VARIANT]>` | Template name/path with optional variant | `-t normal@warm-cream` |
 | `--title <TEXT>` | Site title shown in output HTML | `--title "My Docs"` |
 | `-i, --i18n-mode [CODE]` | Enable i18n mode. Optional default locale with `--i18n-mode=CODE` | `-i=zh-TW` |
+| `--md-linkify [on|off]` | Markdown-it `linkify`; bare flag means `on` | `--md-linkify`, `--md-linkify=off` |
+| `--md-typographer [on|off]` | Markdown-it `typographer`; bare flag means `on` | `--md-typographer=off` |
+| `--md-breaks [on|off]` | Markdown-it `breaks`; bare flag means `on` | `--md-breaks` |
+| `--md-xhtml-out [on|off]` | Markdown-it `xhtmlOut`; bare flag means `on` | `--md-xhtml-out=off` |
 | `-c, --config <PATH>` | Specify `config.toml` path | `-c ./config.toml` |
 
 ## Plugin Options
@@ -47,6 +51,10 @@ For these options, use `=` when passing values:
 - `--code-copy=cmd`
 - `--code-highlight=off`
 - `--code-line-number=off`
+- `--md-linkify=off`
+- `--md-typographer=off`
+- `--md-breaks=off`
+- `--md-xhtml-out=off`
 
 Space form like `--code-copy cmd` is rejected intentionally.
 
@@ -76,6 +84,10 @@ i18n mode requires a single folder input with `[locale]` subfolders and uses mer
 | Default locale | `-i=CODE, --i18n-mode=CODE` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
 | Build date | - | `BUILD_DATE` | `[build] build_date` |
 | Markdown extensions | - | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
+| Markdown linkify | `--md-linkify=...` | `MARKDOWN_LINKIFY` | `[markdown] linkify` |
+| Markdown typographer | `--md-typographer=...` | `MARKDOWN_TYPOGRAPHER` | `[markdown] typographer` |
+| Markdown breaks | `--md-breaks=...` | `MARKDOWN_BREAKS` | `[markdown] breaks` |
+| Markdown XHTML output | `--md-xhtml-out=...` | `MARKDOWN_XHTML_OUT` | `[markdown] xhtml_out` |
 | Image embed | `--img-embed=...` | `IMG_EMBED` | `[plugins.image] embed` |
 | Image width | `--img-max-width` | `IMG_MAX_WIDTH` | `[plugins.image] max_width` |
 | Image compression | `--img-compress` | `IMG_COMPRESS` | `[plugins.image] compress` |

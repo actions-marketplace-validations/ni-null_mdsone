@@ -438,6 +438,7 @@ async function renderMarkdownDocument(
       markdownText,
       templateData: runtime.templateData,
     }),
+    runtime.config.markdown,
   );
   return await runtime.pluginManager.processHtml(
     html,

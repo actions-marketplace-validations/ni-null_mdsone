@@ -13,6 +13,12 @@ export interface Config {
   // build
   default_template: string;
   markdown_extensions: string[];
+  markdown?: {
+    linkify?: boolean;
+    typographer?: boolean;
+    breaks?: boolean;
+    xhtml_out?: boolean;
+  };
   build_date: string;
   // site
   site_title: string;
@@ -38,6 +44,12 @@ export interface CliArgs {
   siteTitle?: string;
   i18nMode?: boolean | string;
   configPath?: string;
+  markdown?: {
+    linkify?: boolean;
+    typographer?: boolean;
+    breaks?: boolean;
+    xhtml_out?: boolean;
+  };
   pluginOverrides?: Partial<Config>;
   version?: boolean;
 }
@@ -96,6 +108,8 @@ export interface TemplateData {
   css: string;
   /** Raw content of template.html containing placeholders. */
   template: string;
+  /** Inline SVG sprite generated from template assets/svg/*.svg. */
+  assets_svg_sprite?: string;
   /** Extra CSS files loaded from template assets/. */
   assets_css: Array<{ filename: string; content: string }>;
   /** Extra JS files loaded from template assets/. */

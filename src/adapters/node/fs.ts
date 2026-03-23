@@ -26,6 +26,87 @@ function parseShikiSettings(raw: unknown): { dark?: string; light?: string; auto
   return { dark, light, auto_detect: autoDetect };
 }
 
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function sanitizeSvgInner(content: string): string {
+  let result = content;
+  result = result.replace(/<script[\s\S]*?<\/script>/gi, "");
+  result = result.replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  result = result.replace(/\s(?:xlink:href|href)\s*=\s*("javascript:[^"]*"|'javascript:[^']*')/gi, "");
+  return result;
+}
+
+function toIconId(filename: string): string {
+  const base = filename.replace(/\.svg$/i, "").trim().toLowerCase();
+  const slug = base.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return `icon-${slug || "asset"}`;
+}
+
+function parseSvgSymbol(filename: string, rawSvg: string): { id: string; symbol: string } | null {
+  const match = rawSvg.match(/<svg\b([^>]*)>([\s\S]*?)<\/svg>/i);
+  if (!match) return null;
+  const attrs = match[1] ?? "";
+  const innerRaw = match[2] ?? "";
+  const viewBoxMatch = attrs.match(/viewBox\s*=\s*("([^"]*)"|'([^']*)')/i);
+  const viewBox = (viewBoxMatch?.[2] ?? viewBoxMatch?.[3] ?? "").trim();
+  if (!viewBox) {
+    console.warn(`[WARN] SVG asset '${filename}' has no viewBox. Skipped.`);
+    return null;
+  }
+  const cleanedInner = sanitizeSvgInner(innerRaw).trim();
+  if (!cleanedInner) return null;
+  const id = toIconId(filename);
+  const safeViewBox = escapeHtmlAttr(viewBox);
+  const symbol = `<symbol id="${id}" viewBox="${safeViewBox}">\n${cleanedInner}\n</symbol>`;
+  return { id, symbol };
+}
+
+async function buildSvgSprite(assetsSvgDir: string): Promise<string> {
+  if (!fsSync.existsSync(assetsSvgDir) || !fsSync.statSync(assetsSvgDir).isDirectory()) {
+    return "";
+  }
+  const svgFiles = fsSync.readdirSync(assetsSvgDir)
+    .filter((f) => f.toLowerCase().endsWith(".svg"))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  if (svgFiles.length === 0) return "";
+
+  const symbols: string[] = [];
+  const seenIds = new Set<string>();
+
+  for (const filename of svgFiles) {
+    const fullPath = path.join(assetsSvgDir, filename);
+    try {
+      const raw = await readTextFile(fullPath);
+      const parsed = parseSvgSymbol(filename, raw);
+      if (!parsed) {
+        console.warn(`[WARN] Failed to parse SVG asset '${filename}'.`);
+        continue;
+      }
+      if (seenIds.has(parsed.id)) {
+        console.warn(`[WARN] Duplicate SVG icon id '${parsed.id}' from '${filename}'. Skipped.`);
+        continue;
+      }
+      seenIds.add(parsed.id);
+      symbols.push(parsed.symbol);
+    } catch (e) {
+      console.warn(`[WARN] Failed to read SVG asset '${filename}': ${e}`);
+    }
+  }
+
+  if (symbols.length === 0) return "";
+  return [
+    '<svg id="mdsone-svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">',
+    ...symbols,
+    "</svg>",
+  ].join("\n");
+}
+
 /** Read UTF-8 text and strip BOM if present. */
 export async function readTextFile(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath, "utf-8");
@@ -237,10 +318,13 @@ export async function loadTemplateFiles(
 
   // Load and sort assets files from template assets/
   const assetsDir = path.join(templateDir, "assets");
+  const assetsSvgDir = path.join(assetsDir, "svg");
   const assets_css: Array<{ filename: string; content: string }> = [];
   const assets_js: Array<{ filename: string; content: string }> = [];
+  let assets_svg_sprite = "";
 
   if (fsSync.existsSync(assetsDir)) {
+    assets_svg_sprite = await buildSvgSprite(assetsSvgDir);
     const entries = fsSync.readdirSync(assetsDir);
     const cssFiles = entries.filter(f => f.endsWith(".css")).sort((a, b) =>
       a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
@@ -268,6 +352,7 @@ export async function loadTemplateFiles(
   return {
     css,
     template,
+    assets_svg_sprite,
     assets_css,
     assets_js,
     version,

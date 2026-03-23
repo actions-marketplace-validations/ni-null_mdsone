@@ -247,6 +247,7 @@ async function getMarkdownShikiPlugin(themeDark: string, themeLight: string): Pr
       defaultLanguage: "text",
       fallbackLanguage: "text",
       trimEndingNewline: true,
+      mergeSameStyleTokens: true,
     });
 
     return (md: MarkdownIt): void => {

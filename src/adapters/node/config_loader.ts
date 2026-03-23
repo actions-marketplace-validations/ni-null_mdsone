@@ -33,6 +33,14 @@ function parseList(val: string | undefined, fallback: string[]): string[] {
   return val.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
+function parseMarkdownBool(val: string | undefined): boolean | undefined {
+  if (val === undefined || val === null) return undefined;
+  const v = val.trim().toLowerCase();
+  if (v === "true" || v === "on") return true;
+  if (v === "false" || v === "off") return false;
+  return undefined;
+}
+
 // ── 從環境變數提取 Partial<Config>（對應 Python _s/_b/_l 系列）──
 
 export function envToConfig(): Partial<Config> {
@@ -54,6 +62,20 @@ export function envToConfig(): Partial<Config> {
   if (e["MARKDOWN_EXTENSIONS"]) {
     out.markdown_extensions = parseList(e["MARKDOWN_EXTENSIONS"], DEFAULT_CONFIG.markdown_extensions);
   }
+  const markdown = {
+    linkify: parseMarkdownBool(e["MARKDOWN_LINKIFY"]),
+    typographer: parseMarkdownBool(e["MARKDOWN_TYPOGRAPHER"]),
+    breaks: parseMarkdownBool(e["MARKDOWN_BREAKS"]),
+    xhtml_out: parseMarkdownBool(e["MARKDOWN_XHTML_OUT"]),
+  };
+  if (
+    markdown.linkify !== undefined ||
+    markdown.typographer !== undefined ||
+    markdown.breaks !== undefined ||
+    markdown.xhtml_out !== undefined
+  ) {
+    out.markdown = markdown;
+  }
   return out;
 }
 
@@ -64,6 +86,7 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   const build = (raw["build"] ?? {}) as Record<string, unknown>;
   const site = (raw["site"] ?? {}) as Record<string, unknown>;
   const i18n = (raw["i18n"] ?? {}) as Record<string, unknown>;
+  const markdown = (raw["markdown"] ?? {}) as Record<string, unknown>;
   const plugins = (raw["plugins"] ?? {}) as Record<string, unknown>;
 
   const out: Partial<Config> = {};
@@ -90,6 +113,20 @@ function tomlToConfig(raw: Record<string, unknown>): Partial<Config> {
   }
   if (b(i18n["mode"]) !== undefined) out.i18n_mode = b(i18n["mode"]);
   if (s(i18n["default_locale"])) out.default_locale = s(i18n["default_locale"]);
+
+  const markdownConfig: NonNullable<Config["markdown"]> = {};
+  if (b(markdown["linkify"]) !== undefined) markdownConfig.linkify = b(markdown["linkify"]);
+  if (b(markdown["typographer"]) !== undefined) markdownConfig.typographer = b(markdown["typographer"]);
+  if (b(markdown["breaks"]) !== undefined) markdownConfig.breaks = b(markdown["breaks"]);
+  if (b(markdown["xhtml_out"]) !== undefined) markdownConfig.xhtml_out = b(markdown["xhtml_out"]);
+  if (
+    markdownConfig.linkify !== undefined ||
+    markdownConfig.typographer !== undefined ||
+    markdownConfig.breaks !== undefined ||
+    markdownConfig.xhtml_out !== undefined
+  ) {
+    out.markdown = markdownConfig;
+  }
 
   const order = (plugins["order"] ?? undefined) as unknown;
   if (Array.isArray(order)) {

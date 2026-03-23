@@ -28,6 +28,12 @@ locale = "en"
 mode = false
 default_locale = ""
 
+[markdown]
+linkify = false
+typographer = false
+breaks = true
+xhtml_out = false
+
 [plugins]
 order = ["image", "katex", "code-highlight", "code-copy", "code-line-number", "minify"]
 "code-copy" = { enable = true, mode = "off" }
@@ -42,9 +48,10 @@ minify = { enable = false }
 
 - No `.env` auto-loading. Runtime order is: CLI > ENV > TOML > defaults.
 - Footnote syntax is enabled in core by default (`markdown-it-footnote`) and is not controlled by `markdown_extensions`.
+- `[markdown]` options map to markdown-it booleans (`linkify`, `typographer`, `breaks`, `xhtml_out`).
+- CLI can override these with `--md-linkify`, `--md-typographer`, `--md-breaks`, `--md-xhtml-out` (`on/off`, bare flag = `on`).
 - KaTeX is auto-enabled by default. Set `katex.enable = false` (or `--katex=off`) to disable completely.
 - Even when enabled, KaTeX CSS/fonts are injected only when rendered formula markup exists.
 - Shiki theme selection is controlled by template variant (`template.config.json`), not by `config.toml`.
 - `plugins.order` controls plugin execution order. `minify` is still forced to run last for output-stage processing.
 - `--template` supports `name@variant` and direct template folder path.
-

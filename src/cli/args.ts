@@ -30,6 +30,7 @@ function readPkgVersion(): string {
 }
 
 const VERSION = readPkgVersion();
+const ON_OFF_PATTERN = /^(on|off)$/i;
 
 function findI18nModeSpaceArg(args: string[]): string | null {
   const localeLike = /^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]+)*$/;
@@ -90,6 +91,28 @@ function findImgEmbedSpaceArg(args: string[]): string | null {
     if (/^(off|base64)$/i.test(next)) return next;
   }
   return null;
+}
+
+function findMarkdownModeSpaceArg(args: string[], flag: string): string | null {
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] !== flag) continue;
+    const next = args[i + 1];
+    if (!next) continue;
+    if (next.startsWith("-")) continue;
+    if (ON_OFF_PATTERN.test(next)) return next;
+  }
+  return null;
+}
+
+function normalizeBareMarkdownModeFlag(args: string[], flag: string): string[] {
+  return args.map((arg) => (arg === flag ? `${flag}=on` : arg));
+}
+
+function parseOnOffMode(raw: unknown, flagName: string): boolean {
+  const value = String(raw ?? "").trim().toLowerCase();
+  if (value === "on") return true;
+  if (value === "off") return false;
+  throw new Error(`Invalid value for --${flagName}. Use on/off.`);
 }
 
 function formatGroupedHelp(
@@ -169,6 +192,27 @@ export function parseArgs(argv?: string[]): CliArgs {
     .option("--title <TEXT>", "Documentation site title (default: Documentation)")
     // Internationalization
     .option("-i, --i18n-mode [CODE]", "Enable multi-language mode; optional CODE via --i18n-mode=CODE (e.g. --i18n-mode=zh-TW, -i=zh-TW)")
+    // Markdown-it options
+    .option(
+      "--md-linkify <on|off>",
+      "Markdown-it linkify (use --md-linkify as shorthand for --md-linkify=on)",
+      (value: string) => parseOnOffMode(value, "md-linkify"),
+    )
+    .option(
+      "--md-typographer <on|off>",
+      "Markdown-it typographer (use --md-typographer as shorthand for --md-typographer=on)",
+      (value: string) => parseOnOffMode(value, "md-typographer"),
+    )
+    .option(
+      "--md-breaks <on|off>",
+      "Markdown-it breaks (use --md-breaks as shorthand for --md-breaks=on)",
+      (value: string) => parseOnOffMode(value, "md-breaks"),
+    )
+    .option(
+      "--md-xhtml-out <on|off>",
+      "Markdown-it xhtmlOut (use --md-xhtml-out as shorthand for --md-xhtml-out=on)",
+      (value: string) => parseOnOffMode(value, "md-xhtml-out"),
+    )
     // Config
     .option("-c, --config <PATH>", "Specify config.toml path")
     .allowUnknownOption(false);
@@ -226,8 +270,49 @@ export function parseArgs(argv?: string[]): CliArgs {
       { exitCode: 1 },
     );
   }
+  const badMdLinkifyMode = findMarkdownModeSpaceArg(parseInput, "--md-linkify");
+  if (badMdLinkifyMode) {
+    program.error(
+      `Invalid markdown syntax: '--md-linkify ${badMdLinkifyMode}'. Use '--md-linkify=${badMdLinkifyMode}' instead.`,
+      { exitCode: 1 },
+    );
+  }
+  const badMdTypographerMode = findMarkdownModeSpaceArg(parseInput, "--md-typographer");
+  if (badMdTypographerMode) {
+    program.error(
+      `Invalid markdown syntax: '--md-typographer ${badMdTypographerMode}'. Use '--md-typographer=${badMdTypographerMode}' instead.`,
+      { exitCode: 1 },
+    );
+  }
+  const badMdBreaksMode = findMarkdownModeSpaceArg(parseInput, "--md-breaks");
+  if (badMdBreaksMode) {
+    program.error(
+      `Invalid markdown syntax: '--md-breaks ${badMdBreaksMode}'. Use '--md-breaks=${badMdBreaksMode}' instead.`,
+      { exitCode: 1 },
+    );
+  }
+  const badMdXhtmlOutMode = findMarkdownModeSpaceArg(parseInput, "--md-xhtml-out");
+  if (badMdXhtmlOutMode) {
+    program.error(
+      `Invalid markdown syntax: '--md-xhtml-out ${badMdXhtmlOutMode}'. Use '--md-xhtml-out=${badMdXhtmlOutMode}' instead.`,
+      { exitCode: 1 },
+    );
+  }
 
-  program.parse(parseInput);
+  const normalizedParseInput = [
+    ...normalizeBareMarkdownModeFlag(
+      normalizeBareMarkdownModeFlag(
+        normalizeBareMarkdownModeFlag(
+          normalizeBareMarkdownModeFlag(parseInput, "--md-linkify"),
+          "--md-typographer",
+        ),
+        "--md-breaks",
+      ),
+      "--md-xhtml-out",
+    ),
+  ];
+
+  program.parse(normalizedParseInput);
   const opts = program.opts<Record<string, unknown>>();
   const typed = opts as {
     merge?: boolean;
@@ -237,6 +322,10 @@ export function parseArgs(argv?: string[]): CliArgs {
     title?: string;
     siteTitle?: string;
     i18nMode?: boolean | string;
+    mdLinkify?: boolean;
+    mdTypographer?: boolean;
+    mdBreaks?: boolean;
+    mdXhtmlOut?: boolean;
     config?: string;
     configPath?: string;
     version?: boolean;
@@ -247,6 +336,18 @@ export function parseArgs(argv?: string[]): CliArgs {
   for (const plugin of builtInPlugins) {
     plugin.cliToConfig?.(opts, pluginOverrides);
   }
+  const markdown = {
+    linkify: typed.mdLinkify,
+    typographer: typed.mdTypographer,
+    breaks: typed.mdBreaks,
+    xhtml_out: typed.mdXhtmlOut,
+  };
+  const hasMarkdownOverrides = (
+    markdown.linkify !== undefined ||
+    markdown.typographer !== undefined ||
+    markdown.breaks !== undefined ||
+    markdown.xhtml_out !== undefined
+  );
 
   return {
     inputs,
@@ -256,9 +357,9 @@ export function parseArgs(argv?: string[]): CliArgs {
     template: typed.template,
     siteTitle: typed.title ?? typed.siteTitle,
     i18nMode: typed.i18nMode,
+    markdown: hasMarkdownOverrides ? markdown : undefined,
     configPath: typed.config,
     pluginOverrides,
     version: typed.version,
   };
 }
-

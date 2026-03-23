@@ -155,6 +155,7 @@ export function buildHtml(params: BuildParams): string {
     TITLE: config.site_title,
     LANG: htmlLang,
     CSS_CONTENT: templateData.css,
+    SVG_SPRITE: templateData.assets_svg_sprite ?? "",
     LIB_CSS: params.libCss ?? "",
     LIB_JS: params.libJs ?? "",
     EXTRA_CSS: cssTagsHtml,

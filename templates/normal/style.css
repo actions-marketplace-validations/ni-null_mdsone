@@ -1007,6 +1007,8 @@ body {
   border-right: 1px solid var(--table-border);
   border-bottom: 1px solid var(--table-border);
   text-align: left;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .tab-content td {
@@ -1016,6 +1018,8 @@ body {
   border-bottom: 1px solid var(--table-border);
   color: var(--text-secondary);
   font-size: calc(14.5px * var(--font-scale));
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .tab-content th:last-child,
@@ -1029,6 +1033,21 @@ body {
 
 .tab-content tr:hover td {
   background: var(--bg-hover);
+}
+
+.table-scroll-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 26px;
+  border-radius: 8px;
+}
+
+.table-scroll-wrapper > table {
+  margin-bottom: 0;
+  min-width: 100%;
 }
 
 
@@ -1074,13 +1093,33 @@ body {
 }
 
 .theme-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  line-height: 1;
+  line-height: 0;
+}
+
+.icon-svg {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.theme-icon svg,
+.icon-svg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .theme-label {
@@ -1098,8 +1137,10 @@ body {
   border-radius: 10px;
   height: 32px;
   min-height: 32px;
-  min-width: 60px;
-  padding: 0 8px;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  padding: 0 6px;
   cursor: pointer;
   font-family: "IBM Plex Sans", "Noto Sans", "Segoe UI", sans-serif;
   font-size: var(--fs-ui);
@@ -1132,7 +1173,11 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.6ch;
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  letter-spacing: 0;
+  font-variant-ligatures: none;
   white-space: nowrap;
 }
 
@@ -1192,6 +1237,29 @@ body {
   text-overflow: ellipsis;
   transition: color 0.2s ease, background-color 0.2s ease;
   outline: none;
+  gap: 8px;
+}
+
+.lang-trigger-icon {
+  display: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  color: currentColor;
+}
+
+.lang-trigger-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.lang-trigger-text {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .lang-trigger:hover,
@@ -1293,6 +1361,12 @@ body {
   .content-area {
     padding: 20px;
   }
+
+  .table-scroll-wrapper > table {
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
+  }
   .sidebar-controls {
     gap: 6px;
     padding: 10px 12px 12px;
@@ -1367,6 +1441,68 @@ body {
 }
 
 @media (max-width: 420px) {
+  .table-scroll-wrapper {
+    overflow-x: visible;
+  }
+
+  .table-scroll-wrapper > table,
+  .table-scroll-wrapper > table thead,
+  .table-scroll-wrapper > table tbody,
+  .table-scroll-wrapper > table tr,
+  .table-scroll-wrapper > table th,
+  .table-scroll-wrapper > table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-scroll-wrapper > table {
+    border: 0;
+    background: transparent;
+    min-width: 0;
+  }
+
+  .table-scroll-wrapper > table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .table-scroll-wrapper > table tr {
+    border: 1px solid var(--table-border);
+    border-radius: 10px;
+    background: var(--bg-surface);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .table-scroll-wrapper > table td,
+  .table-scroll-wrapper > table th {
+    border: 0;
+    border-bottom: 1px solid var(--table-border);
+    min-width: 0;
+    padding: 8px 12px;
+  }
+
+  .table-scroll-wrapper > table tr > :last-child {
+    border-bottom: 0;
+  }
+
+  .table-scroll-wrapper > table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: calc(11px * var(--font-scale));
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
   .lang-switcher {
     flex: 0 0 32px;
     width: 32px;
@@ -1385,14 +1521,17 @@ body {
     padding: 0;
     justify-content: center;
     text-align: center;
-    font-size: 0;
+    gap: 0;
   }
 
-  .lang-trigger::before {
-    content: "\1F310";
-    font-size: 13px;
-    line-height: 1;
-    color: currentColor;
+  .lang-trigger-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lang-trigger-text {
+    display: none;
   }
 
   .lang-menu {

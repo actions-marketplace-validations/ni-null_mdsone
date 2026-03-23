@@ -99,17 +99,10 @@ Windows 設定檔：
 }
 ```
 
-## 4. 官方參考
+## 4. 官方參考資料
 
-- MCP 規範與介紹[^mcp]
-- Claude Code / Claude Desktop MCP[^anthropic]
-- Cursor MCP[^cursor]
-- GitHub Copilot MCP[^copilot]
-- Cline MCP 設定[^cline]
-
-[^mcp]: https://modelcontextprotocol.org/docs/getting-started/intro
-[^anthropic]: https://docs.anthropic.com/en/docs/claude-code/mcp
-[^cursor]: https://docs.cursor.com/en/context/model-context-protocol
-[^copilot]: https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp
-[^cline]: https://docs.cline.bot/mcp/configuring-mcp-servers
-
+- [Model Context Protocol 入門](https://modelcontextprotocol.org/docs/getting-started/intro)
+- [Claude Code / Claude Desktop MCP](https://docs.anthropic.com/en/docs/claude-code/mcp)
+- [Cursor MCP](https://docs.cursor.com/en/context/model-context-protocol)
+- [GitHub Copilot MCP](https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/extend-copilot-chat-with-mcp)
+- [Cline MCP 設定指南](https://docs.cline.bot/mcp/configuring-mcp-servers)
