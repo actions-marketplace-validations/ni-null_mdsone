@@ -22,6 +22,7 @@ const EMBED_ROOT_KATEX = "node_modules/katex/dist";
 const TMP_DIR = path.join(distDir, "_tmp");
 const WINDOWS_ICON_SOURCE = path.join(projectRoot, "logo", "mdsone.ico");
 const GENERATED_WINDOWS_ICON = path.join(generatedDir, "mdsone_icon.ico");
+const PLUGIN_ASSET_GENERATOR = path.join(projectRoot, "scripts", "generate-plugin-assets.mjs");
 
 const BUILD_TARGETS = [
   {
@@ -241,7 +242,20 @@ function compileTarget(target, outFile, windowsIconPath) {
   }
 }
 
+function runPluginAssetGenerator() {
+  if (!fs.existsSync(PLUGIN_ASSET_GENERATOR)) return;
+  const result = spawnSync("node", [PLUGIN_ASSET_GENERATOR], {
+    cwd: projectRoot,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
 function run() {
+  runPluginAssetGenerator();
   const logicalPaths = collectEmbeddedLogicalPaths();
   writeGeneratedAssetsModule(logicalPaths);
   const windowsIconPath = resolveWindowsIconPath();

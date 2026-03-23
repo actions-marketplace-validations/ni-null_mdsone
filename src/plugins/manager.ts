@@ -6,6 +6,36 @@
 import { load } from "cheerio";
 import type { Config, Plugin, PluginContext, ValidationIssue } from "../core/types.js";
 import { builtInPlugins } from "./index.js";
+import { listPluginAssets, resolvePluginAsset, type PluginAssetKind } from "./asset-registry.js";
+
+function wrapCssAssetTag(assetPath: string, content: string): string {
+  return `<style>/* ${assetPath} */\n${content}\n</style>`;
+}
+
+function wrapJsAssetTag(assetPath: string, content: string): string {
+  return `<script>/* ${assetPath} */\n${content}\n</script>`;
+}
+
+function collectFileAssets(
+  target: string[],
+  pluginName: string,
+  kind: PluginAssetKind,
+  filePaths: string[] | undefined,
+): void {
+  for (const filePath of filePaths ?? []) {
+    const resolved = resolvePluginAsset(pluginName, kind, filePath);
+    if (!resolved) {
+      console.warn(`[WARN] Plugin "${pluginName}" ${kind} asset not found: ${filePath}`);
+      continue;
+    }
+
+    if (kind === "css") {
+      target.push(wrapCssAssetTag(resolved.assetPath, resolved.content));
+    } else {
+      target.push(wrapJsAssetTag(resolved.assetPath, resolved.content));
+    }
+  }
+}
 
 /**
  * Sort plugins by `config.plugins.order`.
@@ -133,16 +163,24 @@ export class PluginManager {
       (config as unknown as { plugins?: { order?: string[] } }).plugins?.order,
     );
     for (const plugin of ordered) {
-      if (plugin.isEnabled(config) && plugin.getAssets) {
-        try {
-          const assets = await plugin.getAssets(config);
-          if (assets.css) cssParts.push(assets.css);
-          if (assets.js) jsParts.push(assets.js);
-        } catch (e) {
-          console.warn(
-            `[WARN] Plugin "${plugin.name}" getAssets failed: ${e instanceof Error ? e.message : e}`,
-          );
+      if (!plugin.isEnabled(config)) continue;
+
+      try {
+        // Default mode: when plugin does not implement getAssets(), load all assets/*
+        // from generated registry/filesystem by plugin name.
+        if (!plugin.getAssets) {
+          collectFileAssets(cssParts, plugin.name, "css", listPluginAssets(plugin.name, "css"));
+          collectFileAssets(jsParts, plugin.name, "js", listPluginAssets(plugin.name, "js"));
+          continue;
         }
+
+        const assets = await plugin.getAssets(config);
+        collectFileAssets(cssParts, plugin.name, "css", assets.cssFiles);
+        collectFileAssets(jsParts, plugin.name, "js", assets.jsFiles);
+      } catch (e) {
+        console.warn(
+          `[WARN] Plugin "${plugin.name}" getAssets failed: ${e instanceof Error ? e.message : e}`,
+        );
       }
     }
 

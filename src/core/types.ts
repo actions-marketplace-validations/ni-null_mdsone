@@ -189,10 +189,10 @@ export interface mdsoneConfigPayload {
 
 /** CSS/JS assets provided by a plugin. */
 export interface PluginAssets {
-  /** Inline style tag string(s). */
-  css?: string;
-  /** Inline script tag string(s). */
-  js?: string;
+  /** File-based CSS asset path(s), resolved by plugin asset registry then inlined as <style>. */
+  cssFiles?: string[];
+  /** File-based JS asset path(s), resolved by plugin asset registry then inlined as <script>. */
+  jsFiles?: string[];
 }
 
 /** Context passed to plugin DOM hook. */

@@ -5,9 +5,6 @@
 import { load, type CheerioAPI } from "cheerio";
 import type { Config, Plugin, PluginAssets } from "../../src/core/types.js";
 import { DEFAULT_CONFIG } from "../../src/core/config.js";
-import { getLineNumberStyle } from "./line-number.js";
-
-const LINE_NUMBER_CSS = `<style id="mdsone-line-number">\n${getLineNumberStyle()}\n</style>`;
 
 type LineNumberPluginConfig = { enable?: boolean };
 
@@ -76,7 +73,7 @@ export const codeLineNumberPlugin: Plugin = {
   },
 
   getAssets(): PluginAssets {
-    return { css: LINE_NUMBER_CSS };
+    return { cssFiles: ["line-number.css"] };
   },
 };
 

@@ -8,6 +8,9 @@ This folder contains the Bun-specific executable build flow for `mdsone`.
 bun run Bun/build.mjs
 ```
 
+The build script auto-runs plugin asset generation (`scripts/generate-plugin-assets.mjs`) before compile,
+so file-based plugin assets are embedded into runtime output without manual inline authoring.
+
 Optional environment variables:
 
 - `BUN_COMPILE_MINIFY=1`

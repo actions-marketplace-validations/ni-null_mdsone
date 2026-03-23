@@ -49,10 +49,11 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
+    "assets:gen": "node scripts/generate-plugin-assets.mjs",
+    "build": "npm run assets:gen && tsup",
     "dev": "tsx src/cli/main.ts",
     "start": "tsx src/cli/main.ts",
-    "bun:build:exe": "bun run Bun/build.mjs",
+    "bun:build:exe": "npm run assets:gen && bun run Bun/build.mjs",
     "typecheck": "tsc --noEmit",
     "regression": "npm run build && node scripts/regression.mjs",
     "regression:update": "npm run build && node scripts/regression.mjs --update",

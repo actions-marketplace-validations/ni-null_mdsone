@@ -79,8 +79,17 @@ const codeHighlightLib = await codeHighlightAssets();
 const codeCopyLib = await codeCopyAssets({ mode: "line" });
 const codeLineNumberLib = await codeLineNumberAssets();
 
-const libCss = `${codeHighlightLib.css ?? ""}\n${codeCopyLib.css ?? ""}\n${codeLineNumberLib.css ?? ""}`;
-const libJs = `${codeCopyLib.js ?? ""}\n${codeLineNumberLib.js ?? ""}`;
+// Plugin assets are file-based in dev versions.
+// Runtime CLI resolves and inlines these automatically.
+const libCssFiles = [
+  ...(codeHighlightLib.cssFiles ?? []),
+  ...(codeCopyLib.cssFiles ?? []),
+  ...(codeLineNumberLib.cssFiles ?? []),
+];
+const libJsFiles = [
+  ...(codeCopyLib.jsFiles ?? []),
+  ...(codeLineNumberLib.jsFiles ?? []),
+];
 ```
 
 ## Browser Use
@@ -89,3 +98,4 @@ const libJs = `${codeCopyLib.js ?? ""}\n${codeLineNumberLib.js ?? ""}`;
 - `mdsone/node` is Node-only.
 - `image` plugin is designed for Node file/network processing.
 - Other plugins can be composed as HTML post-processors when needed.
+- `code*Assets()` now returns `cssFiles/jsFiles` (file paths), not inline tag strings.

@@ -1,0 +1,25 @@
+.code-line { display: block; position: relative; line-height: inherit; margin: 0; padding: 0; }
+.code-line--cmd {
+  border-radius: 3px;
+  padding-right: 2rem;
+  transition: background 0.12s;
+}
+.code-line--hover { background: rgba(128,128,128,0.12); }
+.code-line--flash { background: rgba(55,138,221,0.18) !important; }
+.line-copy-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  padding: 0; border: none; border-radius: 4px;
+  background: transparent; color: inherit;
+  opacity: 0; cursor: pointer;
+  transition: opacity 0.15s, background 0.12s;
+}
+.code-line--cmd:hover .line-copy-btn,
+.line-copy-btn.copied { opacity: 0.75; }
+.line-copy-btn:hover { opacity: 1 !important; background: rgba(128,128,128,0.18); }

@@ -41,8 +41,14 @@ import { codeLineNumberAssets } from "mdsone/plugins/code-line-number";
 
 const codeCopyLib = await codeCopyAssets({ mode: "line" });
 const codeLineNumberLib = await codeLineNumberAssets();
-const libCss = `${codeCopyLib.css ?? ""}\n${codeLineNumberLib.css ?? ""}`;
-const libJs = `${codeCopyLib.js ?? ""}\n${codeLineNumberLib.js ?? ""}`;
+const libCssFiles = [
+  ...(codeCopyLib.cssFiles ?? []),
+  ...(codeLineNumberLib.cssFiles ?? []),
+];
+const libJsFiles = [
+  ...(codeCopyLib.jsFiles ?? []),
+  ...(codeLineNumberLib.jsFiles ?? []),
+];
 ```
 
 ## 單一 Markdown 轉 HTML（Node）
@@ -117,19 +123,6 @@ import { codeHighlight, codeHighlightAssets } from "mdsone/plugins/code-highligh
 import { codeCopy, codeCopyAssets } from "mdsone/plugins/code-copy";
 import { codeLineNumber, codeLineNumberAssets } from "mdsone/plugins/code-line-number";
 
-function injectAssets(css?: string, js?: string) {
-  if (css) document.head.insertAdjacentHTML("beforeend", css);
-  if (js) {
-    const container = document.createElement("div");
-    container.innerHTML = js;
-    container.querySelectorAll("script").forEach((oldScript) => {
-      const script = document.createElement("script");
-      script.textContent = oldScript.textContent ?? "";
-      document.body.appendChild(script);
-    });
-  }
-}
-
 const md = `
 \`\`\`bash
 npx mdsone ./docs -m --code-copy=cmd
@@ -145,10 +138,15 @@ const codeHighlightLib = await codeHighlightAssets();
 const codeCopyLib = await codeCopyAssets({ mode: "line" });
 const codeLineNumberLib = await codeLineNumberAssets();
 
-injectAssets(
-  `${codeHighlightLib.css ?? ""}\n${codeCopyLib.css ?? ""}\n${codeLineNumberLib.css ?? ""}`,
-  `${codeCopyLib.js ?? ""}\n${codeLineNumberLib.js ?? ""}`,
-);
+const libCssFiles = [
+  ...(codeHighlightLib.cssFiles ?? []),
+  ...(codeCopyLib.cssFiles ?? []),
+  ...(codeLineNumberLib.cssFiles ?? []),
+];
+const libJsFiles = [
+  ...(codeCopyLib.jsFiles ?? []),
+  ...(codeLineNumberLib.jsFiles ?? []),
+];
 
 document.querySelector("#preview")!.innerHTML = result;
 ```

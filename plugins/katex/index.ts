@@ -236,11 +236,12 @@ export async function extendKatexMarkdown(
   return md;
 }
 
-/** Plugin CSS assets for host template injection. */
+/**
+ * File-based asset mode does not expose dynamic KaTeX CSS through PluginAssets.
+ * KaTeX runtime CSS injection is handled in `processOutputHtml()`.
+ */
 export async function katexAssets(options: KatexOptions = {}): Promise<PluginAssets> {
   const config = resolveKatexConfig(options);
   if (!katexPlugin.isEnabled(config)) return {};
-  const mode = normalizeKatexMode(readKatexPluginConfig(config).mode);
-  const styleTag = buildKatexStyleTag(mode);
-  return styleTag ? { css: styleTag } : {};
+  return {};
 }

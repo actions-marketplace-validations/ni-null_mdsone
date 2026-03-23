@@ -4,7 +4,6 @@
 
 import type { Config, Plugin, PluginAssets } from "../../src/core/types.js";
 import { DEFAULT_CONFIG } from "../../src/core/config.js";
-import { getCopyButtonScript, getLineCopyStyle, getCmdCopyStyle } from "./copy-button.js";
 import { load, type CheerioAPI } from "cheerio";
 
 function trimTrailingEmpty(lines: string[]): string[] {
@@ -158,49 +157,17 @@ export const codeCopyPlugin: Plugin = {
     },
 
     getAssets(config): PluginAssets {
-        const script   = getCopyButtonScript();
         const runtime  = resolveCopyRuntime(config);
         const mode     = runtime.mode;
-        const blockOn  = runtime.enable && mode !== "off";
-
-        // initCall
-        const calls: string[] = [];
-        if (blockOn)        calls.push("window.__mdsone_copy(root)");
-        if (mode === "line") calls.push("window.__mdsone_line_copy(root)");
-        if (mode === "cmd")  calls.push("window.__mdsone_cmd_copy(root)");
-        const initCall = calls.join("; ");
 
         // CSS
-        let css: string | undefined;
-        if (mode === "line") css = `<style id="mdsone-line-copy">\n${getLineCopyStyle()}\n</style>`;
-        if (mode === "cmd")  css = `<style id="mdsone-cmd-copy">\n${getCmdCopyStyle()}\n</style>`;
+        let cssFiles: string[] | undefined;
+        if (mode === "line") cssFiles = ["line-copy.css"];
+        if (mode === "cmd") cssFiles = ["cmd-copy.css"];
 
         return {
-            css,
-            js:
-                `<script>\n` +
-                `try {\n` +
-                script + `\n` +
-                `var __mdsone_copy_apply = function (root) { ${initCall} };\n` +
-                `if (document.readyState === 'loading') {\n` +
-                `  document.addEventListener('DOMContentLoaded', function () { __mdsone_copy_apply(document.body); });\n` +
-                `} else {\n` +
-                `  __mdsone_copy_apply(document.body);\n` +
-                `}\n` +
-                `if (typeof MutationObserver !== 'undefined') {\n` +
-                `  var obs = new MutationObserver(function (mutations) {\n` +
-                `    mutations.forEach(function (m) {\n` +
-                `      m.addedNodes && m.addedNodes.forEach(function (n) {\n` +
-                `        if (n && n.nodeType === 1) __mdsone_copy_apply(n);\n` +
-                `      });\n` +
-                `    });\n` +
-                `  });\n` +
-                `  obs.observe(document.body, { childList: true, subtree: true });\n` +
-                `}\n` +
-                `} catch(e) {\n` +
-                `  console.warn('[mdsone] Failed to load copy button:', e.message);\n` +
-                `}\n` +
-                `</script>`,
+            cssFiles,
+            jsFiles: ["copy-runtime.js"],
         };
     },
 };

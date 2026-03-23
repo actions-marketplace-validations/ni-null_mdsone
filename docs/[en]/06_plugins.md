@@ -16,6 +16,10 @@ Pipeline summary:
 3. `PluginManager.getAssets()` collects plugin CSS/JS.
 4. `PluginManager.processOutputHtml()` runs final output hooks (minify stage).
 
+Asset return modes in `getAssets()`:
+
+- `cssFiles` / `jsFiles`: file-based asset paths resolved by the plugin asset registry and auto-inlined by runtime.
+
 ## image
 
 Purpose:

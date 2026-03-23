@@ -11,19 +11,6 @@ import { createHighlighter } from "shiki";
 import type { Config, Plugin, PluginAssets, TemplateData } from "../../src/core/types.js";
 import { DEFAULT_CONFIG } from "../../src/core/config.js";
 
-const SHIKI_THEME_ADAPTER_CSS =
-  `<style id="shiki-theme-adapter">` +
-  `html[data-theme="dark"] pre.shiki,` +
-  `html[data-theme="dark"] pre.shiki code,` +
-  `html[data-theme="dark"] pre.shiki span {` +
-  `  color: var(--shiki-dark) !important;` +
-  `  background-color: var(--shiki-dark-bg) !important;` +
-  `  font-style: var(--shiki-dark-font-style) !important;` +
-  `  font-weight: var(--shiki-dark-font-weight) !important;` +
-  `  text-decoration: var(--shiki-dark-text-decoration) !important;` +
-  `}` +
-  `</style>`;
-
 const AUTO_DETECT_LANGUAGES = [
   "javascript", "typescript", "python", "bash", "json",
   "css", "html", "sql", "yaml", "java", "go", "rust", "cpp",
@@ -537,7 +524,7 @@ export const codeHighlightPlugin: Plugin = {
   },
 
   getAssets(): PluginAssets {
-    return { css: SHIKI_THEME_ADAPTER_CSS };
+    return { cssFiles: ["theme-adapter.css"] };
   },
 
   processOutputHtml(html): string {
