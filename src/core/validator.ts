@@ -9,12 +9,12 @@ import type { Config, ValidationIssue, ValidationResult } from "./types.js";
 export function collectConfigValidationIssues(config: Config): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
-  if (!config.default_template || config.default_template.trim() === "") {
+  if (!config.template || config.template.trim() === "") {
     issues.push({
       level: "error",
-      code: "core.default_template.required",
-      message: "Default template is not configured.",
-      hint: "Set --template or configure [build].default_template in config.toml.",
+      code: "core.template.required",
+      message: "Template is not configured.",
+      hint: "Set --template or configure [build].template in config.toml.",
     });
   }
 
@@ -32,4 +32,3 @@ export function validateConfig(config: Config): ValidationResult {
     errors,
   };
 }
-

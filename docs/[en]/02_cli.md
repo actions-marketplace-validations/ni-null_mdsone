@@ -78,12 +78,11 @@ i18n mode requires a single folder input with `[locale]` subfolders and uses mer
 |---|---|---|---|
 | Source input | `<inputs...>` | `MARKDOWN_SOURCE_DIR` | `[paths] source` |
 | Output | `-o, --output` | `OUTPUT_FILE` | `[paths] output_file` |
-| Template | `--template` | `DEFAULT_TEMPLATE` | `[build] default_template` |
+| Template | `--template` | `TEMPLATE` | `[build] template` |
 | Site title | `--title` | `SITE_TITLE` | `[site] title` |
 | i18n mode | `-i, --i18n-mode` | `I18N_MODE` | `[i18n] mode` |
-| Default locale | `-i=CODE, --i18n-mode=CODE` | `DEFAULT_LOCALE` | `[i18n] default_locale` |
+| Default locale | `-i=CODE, --i18n-mode=CODE` | `I18N_DEFAULT_LOCALE` | `[i18n] i18n_default_locale` |
 | Build date | - | `BUILD_DATE` | `[build] build_date` |
-| Markdown extensions | - | `MARKDOWN_EXTENSIONS` | `[build] markdown_extensions` |
 | Markdown linkify | `--md-linkify=...` | `MARKDOWN_LINKIFY` | `[markdown] linkify` |
 | Markdown typographer | `--md-typographer=...` | `MARKDOWN_TYPOGRAPHER` | `[markdown] typographer` |
 | Markdown breaks | `--md-breaks=...` | `MARKDOWN_BREAKS` | `[markdown] breaks` |

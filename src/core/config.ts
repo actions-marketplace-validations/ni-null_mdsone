@@ -10,11 +10,9 @@ export const DEFAULT_CONFIG: Config = {
   // paths
   markdown_source_dir: "./markdown",
   output_file: "main.html",
-  templates_dir: "templates",
   locales_dir: "locales",
   // build
-  default_template: "normal",
-  markdown_extensions: ["tables", "fenced_code", "nl2br", "sane_lists", "attr_list"],
+  template: "normal",
   build_date: "",
   // site
   site_title: "Documentation",
@@ -117,7 +115,7 @@ function mergeMarkdownSettings(
 export function cliArgsToConfig(args: CliArgs): Partial<Config> {
   const out: Partial<Config> = {};
   // Templates & Styling
-  if (args.template) out.default_template = args.template;
+  if (args.template) out.template = args.template;
   if (args.siteTitle) out.site_title = args.siteTitle;
   // Internationalization
   if (typeof args.i18nMode === "string") {

@@ -85,53 +85,6 @@ function resolveCopyRuntime(config: Config): { enable: boolean; mode: CopyMode }
 export const codeCopyPlugin: Plugin = {
     name: "code-copy",
 
-    registerCli(program) {
-        const parseMode = (raw: string): "off" | "line" | "cmd" => {
-            const v = String(raw ?? "").trim().toLowerCase();
-            if (v === "off" || v === "line" || v === "cmd") return v;
-            throw new Error("Invalid value for --code-copy. Use off|line|cmd.");
-        };
-        program.option(
-            "--code-copy <off|line|cmd>",
-            "Copy button mode (use --code-copy=off|line|cmd)",
-            parseMode,
-        );
-    },
-
-    cliToConfig(opts, out) {
-        const raw = opts["codeCopy"];
-        if (raw === undefined) return;
-        const previous = out.plugins ?? {};
-        const prevConfig = previous.config ?? {};
-        const prevCopy = (prevConfig["code-copy"] ?? {}) as Record<string, unknown>;
-        const v = String(raw).toLowerCase();
-        if (v === "off") {
-            out.plugins = {
-                ...previous,
-                config: {
-                    ...prevConfig,
-                    "code-copy": { ...prevCopy, enable: false, mode: "off" },
-                },
-            };
-        } else if (v === "line") {
-            out.plugins = {
-                ...previous,
-                config: {
-                    ...prevConfig,
-                    "code-copy": { ...prevCopy, enable: true, mode: "line" },
-                },
-            };
-        } else if (v === "cmd") {
-            out.plugins = {
-                ...previous,
-                config: {
-                    ...prevConfig,
-                    "code-copy": { ...prevCopy, enable: true, mode: "cmd" },
-                },
-            };
-        }
-    },
-
     isEnabled: (config) => {
         const runtime = resolveCopyRuntime(config);
         return runtime.enable && runtime.mode !== "off";

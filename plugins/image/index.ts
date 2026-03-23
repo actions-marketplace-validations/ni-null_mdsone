@@ -93,54 +93,6 @@ function resolveImageRuntime(config: Config): {
 export const imageEmbedPlugin: Plugin = {
     name: "image",
 
-    registerCli(program) {
-        const parseEmbedMode = (raw: string): "off" | "base64" => {
-            const v = String(raw ?? "").trim().toLowerCase();
-            if (v === "off" || v === "base64") return v;
-            throw new Error("Invalid value for --img-embed. Use off|base64.");
-        };
-        program.option(
-            "--img-embed <off|base64>",
-            "Image embedding mode (use --img-embed=base64|off)",
-            parseEmbedMode,
-        );
-        program.option("--img-max-width <pixels>", "Max image width in pixels (requires 'sharp' package)");
-        program.option("--img-compress <1-100>", "Image compression quality 1-100 (requires 'sharp' package)");
-    },
-
-    cliToConfig(opts, out) {
-        const previous = out.plugins ?? {};
-        const prevConfig = previous.config ?? {};
-        const prevImage = (prevConfig["image"] ?? {}) as Record<string, unknown>;
-        const nextImage: Record<string, unknown> = { ...prevImage };
-
-        const rawEmbed = opts["imgEmbed"];
-        if (typeof rawEmbed === "string") {
-            const mode = rawEmbed.toLowerCase();
-            if (mode === "off" || mode === "base64") {
-                nextImage["embed"] = mode;
-            }
-        }
-        const maxWidth = opts["imgMaxWidth"];
-        if (typeof maxWidth === "string" && maxWidth !== "") {
-            const w = parseInt(maxWidth, 10);
-            if (!isNaN(w) && w > 0) nextImage["max_width"] = w;
-        }
-        const compress = opts["imgCompress"];
-        if (typeof compress === "string" && compress !== "") {
-            const q = parseInt(compress, 10);
-            if (!isNaN(q)) nextImage["compress"] = Math.max(1, Math.min(100, q));
-        }
-
-        out.plugins = {
-            ...previous,
-            config: {
-                ...prevConfig,
-                image: nextImage,
-            },
-        };
-    },
-
     isEnabled: (config) => resolveImageRuntime(config).embed === "base64",
 
     async processDom(dom, config, context) {

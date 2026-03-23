@@ -164,12 +164,17 @@ function parseTemplateSpec(raw: string): { template: string; variant: string } {
 }
 
 function normalizeConfigPaths(config: Config, packageRoot: string): void {
-  if (!path.isAbsolute(config.templates_dir)) {
-    config.templates_dir = path.resolve(packageRoot, config.templates_dir);
-  }
   if (!path.isAbsolute(config.locales_dir)) {
     config.locales_dir = path.resolve(packageRoot, config.locales_dir);
   }
+}
+
+function resolveBuiltInTemplatesDir(packageRoot: string): string {
+  const envTemplatesDir = process.env.MDSONE_TEMPLATE_ROOT;
+  if (envTemplatesDir && envTemplatesDir.trim()) {
+    return path.resolve(envTemplatesDir);
+  }
+  return path.resolve(packageRoot, "templates");
 }
 
 function resolveInputs(args: CliArgs, config: Config): string[] {
@@ -294,12 +299,16 @@ function resolveOutputPlan(args: CliArgs, config: Config, inputs: ResolvedInputs
   return { force, outputFile, outputDir };
 }
 
-async function resolveTemplateContext(config: Config, logger: CliPipelineLogger): Promise<TemplateContext> {
-  let templateRootDir = config.templates_dir;
-  const rawTemplateSpec = (config.default_template || "").trim();
+async function resolveTemplateContext(
+  config: Config,
+  logger: CliPipelineLogger,
+  packageRoot: string,
+): Promise<TemplateContext> {
+  let templateRootDir = resolveBuiltInTemplatesDir(packageRoot);
+  const rawTemplateSpec = (config.template || "").trim();
   const parsedTemplate = parseTemplateSpec(rawTemplateSpec);
   const rawTemplate = parsedTemplate.template;
-  config.default_template = rawTemplate;
+  config.template = rawTemplate;
   config.template_variant = parsedTemplate.variant;
 
   let templateName = rawTemplate;
@@ -431,7 +440,6 @@ async function renderMarkdownDocument(
 ): Promise<string> {
   const html = await markdownToHtmlAsync(
     markdownText,
-    runtime.config.markdown_extensions,
     fileIndex,
     async (md) => await runtime.pluginManager.extendMarkdown(md, runtime.config, {
       sourceDir,
@@ -723,7 +731,7 @@ export async function runCli(logger: CliPipelineLogger, argv?: string[]): Promis
   const pluginManager = new PluginManager();
   runPreflightValidation(config, pluginManager, logger);
 
-  const templateContext = await resolveTemplateContext(config, logger);
+  const templateContext = await resolveTemplateContext(config, logger, packageRoot);
   const assets = await pluginManager.getAssets(config);
   const localeNames = await loadLocaleNamesConfig(config.locales_dir);
   const runtime = createRuntimeContext(

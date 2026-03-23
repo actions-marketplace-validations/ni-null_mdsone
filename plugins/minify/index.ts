@@ -29,46 +29,6 @@ async function loadMinifierModule(): Promise<HtmlMinifierModule> {
 export const minifyPlugin: Plugin = {
   name: "minify",
 
-  registerCli(program) {
-    const parseMode = (raw: string): "off" => {
-      const v = String(raw ?? "").trim().toLowerCase();
-      if (v === "off") return "off";
-      throw new Error("Invalid value for --minify. Use --minify or --minify=off.");
-    };
-    program.option(
-      "--minify [off]",
-      "Minify output HTML (default: off; use --minify or --minify=off)",
-      parseMode,
-    );
-  },
-
-  cliToConfig(opts, out) {
-    const raw = opts["minify"];
-    const previous = out.plugins ?? {};
-    const prevConfig = previous.config ?? {};
-    const prevMinify = (prevConfig["minify"] ?? {}) as Record<string, unknown>;
-    if (raw === true) {
-      out.plugins = {
-        ...previous,
-        config: {
-          ...prevConfig,
-          minify: { ...prevMinify, enable: true },
-        },
-      };
-    } else if (typeof raw === "string") {
-      const v = raw.toLowerCase();
-      if (v === "off") {
-        out.plugins = {
-          ...previous,
-          config: {
-            ...prevConfig,
-            minify: { ...prevMinify, enable: false },
-          },
-        };
-      }
-    }
-  },
-
   isEnabled: (config) => {
     const minify = config.plugins?.config?.["minify"] as { enable?: boolean } | undefined;
     return minify?.enable === true;

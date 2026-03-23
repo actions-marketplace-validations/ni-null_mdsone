@@ -73,33 +73,27 @@ export function sanitizeTableCells(html: string): string {
 
 /**
  * 建立 markdown-it 實例。
- * extensions 清單與 Python markdown lib 的 extensions 名稱對應：
- *   tables        → markdown-it 內建 (tables: true)
- *   fenced_code   → markdown-it 內建 (fenced: true)
- *   nl2br         → breaks: true（每行換行 → <br>）
- *   attr_list     → markdown-it-attrs 插件
- *   sane_lists    → markdown-it 內建（行為差異小，以 lists: true 模擬）
- *   footnote      → 核心固定啟用 markdown-it-footnote（不由 extensions 切換）
- *   task list     → 核心固定啟用 markdown-it-task-lists（不由 extensions 切換）
+ * 核心固定啟用：
+ * - markdown-it-attrs
+ * - markdown-it-anchor
+ * - markdown-it-footnote
+ * - markdown-it-task-lists
  *
  * @param fileIndex - 用於產生跨檔案唯一的 heading id（預設 0）
  */
 function createMarkdownIt(
-  extensions: string[],
   fileIndex: number,
   markdownOptions?: Config["markdown"],
 ): MarkdownIt {
   const opts: MarkdownItOptions = {
     html: true,
     xhtmlOut: markdownOptions?.xhtml_out ?? false,
-    breaks: markdownOptions?.breaks ?? extensions.includes("nl2br"),
+    breaks: markdownOptions?.breaks ?? true,
     linkify: markdownOptions?.linkify ?? false,
     typographer: markdownOptions?.typographer ?? false,
   };
   const md = new MarkdownIt(opts);
-  if (extensions.includes("attr_list")) {
-    md.use(markdownItAttrs);
-  }
+  md.use(markdownItAttrs);
   // 注入 anchor 插件：以 f{fileIndex}- 前綴 + 保留非 ASCII 的 slugify 產生穩定 id
   md.use(markdownItAnchor, {
     slugify: makeAnchorSlugify(fileIndex),
@@ -148,12 +142,11 @@ function applyDefaultFenceWrapper(md: MarkdownIt): void {
  */
 export function markdownToHtml(
   markdownText: string,
-  extensions: string[],
   fileIndex = 0,
   extendMarkdown?: (md: MarkdownIt) => void,
   markdownOptions?: Config["markdown"],
 ): string {
-  const md = createMarkdownIt(extensions, fileIndex, markdownOptions);
+  const md = createMarkdownIt(fileIndex, markdownOptions);
   if (extendMarkdown) {
     extendMarkdown(md);
   }
@@ -172,12 +165,11 @@ export function markdownToHtml(
  */
 export async function markdownToHtmlAsync(
   markdownText: string,
-  extensions: string[],
   fileIndex = 0,
   extendMarkdown?: (md: MarkdownIt) => void | Promise<void>,
   markdownOptions?: Config["markdown"],
 ): Promise<string> {
-  const md = createMarkdownIt(extensions, fileIndex, markdownOptions);
+  const md = createMarkdownIt(fileIndex, markdownOptions);
   if (extendMarkdown) {
     await extendMarkdown(md);
   }

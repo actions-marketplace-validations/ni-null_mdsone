@@ -8,11 +8,9 @@ export interface Config {
   // paths
   markdown_source_dir: string;
   output_file: string;
-  templates_dir: string;
   locales_dir: string;
   // build
-  default_template: string;
-  markdown_extensions: string[];
+  template: string;
   markdown?: {
     linkify?: boolean;
     typographer?: boolean;
@@ -216,12 +214,6 @@ export interface CliProgram {
 export interface Plugin {
   /** Unique plugin name used by plugin ordering and logs. */
   readonly name: string;
-
-  /** Register plugin-specific CLI options. */
-  registerCli?: (program: CliProgram) => void;
-
-  /** Map parsed CLI options into Partial<Config> overrides. */
-  cliToConfig?: (opts: Record<string, unknown>, out: Partial<Config>) => void;
 
   /** Return whether this plugin is enabled for current config. */
   isEnabled: (config: Config) => boolean;

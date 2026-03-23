@@ -503,36 +503,6 @@ async function preloadFenceLanguages(
 export const codeHighlightPlugin: Plugin = {
   name: "code-highlight",
 
-  registerCli(program) {
-    const parseHighlightMode = (raw: string): "off" => {
-      const value = String(raw ?? "").trim().toLowerCase();
-      if (value === "off") return "off";
-      throw new Error("Invalid value for --code-highlight. Use off.");
-    };
-    program.option(
-      "--code-highlight <off>",
-      "Disable syntax highlighting (use --code-highlight=off)",
-      parseHighlightMode,
-    );
-  },
-
-  cliToConfig(opts, out) {
-    const raw = opts["codeHighlight"];
-    if (String(raw ?? "").toLowerCase() !== "off") return;
-
-    const previousPlugins = out.plugins ?? {};
-    const previousConfig = previousPlugins.config ?? {};
-    const previousCodeHighlight = asObject(previousConfig["code-highlight"]);
-
-    out.plugins = {
-      ...previousPlugins,
-      config: {
-        ...previousConfig,
-        "code-highlight": { ...previousCodeHighlight, enable: false },
-      },
-    };
-  },
-
   isEnabled(config) {
     return readCodeHighlightConfig(config).enable ?? true;
   },

@@ -35,9 +35,7 @@ The generated file statically embeds:
 At runtime, the executable extracts embedded assets to a temp directory and
 sets:
 
-- `TEMPLATES_DIR`
 - `LOCALES_DIR`
-- `KATEX_DIST_DIR` (when KaTeX assets are embedded)
 
 No external runtime folder is required in distribution.
 

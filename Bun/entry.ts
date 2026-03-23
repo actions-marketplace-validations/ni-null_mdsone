@@ -38,16 +38,12 @@ async function bootstrapRuntimeAssetDirs(): Promise<void> {
   if (embeddedRoot) {
     const templatesDir = path.join(embeddedRoot, EMBEDDED_ROOTS.templates);
     const localesDir = path.join(embeddedRoot, EMBEDDED_ROOTS.locales);
-    const katexDistDir = path.join(embeddedRoot, EMBEDDED_ROOTS.katexDist);
 
-    if (!process.env.TEMPLATES_DIR && fs.existsSync(templatesDir)) {
-      process.env.TEMPLATES_DIR = templatesDir;
+    if (!process.env.MDSONE_TEMPLATE_ROOT && fs.existsSync(templatesDir)) {
+      process.env.MDSONE_TEMPLATE_ROOT = templatesDir;
     }
     if (!process.env.LOCALES_DIR && fs.existsSync(localesDir)) {
       process.env.LOCALES_DIR = localesDir;
-    }
-    if (!process.env.KATEX_DIST_DIR && fs.existsSync(path.join(katexDistDir, "katex.min.css"))) {
-      process.env.KATEX_DIST_DIR = katexDistDir;
     }
     return;
   }
@@ -57,8 +53,8 @@ async function bootstrapRuntimeAssetDirs(): Promise<void> {
   const templatesDir = path.join(runtimeDir, "templates");
   const localesDir = path.join(runtimeDir, "locales");
 
-  if (!process.env.TEMPLATES_DIR && fs.existsSync(templatesDir)) {
-    process.env.TEMPLATES_DIR = templatesDir;
+  if (!process.env.MDSONE_TEMPLATE_ROOT && fs.existsSync(templatesDir)) {
+    process.env.MDSONE_TEMPLATE_ROOT = templatesDir;
   }
   if (!process.env.LOCALES_DIR && fs.existsSync(localesDir)) {
     process.env.LOCALES_DIR = localesDir;

@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Command, type Help, type Option } from "commander";
 import type { CliArgs, Config, CliProgram } from "../core/types.js";
-import { builtInPlugins } from "../plugins/index.js";
+import { applyPluginCliToConfig, registerPluginCliOptions } from "../plugins/option-specs.js";
 
 function readPkgVersion(): string {
   try {
@@ -220,9 +220,7 @@ export function parseArgs(argv?: string[]): CliArgs {
   const coreOptionFlags = new Set(program.options.map((option) => option.flags));
 
   // Plugin-owned CLI options
-  for (const plugin of builtInPlugins) {
-    plugin.registerCli?.(program as unknown as CliProgram);
-  }
+  registerPluginCliOptions(program as unknown as CliProgram);
 
   const pluginOptionFlags = new Set(
     program.options
@@ -333,9 +331,7 @@ export function parseArgs(argv?: string[]): CliArgs {
 
   const inputs: string[] = (program.processedArgs[0] as string[] | undefined) ?? [];
   const pluginOverrides: Partial<Config> = {};
-  for (const plugin of builtInPlugins) {
-    plugin.cliToConfig?.(opts, pluginOverrides);
-  }
+  applyPluginCliToConfig(opts, pluginOverrides);
   const markdown = {
     linkify: typed.mdLinkify,
     typographer: typed.mdTypographer,

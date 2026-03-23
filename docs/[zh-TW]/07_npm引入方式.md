@@ -70,14 +70,13 @@ const localeFile = await loadLocaleFile(localeRoot, "zh-TW");
 
 const bodyHtml = markdownToHtml(
   mdText,
-  DEFAULT_CONFIG.markdown_extensions,
   0,
 );
 
 const html = buildHtml({
   config: {
     ...DEFAULT_CONFIG,
-    default_template: templateName,
+    template: templateName,
     site_title: "My Docs",
     i18n_mode: false,
     template_variant: "default",
@@ -106,7 +105,7 @@ const md = `# Hello mdsone
 - item 2
 `;
 
-const html = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, 0);
+const html = markdownToHtml(md, 0);
 document.querySelector("#preview")!.innerHTML = html;
 ```
 
@@ -137,7 +136,7 @@ npx mdsone ./docs -m --code-copy=cmd
 \`\`\`
 `;
 
-let result = markdownToHtml(md, DEFAULT_CONFIG.markdown_extensions, 0);
+let result = markdownToHtml(md, 0);
 result = await codeHighlight(result);
 result = await codeCopy(result, { mode: "line" });
 result = await codeLineNumber(result);

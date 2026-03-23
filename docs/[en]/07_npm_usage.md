@@ -44,12 +44,12 @@ const localeRoot = path.resolve("./locales");
 const templateData = await loadTemplateFiles(templateRoot, templateName);
 const localeFile = await loadLocaleFile(localeRoot, "en");
 
-const bodyHtml = markdownToHtml(mdText, DEFAULT_CONFIG.markdown_extensions, 0);
+const bodyHtml = markdownToHtml(mdText, 0);
 
 const html = buildHtml({
   config: {
     ...DEFAULT_CONFIG,
-    default_template: templateName,
+    template: templateName,
     template_variant: "default",
     site_title: "My Docs",
     i18n_mode: false,
@@ -70,7 +70,7 @@ import { codeHighlight, codeHighlightAssets } from "mdsone/plugins/code-highligh
 import { codeCopy, codeCopyAssets } from "mdsone/plugins/code-copy";
 import { codeLineNumber, codeLineNumberAssets } from "mdsone/plugins/code-line-number";
 
-let result = markdownToHtml("```bash\nnpx mdsone\n```", DEFAULT_CONFIG.markdown_extensions, 0);
+let result = markdownToHtml("```bash\nnpx mdsone\n```", 0);
 result = await codeHighlight(result);
 result = await codeCopy(result, { mode: "line" });
 result = await codeLineNumber(result);

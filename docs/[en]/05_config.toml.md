@@ -12,11 +12,9 @@ npx mdsone --config ./config.toml
 [paths]
 source = "./docs"
 output_file = "./dist/index.html"
-templates_dir = "templates"
 
 [build]
-default_template = "normal@warm-cream"  # <theme-or-path>[@variant]
-markdown_extensions = ["tables", "fenced_code", "nl2br", "sane_lists", "attr_list"]
+template = "normal@warm-cream"  # <theme-or-path>[@variant]
 build_date = ""
 
 [site]
@@ -24,9 +22,8 @@ title = "Documentation"
 theme_mode = "light"
 
 [i18n]
-locale = "en"
 mode = false
-default_locale = ""
+i18n_default_locale = ""
 
 [markdown]
 linkify = false
@@ -47,7 +44,19 @@ xhtml_out = false
 ## Notes
 
 - No `.env` auto-loading. Runtime order is: CLI > ENV > TOML > defaults.
-- Footnote syntax is enabled in core by default (`markdown-it-footnote`) and is not controlled by `markdown_extensions`.
+- Current `config.toml` keys supported by the program:
+  - `[paths] source` (legacy alias: `[paths] markdown_source_dir`)
+  - `[paths] output_file`
+  - `[build] template`
+  - `[build] build_date`
+  - `[site] title`
+  - `[site] theme_mode`
+  - `[i18n] mode`
+  - `[i18n] i18n_default_locale`
+  - `[markdown] linkify` / `typographer` / `breaks` / `xhtml_out`
+  - `[plugins] order` and plugin subtables
+- `[i18n].locale` and `[i18n].default_locale` are removed. Use `[i18n].i18n_default_locale`.
+- Core always enables `markdown-it-attrs`, `markdown-it-footnote`, and `markdown-it-task-lists`.
 - `[markdown]` options map to markdown-it booleans (`linkify`, `typographer`, `breaks`, `xhtml_out`).
 - CLI can override these with `--md-linkify`, `--md-typographer`, `--md-breaks`, `--md-xhtml-out` (`on/off`, bare flag = `on`).
 - KaTeX is auto-enabled by default. Set `katex.enable = false` (or `--katex=off`) to disable completely.

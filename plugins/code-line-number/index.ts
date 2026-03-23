@@ -52,46 +52,6 @@ function injectIntoPlain(innerHtml: string): string {
 export const codeLineNumberPlugin: Plugin = {
   name: "code-line-number",
 
-  registerCli(program) {
-    const parseMode = (raw: string): "off" => {
-      const v = String(raw ?? "").trim().toLowerCase();
-      if (v === "off") return "off";
-      throw new Error("Invalid value for --code-line-number. Use off.");
-    };
-    program.option(
-      "--code-line-number [off]",
-      "Show line numbers in code blocks (use --code-line-number or --code-line-number=off)",
-      parseMode,
-    );
-  },
-
-  cliToConfig(opts, out) {
-    const raw = opts["codeLineNumber"];
-    const previous = out.plugins ?? {};
-    const prevConfig = previous.config ?? {};
-    const prevLineNumber = (prevConfig["code-line-number"] ?? {}) as Record<string, unknown>;
-    if (raw === true) {
-      out.plugins = {
-        ...previous,
-        config: {
-          ...prevConfig,
-          "code-line-number": { ...prevLineNumber, enable: true },
-        },
-      };
-    } else if (typeof raw === "string") {
-      const v = raw.toLowerCase();
-      if (v === "off") {
-        out.plugins = {
-          ...previous,
-          config: {
-            ...prevConfig,
-            "code-line-number": { ...prevLineNumber, enable: false },
-          },
-        };
-      }
-    }
-  },
-
   isEnabled: (config) => readLineNumberPluginConfig(config).enable === true,
 
   processDom(dom) {

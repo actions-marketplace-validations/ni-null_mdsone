@@ -84,11 +84,6 @@ function inlineKatexFontUrls(css: string, distDir: string, mode: KatexMode): str
 }
 
 function resolveKatexDistDir(): string | null {
-  const envDir = process.env.KATEX_DIST_DIR;
-  if (envDir && fs.existsSync(path.join(envDir, "katex.min.css"))) {
-    return envDir;
-  }
-
   // Prefer the same KaTeX package instance used by markdown-it-katex,
   // avoiding CSS/HTML mismatch across different KaTeX major versions.
   try {
@@ -186,39 +181,6 @@ const KATEX_LAYOUT_FIX_CSS = [
 
 export const katexPlugin: Plugin = {
   name: "katex",
-
-  registerCli(program) {
-    const parseMode = (raw: string): "full" | "off" => {
-      const v = String(raw ?? "").trim().toLowerCase();
-      if (v === "full") return "full";
-      if (v === "off") return "off";
-      throw new Error("Invalid value for --katex. Use --katex, --katex=full, or --katex=off.");
-    };
-    program.option(
-      "--katex [mode]",
-      "KaTeX mode (auto default; --katex=full for full fonts; --katex=off to disable)",
-      parseMode,
-    );
-  },
-
-  cliToConfig(opts, out) {
-    const raw = opts["katex"];
-    if (raw !== true && raw !== "full" && raw !== "off") return;
-    const prevPlugins = out.plugins ?? {};
-    const prevConfig = prevPlugins.config ?? {};
-    const prevKatex = (prevConfig["katex"] ?? {}) as Record<string, unknown>;
-    out.plugins = {
-      ...prevPlugins,
-      config: {
-        ...prevConfig,
-        katex: {
-          ...prevKatex,
-          enable: raw !== "off",
-          mode: raw === "full" ? "full" : "woff2",
-        },
-      },
-    };
-  },
 
   isEnabled: isKatexEnabled,
 

@@ -16,7 +16,7 @@ import { runCli } from "../pipeline.js";
 const DEFAULT_TIMEOUT_MS = 120000;
 const CAPABILITY_SUMMARY =
   "mdsone converts Markdown into self-contained HTML with modern responsive templates, built-in code syntax highlighting, footnotes, task lists, and optional i18n output.";
-const DEFAULT_TEMPLATE_HINT = "normal@default";
+const TEMPLATE_HINT = "normal@default";
 
 type CliRunResult = {
   outputPath: string | null;
@@ -250,7 +250,7 @@ function createServer(): McpServer {
         defaults: {
           force: true,
           return_mode: "path",
-          template_hint: DEFAULT_TEMPLATE_HINT,
+          template_hint: TEMPLATE_HINT,
         },
         notes: [
           "The MCP server executes the same core mdsone CLI pipeline.",
