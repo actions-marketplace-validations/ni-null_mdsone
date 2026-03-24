@@ -120,7 +120,17 @@ export async function writeTextFile(filePath: string, content: string): Promise<
 
 /** Ensure directory exists (recursive). */
 export async function ensureDir(dirPath: string): Promise<void> {
-  await fs.mkdir(dirPath, { recursive: true });
+  try {
+    await fs.mkdir(dirPath, { recursive: true });
+  } catch (e: unknown) {
+    const code = e && typeof e === "object" && "code" in e
+      ? String((e as { code?: unknown }).code ?? "")
+      : "";
+    if (code === "EEXIST" && dirExists(dirPath)) {
+      return;
+    }
+    throw e;
+  }
 }
 
 /** Return true if path exists and is a directory. */
