@@ -68,7 +68,7 @@ jobs:
 
   release:
     needs: build
-    if: ${{ github.event.inputs.publish_release == 'true' && github.event.inputs.tag_name != '' }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'true' && github.event.inputs.tag_name != '') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -82,10 +82,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.tag_name }}
+          tag_name: ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
-          prerelease: ${{ contains(github.event.inputs.tag_name, '-') }}
+          prerelease: ${{ contains(github.event_name == 'push' && github.ref_name || github.event.inputs.tag_name, '-') }}
           files: |
             Bun/dist/mdsone-win-x64.exe
             Bun/dist/mdsone-linux-x64
