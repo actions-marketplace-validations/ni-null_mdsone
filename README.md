@@ -63,37 +63,66 @@ With image embedding:
 npx mdsone README.md -o index.html --img-embed=base64 --img-max-width 400
 ```
 
+`--img-embed` currently supports `off|base64` (Blob mode is not available yet).
+
+## Template Structure
+
+Template discovery and loading now require this structure:
+
+```text
+templates/<name>/
+  template.html
+  assets/
+    style.css   # required
+    *.css       # auto-inlined, sorted by filename
+    *.js        # auto-inlined, sorted by filename
+    svg/*.svg   # optional, merged into inline SVG sprite
+```
+
+Notes:
+
+- `template.html` should keep `{LIB_CSS}` and `{EXTRA_CSS}` in `<head>`, and `{LIB_JS}` and `{EXTRA_JS}` before `</body>`.
+- Root-level `templates/<name>/style.css` is no longer loaded.
+- Template JS can be placed in `assets/app.js` (recommended) and will be auto-injected via `{EXTRA_JS}`.
+
 ## GitHub Action
 
+Tip: You can pin a specific version for reproducible builds, for example `uses: ni-null/mdsone@v0.3.0`.
+
 ```yaml
-name: Build Docs
+name: Build README to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Convert Markdown to HTML
-        uses: ni-null/mdsone@v1
-        with:
-          source: ./docs
-          output: ./docs.html
-          merge: true
-          i18n_mode: zh-TW
-          template: normal@warm-cream
-          code_line_number: true
-          code_copy: cmd
-          minify: true
+      - uses: actions/configure-pages@v5
 
-      - name: Upload output
-        uses: actions/upload-artifact@v4
+      - name: Convert README.md to index.html
+        uses: ni-null/mdsone@main
         with:
-          name: docs-html
-          path: ./docs.html
+          source: README.md
+          output: _site/index.html
+          force: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
 ```
 
 
@@ -105,6 +134,7 @@ Arguments:
 
 Options:
   -v, --version                         Display version
+  --template-dev                        Start template development server (source checkout only)
   -m, --merge                           Merge all inputs into a single HTML output
   -o, --output <PATH>                   Output HTML file path
   -f, --force                           Overwrite existing output file
@@ -112,6 +142,12 @@ Options:
   --title <TEXT>                        Documentation site title (default: Documentation)
   -i, --i18n-mode [CODE]                Enable multi-language mode; optional CODE via --i18n-mode=CODE (e.g.
                                         --i18n-mode=zh-TW)
+  --md-linkify <on|off>                 Markdown-it linkify (use --md-linkify as shorthand for --md-linkify=on)
+  --md-typographer <on|off>             Markdown-it typographer (use --md-typographer as shorthand for
+                                        --md-typographer=on)
+  --md-breaks <on|off>                  Markdown-it breaks (use --md-breaks as shorthand for --md-breaks=on)
+  --md-xhtml-out <on|off>               Markdown-it xhtmlOut (use --md-xhtml-out as shorthand for
+                                        --md-xhtml-out=on)
   -c, --config <PATH>                   Specify config.toml path
   -h, --help                            display help for command
 
@@ -140,4 +176,3 @@ mdsone is built on top of excellent open-source packages:
 - `sharp`: Optional image resize/compression during image embedding.
 - `commander`: CLI argument parsing.
 - `@iarna/toml`: `config.toml` parsing.
-
